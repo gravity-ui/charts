@@ -2,6 +2,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+const {migrateChartDataV1} = require('../src/migration/v1');
+
 const {
     createSchemaValidator,
     generateChartConfigArtifacts,
@@ -92,6 +94,90 @@ describe('chart config artifacts', () => {
         }
     });
 
+    test('v2 removes only aliases with a verified v1 adapter', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'v2-migration-usage.ts'),
+                declaration +
+                    `
+                const ticks: ChartAxisTicks = {interval: 120};
+                // @ts-expect-error Removed alias belongs to the v1 adapter input only.
+                ticks.pixelInterval = 120;
+                const format: FormatNumberOptions = {units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''}};
+                // @ts-expect-error Removed alias belongs to the v1 adapter input only.
+                format.unit = 'k';
+                const bars: BarXSeries = {type: 'bar-x', name: 'A', data: [], dataLabels: {placement: ['inside-center']}};
+                // @ts-expect-error Removed bar alias belongs to the v1 adapter input only.
+                bars.dataLabels!.inside = true;
+                const axis: ChartXAxis = {padding: {max: '5%'}};
+                // @ts-expect-error Removed alias belongs to the v1 adapter input only.
+                axis.maxPadding = 0.05;
+                void [ticks, format, axis, bars];
+            `,
+            ),
+        ).not.toThrow();
+        expect(schema.definitions.ChartAxisTicks.properties).not.toHaveProperty('pixelInterval');
+        for (const [name, definition] of Object.entries(schema.definitions)) {
+            if (name.startsWith('BarXSeries<') || name.startsWith('BarYSeries<')) {
+                expect(definition.properties.dataLabels.properties).not.toHaveProperty('inside');
+            }
+        }
+        for (const definition of Object.values(schema.definitions)) {
+            if (definition.properties?.units)
+                expect(definition.properties).not.toHaveProperty('unit');
+        }
+        const validate = createSchemaValidator().compile(schema);
+        expect(validate({series: {data: []}, xAxis: {ticks: {pixelInterval: 120}}})).toBe(false);
+        expect(validate({series: {data: []}, xAxis: {labels: {numberFormat: {unit: 'k'}}}})).toBe(
+            false,
+        );
+        expect(
+            validate({
+                series: {data: []},
+                xAxis: {
+                    ticks: {interval: 120},
+                    labels: {
+                        numberFormat: {
+                            units: {scale: [{factor: 1000, postfix: 'K'}], delimiter: ''},
+                        },
+                    },
+                },
+            }),
+        ).toBe(true);
+    });
+
+    test('validates stored v1 JSON after migration without relaxing the v2 schema', () => {
+        const legacy = JSON.parse(`{
+            "xAxis": {"ticks": {"pixelInterval": 120}, "labels": {"numberFormat": {"unit": "k"}}},
+            "yAxis": [{"ticks": {"pixelInterval": 60}, "maxPadding": 0.25}],
+            "series": {"data": [{
+                "type": "bar-x", "name": "Revenue", "data": [{"x": 1, "y": 1500}],
+                "dataLabels": {"inside": true, "format": {"type": "number", "unit": "k"}}
+            }]}
+        }`);
+        const original = JSON.stringify(legacy);
+        const validate = createSchemaValidator().compile(schema);
+        expect(validate(legacy)).toBe(false);
+
+        const {data, warnings} = migrateChartDataV1(legacy);
+        expect(validate(data)).toBe(true);
+        expect(warnings.every(({resolution}) => resolution === 'automatic')).toBe(true);
+        expect(JSON.stringify(legacy)).toBe(original);
+        expect(data.yAxis[0].padding).toEqual({max: '25%'});
+        expect(data.yAxis[0]).not.toHaveProperty('maxPadding');
+
+        const unknown = migrateChartDataV1({...legacy, unknownProperty: true});
+        expect(validate(unknown.data)).toBe(false);
+        const invalid = migrateChartDataV1({
+            ...legacy,
+            xAxis: {labels: {numberFormat: {unit: 'bytes'}}},
+        });
+        expect(validate(invalid.data)).toBe(false);
+        expect(invalid.warnings).toContainEqual(
+            expect.objectContaining({code: 'invalid-number-unit', resolution: 'review'}),
+        );
+    });
+
     test('waterfall connectors are available in declarations and schema', () => {
         expect(() =>
             validateDeclaration(
@@ -128,23 +214,22 @@ describe('chart config artifacts', () => {
         }
     });
 
-    test('axis padding extends the axis API while keeping legacy maxPadding numeric', () => {
+    test('axis padding replaces legacy maxPadding in declarations and schema', () => {
         expect(() =>
             validateDeclaration(
                 path.resolve(__dirname, 'axis-padding-usage.ts'),
                 declaration +
                     `
                 const padding: ChartAxisPadding = {min: 'auto', max: '5%'};
-                const x: ChartXAxis = {padding, maxPadding: 0.05};
+                const x: ChartXAxis = {padding};
                 const y: ChartYAxis = {padding: {min: 12, max: '12px'}};
-                const legacy: number = x.maxPadding ?? 0;
-                // @ts-expect-error The legacy contract stays numeric.
-                x.maxPadding = 'auto';
+                // @ts-expect-error maxPadding was removed in v2.
+                x.maxPadding = 0.05;
                 // @ts-expect-error There is no legacy minPadding.
                 x.minPadding = 0;
                 // @ts-expect-error Padding belongs to axes.
                 const chart: ChartOptions = {plotPadding: {right: 'auto'}};
-                void [x, y, legacy, chart];
+                void [x, y, chart];
             `,
             ),
         ).not.toThrow();
@@ -158,7 +243,7 @@ describe('chart config artifacts', () => {
             expect(schema.definitions[name].properties.padding.$ref).toBe(
                 '#/definitions/ChartAxisPadding',
             );
-            expect(schema.definitions[name].properties.maxPadding.type).toBe('number');
+            expect(schema.definitions[name].properties).not.toHaveProperty('maxPadding');
         }
         const validate = createSchemaValidator().compile(schema);
         for (const max of ['auto', 0, 16, '16px', '10%', '.5%', '0.5px']) {
@@ -167,6 +252,8 @@ describe('chart config artifacts', () => {
         for (const max of [-1, Infinity, NaN, null, true]) {
             expect(validate({xAxis: {padding: {max}}, series: {data: []}})).toBe(false);
         }
+        expect(validate({xAxis: {maxPadding: 0.05}, series: {data: []}})).toBe(false);
+        expect(validate({yAxis: [{maxPadding: 0.05}], series: {data: []}})).toBe(false);
         expect(validate({chart: {plotPadding: {right: 'auto'}}, series: {data: []}})).toBe(false);
     });
 
@@ -210,6 +297,38 @@ describe('chart config artifacts', () => {
                     },
                 }),
             ).toBe(value === undefined || value === 'center' || value === 'marker-edge');
+        }
+    });
+
+    test('treemap point opacity is available in declarations and constrained in schema', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'treemap-opacity-usage.ts'),
+                declaration +
+                    `
+                    const series: TreemapSeries = {
+                        type: 'treemap', name: 'Values',
+                        data: [{name: 'Value', value: 10, opacity: 0.5}],
+                    };
+                    void series;
+                `,
+            ),
+        ).not.toThrow();
+        const validateConfig = createSchemaValidator().compile(schema);
+        for (const opacity of [undefined, 0, 0.5, 1, -1, 2, null, '0.5']) {
+            expect(
+                validateConfig({
+                    series: {
+                        data: [
+                            {
+                                type: 'treemap',
+                                name: 'Values',
+                                data: [{name: 'Value', value: 10, opacity}],
+                            },
+                        ],
+                    },
+                }),
+            ).toBe([undefined, 0, 0.5, 1].includes(opacity));
         }
     });
 

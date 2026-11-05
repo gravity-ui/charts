@@ -3,7 +3,7 @@ import type {Dispatch} from 'd3-dispatch';
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
 import {select} from 'd3-selection';
 import type {BaseType} from 'd3-selection';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import type {TooltipDataChunkTreemap, TreemapSeriesData} from '../../../types';
 import {block} from '../../../utils';
@@ -36,6 +36,7 @@ export function renderTreemap(
     const rectSelection = leaf
         .append('rect')
         .attr('id', (d) => d.id || d.name)
+        .attr('opacity', (d) => d.data.opacity ?? null)
         .attr('fill', (d) => {
             if (d.data.color) {
                 return d.data.color;
@@ -86,9 +87,9 @@ export function renderTreemap(
                 })
                 .attr('opacity', () => {
                     if (inactive) {
-                        return inactiveOptions?.opacity || null;
+                        return (d.data.opacity ?? 1) * (inactiveOptions?.opacity ?? 1);
                     }
-                    return null;
+                    return d.data.opacity ?? null;
                 });
 
             return d;
@@ -99,7 +100,7 @@ export function renderTreemap(
             const inactive = Boolean(inactiveEnabled && hoveredData && !hovered);
             currentLabel.attr('opacity', () => {
                 if (inactive) {
-                    return inactiveOptions?.opacity || null;
+                    return inactiveOptions?.opacity ?? null;
                 }
                 return null;
             });

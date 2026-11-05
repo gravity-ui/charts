@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {applyAxisPadding} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';

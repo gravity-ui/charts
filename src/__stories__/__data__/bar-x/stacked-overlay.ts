@@ -14,7 +14,7 @@ export const barXStackedOverlayData: ChartData = {
                 stacking: 'normal',
                 grouping: false,
                 barPadding: stackId === 'Plan' ? 0.2 : 0.6,
-                dataLabels: {enabled: stackId === 'Actual', inside: true},
+                dataLabels: {enabled: stackId === 'Actual', placement: ['inside-center']},
                 data: [{x: 'A', y: value}],
             })),
         ),

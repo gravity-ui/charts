@@ -1,4 +1,4 @@
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import {
     DEFAULT_DATALABELS_STYLE,
@@ -39,8 +39,7 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
         const name = series.name || '';
         const color = series.color || colorScale(name);
         const opacity = series.opacity ?? seriesOptions?.['bar-x']?.opacity ?? 1;
-        const dataLabelsInside =
-            series.stacking === 'percent' ? true : get(series, 'dataLabels.inside', false);
+        const dataLabelsInside = series.stacking === 'percent';
         const yAxisIndex = get(series, 'yAxis', 0);
 
         return {

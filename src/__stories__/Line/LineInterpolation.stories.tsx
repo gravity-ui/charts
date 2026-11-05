@@ -2,8 +2,8 @@ import React from 'react';
 
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import set from 'es-toolkit/compat/set';
 
 import type {ChartData} from '../../types';
 import {ChartStory} from '../ChartStory';
@@ -53,21 +53,21 @@ const LineInterpolationComparison = () => {
     });
 
     return (
-        <Container spaceRow={5}>
-            <Row space={3}>
-                <Col s={12} m={4}>
+        <Container rowGap="spacing-5">
+            <Row gap="spacing-3">
+                <Col size={{xs: 12, m: 4}}>
                     <ChartStory data={linearData} />
                 </Col>
-                <Col s={12} m={4}>
+                <Col size={{xs: 12, m: 4}}>
                     <ChartStory data={monotoneData} />
                 </Col>
-                <Col s={12} m={4}>
+                <Col size={{xs: 12, m: 4}}>
                     <ChartStory data={cardinalData} />
                 </Col>
             </Row>
-            <Row space={3}>
+            <Row gap="spacing-3">
                 {stepData.map((data) => (
-                    <Col key={data.title?.text} s={12} m={4}>
+                    <Col key={data.title?.text} size={{xs: 12, m: 4}}>
                         <ChartStory data={data} />
                     </Col>
                 ))}

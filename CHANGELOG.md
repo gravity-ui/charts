@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.0.0](https://github.com/gravity-ui/charts/compare/v1.73.0...v2.0.0) (2026-11-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* build real CommonJS and strict ESM like uikit 8 ([#813](https://github.com/gravity-ui/charts/issues/813))
+* compile to ES2022 like uikit 8 ([#817](https://github.com/gravity-ui/charts/issues/817))
+* migrate deprecated config to isolated v1 adapter ([#812](https://github.com/gravity-ui/charts/issues/812))
+* migrate to @gravity-ui/uikit 8 and drop React 17 ([#800](https://github.com/gravity-ui/charts/issues/800))
+
+### Performance Improvements
+
+* replace lodash with es-toolkit ([#818](https://github.com/gravity-ui/charts/issues/818)) ([9c30a19](https://github.com/gravity-ui/charts/commit/9c30a19654d0545a5249ef38f847c374ec8643e3))
+* update @gravity-ui/icons to 2.23.1 ([#824](https://github.com/gravity-ui/charts/issues/824)) ([9c30a19](https://github.com/gravity-ui/charts/commit/9c30a19654d0545a5249ef38f847c374ec8643e3))
+
+## [1.73.0](https://github.com/gravity-ui/charts/compare/v1.72.0...v1.73.0) (2026-11-03)
+
+
+### Features
+
+* support per-point treemap opacity ([#823](https://github.com/gravity-ui/charts/issues/823)) ([7c2e570](https://github.com/gravity-ui/charts/commit/7c2e57038609c5fd224809cee157dbcfa66b7585))
+
 ## [1.72.0](https://github.com/gravity-ui/charts/compare/v1.71.0...v1.72.0) (2026-11-02)
 
 

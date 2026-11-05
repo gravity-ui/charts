@@ -15,6 +15,68 @@ test.describe('Treemap series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Point opacity', async ({mount, page}) => {
+        function createData(opacity?: number, inactiveOpacity = 0.2): ChartData {
+            return {
+                series: {
+                    data: [
+                        {
+                            type: 'treemap',
+                            name: 'Values',
+                            layoutAlgorithm: 'dice',
+                            data: [
+                                {id: 'hover-target', name: 'opacity: 1', value: 10, opacity: 1},
+                                {
+                                    id: 'updated-point',
+                                    name: `opacity: ${opacity}`,
+                                    value: 10,
+                                    opacity,
+                                },
+                                {
+                                    id: 'transparent-point',
+                                    name: 'opacity: 0',
+                                    value: 10,
+                                    opacity: 0,
+                                },
+                            ],
+                            dataLabels: {enabled: true, html: false},
+                        },
+                    ],
+                    options: {
+                        treemap: {
+                            states: {
+                                hover: {enabled: true, brightness: 0},
+                                inactive: {enabled: true, opacity: inactiveOpacity},
+                            },
+                        },
+                    },
+                },
+                legend: {enabled: false},
+                tooltip: {enabled: false},
+            };
+        }
+
+        const component = await mount(<ChartTestStory data={createData(0.5)} />);
+        const svg = component.locator('svg');
+
+        await expect(svg).toHaveScreenshot('point-opacity-initial.png');
+        await component.locator('rect[id="hover-target"]').hover({position: {x: 10, y: 10}});
+        await expect(svg).toHaveScreenshot('point-opacity-inactive.png');
+        await page.mouse.move(0, 0);
+        await expect(svg).toHaveScreenshot('point-opacity-initial.png');
+
+        await component.update(<ChartTestStory data={createData(0)} />);
+        await expect(svg).toHaveScreenshot('point-opacity-updated.png');
+        await component.update(<ChartTestStory data={createData()} />);
+        await expect(svg).toHaveScreenshot('point-opacity-removed.png');
+
+        await component.update(<ChartTestStory data={createData(0.5, 0)} />);
+        await component.locator('rect[id="hover-target"]').hover({position: {x: 10, y: 10}});
+        await expect(svg).toHaveScreenshot('point-opacity-inactive-zero.png');
+        await page.mouse.move(0, 0);
+        await expect(svg).toHaveScreenshot('point-opacity-initial.png');
+    });
+
     test('With special symbols', async ({mount}) => {
         const data: ChartData = {
             series: {

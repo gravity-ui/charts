@@ -392,7 +392,7 @@ describe('legend and domain updates', () => {
         async (type) => {
             const props = getProps({
                 legend: {enabled: false},
-                xAxis: {type, maxPadding: 0},
+                xAxis: {type, padding: {max: 0}},
                 series: {
                     data: [
                         {

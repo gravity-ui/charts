@@ -2,8 +2,8 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 import type {Page} from '@playwright/test';
-import cloneDeep from 'lodash/cloneDeep';
-import set from 'lodash/set';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import set from 'es-toolkit/compat/set';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {otherLineAndBarData} from '../__stories__/__data__/other/line-and-bar';
@@ -49,11 +49,11 @@ test.describe('Multiple types of series on same chart', () => {
                     },
                 ],
             },
-            yAxis: [{maxPadding: 0, visible: false}],
+            yAxis: [{padding: {max: 0}, visible: false}],
             xAxis: {
                 type: 'category',
                 categories: ['a', 'b', 'c'],
-                maxPadding: 0,
+                padding: {max: 0},
                 grid: {enabled: false},
             },
         };

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import isNil from 'lodash/isNil';
+import isNil from 'es-toolkit/compat/isNil';
 
 import type {
     ChartTooltip,

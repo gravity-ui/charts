@@ -57,7 +57,7 @@ function prepareData(): ChartData {
                     rotation: -90,
                 },
                 ticks: {
-                    pixelInterval: 120,
+                    interval: 120,
                 },
             },
         ],

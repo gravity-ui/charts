@@ -135,13 +135,6 @@ export interface BarXSeries<T = MeaningfulAny> extends BaseSeries {
         ChartSeriesOptions['dataLabels'] & {
             /** Formatting settings for labels. Percent stacks provide `percentage` to custom formatters. */
             format?: BarXValueFormat<T>;
-            /**
-             * Whether to align the data label inside or outside the box.
-             * Ignored when `placement` is set.
-             * @deprecated Use `placement` instead.
-             * @default false
-             */
-            inside?: boolean;
         };
     tooltip?: Omit<NonNullable<BaseSeries['tooltip']>, 'valueFormat'> & {
         /** Formatting settings for tooltip values. Percent stacks provide `percentage` to custom formatters. */

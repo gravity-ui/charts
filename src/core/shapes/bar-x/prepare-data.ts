@@ -1,7 +1,7 @@
 import {ascending, descending, max, min, reverse, sort} from 'd3-array';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
-import get from 'lodash/get';
+import get from 'es-toolkit/compat/get';
 
 import type {BarXSeriesData, HtmlItem, LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
@@ -81,7 +81,7 @@ async function getLabelData(
     if (d.series.dataLabels.html) {
         let y = Math.max(height, d.y - d.series.dataLabels.padding);
         if (d.series.dataLabels.inside) {
-            y = d.y + d.height / 2;
+            y = d.y + d.height / 2 + height / 2;
         }
         const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
         return {

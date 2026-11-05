@@ -53,21 +53,21 @@ const DatetimeStartOnTick = () => {
     });
 
     return (
-        <Container spaceRow={5}>
-            <Row space={1}>
+        <Container rowGap="spacing-5">
+            <Row gap="spacing-1">
                 <Text variant="subheader-2">Datetime axis: startOnTick and endOnTick</Text>
             </Row>
-            <Row space={1}>
+            <Row gap="spacing-1">
                 <Text variant="body-1" color="secondary">
                     Particularly useful for datetime axes where data may not start at midnight or
                     the first of the month.
                 </Text>
             </Row>
-            <Row space={4}>
-                <Col s={6}>
+            <Row gap="spacing-4">
+                <Col size={6}>
                     <ChartStory data={getWidgetData(true, true)} />
                 </Col>
-                <Col s={6}>
+                <Col size={6}>
                     <ChartStory data={getWidgetData(false, false)} />
                 </Col>
             </Row>

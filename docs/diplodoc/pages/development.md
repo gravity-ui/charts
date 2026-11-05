@@ -31,13 +31,20 @@ Storybook will be available at `http://localhost:7007`.
 npm test
 ```
 
+To check the built package, build it first. The check loads both the CommonJS and the ESM build in Node and compares their exports:
+
+```shell
+npm run build
+npm run test:build
+```
+
 Visual regression tests run in Docker to ensure consistent screenshots across environments:
 
 ```shell
 npm run playwright:docker
 ```
 
-In pull requests, the main visual suite runs in two parallel GitHub Actions shards with four workers each. The `Visual Tests` check merges their reports and fails if either shard fails. Performance tests run in a separate job; the React 17 and 19 release checks keep their existing configuration.
+In pull requests, the main visual suite runs in two parallel GitHub Actions shards with four workers each. The `Visual Tests` check merges their reports and fails if either shard fails. Performance tests run in a separate job; the React 19 release checks keep their existing configuration.
 
 To run one shard locally with the same browser selection as CI:
 

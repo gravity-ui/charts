@@ -24,7 +24,7 @@ const data: ChartData<{orders: number}> = {
                 type: 'bar-x',
                 name: 'Store A',
                 stacking: 'normal',
-                dataLabels: {enabled: true, inside: true},
+                dataLabels: {enabled: true, placement: ['inside-center']},
                 data: [
                     {x: 'Apples', y: 300, label: '12 orders', custom: {orders: 12}},
                     {x: 'Oranges', y: 200, label: '10 orders', custom: {orders: 10}},
@@ -34,7 +34,7 @@ const data: ChartData<{orders: number}> = {
                 type: 'bar-x',
                 name: 'Store B',
                 stacking: 'normal',
-                dataLabels: {enabled: true, inside: true},
+                dataLabels: {enabled: true, placement: ['inside-center']},
                 data: [
                     {x: 'Apples', y: 200, label: '8 orders', custom: {orders: 8}},
                     {x: 'Oranges', y: 150, label: '6 orders', custom: {orders: 6}},

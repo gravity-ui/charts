@@ -1,5 +1,4 @@
-import get from 'lodash/get';
-import merge from 'lodash/merge';
+import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {
@@ -13,6 +12,7 @@ import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
+import {merge} from '~core/utils/merge';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';

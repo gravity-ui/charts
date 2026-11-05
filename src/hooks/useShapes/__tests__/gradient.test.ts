@@ -39,7 +39,9 @@ const options = {
 };
 const categories = ['A', 'B', 'C', 'D', 'E'];
 const xAxis = {type: 'category', categories} as PreparedXAxis;
-const yAxis = [{type: 'linear', plotIndex: 0, min: 0, max: 5, maxPadding: 0}] as PreparedYAxis[];
+const yAxis = [
+    {type: 'linear', plotIndex: 0, min: 0, max: 5, padding: {max: 0}},
+] as PreparedYAxis[];
 
 function reference(
     series: PreparedSeries[],

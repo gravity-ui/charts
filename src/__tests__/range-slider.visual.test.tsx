@@ -1,8 +1,8 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
-import cloneDeep from 'lodash/cloneDeep';
-import merge from 'lodash/merge';
+import cloneDeep from 'es-toolkit/compat/cloneDeep';
+import merge from 'es-toolkit/compat/merge';
 
 import {DAY} from '~core/constants';
 
@@ -175,7 +175,7 @@ test.describe('Range slider', () => {
     test('maxPadding should not applied', async ({mount}) => {
         const data = getData({
             basicData: scatterLinearXAxisData,
-            extraData: {xAxis: {maxPadding: 0.2}},
+            extraData: {xAxis: {padding: {max: '20%'}}},
         });
         const component = await mount(<ChartTestStory data={data} />);
         await expect(component.locator('svg')).toHaveScreenshot();

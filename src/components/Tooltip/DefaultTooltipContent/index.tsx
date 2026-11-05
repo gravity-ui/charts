@@ -1,9 +1,10 @@
 import React from 'react';
 
 import {Divider} from '@gravity-ui/uikit';
+import get from 'es-toolkit/compat/get';
+import isEqual from 'es-toolkit/compat/isEqual';
+import toPath from 'es-toolkit/compat/toPath';
 import parse from 'html-react-parser';
-import get from 'lodash/get';
-import isEqual from 'lodash/isEqual';
 
 import {i18n} from '~core/i18n';
 import type {PluginTooltipRowCell} from '~core/series/plugin';
@@ -27,6 +28,25 @@ import {getHoveredValues, getMeasureValue, getPreparedAggregation} from './utils
 import type {HoveredValue} from './utils';
 
 const b = block('tooltip');
+
+// Parsed cell source paths, reused across points and renders. toPath parses them as lodash does:
+// compat's get skips empty segments in some strings, such as the last one in 'data.custom.'.
+// Like lodash's own path cache, it is cleared at 500 entries, so it does not grow with every
+// config a long-lived page renders.
+const MAX_SOURCE_PATHS = 500;
+const sourcePaths = new Map<string, string[]>();
+
+function getSourcePath(path: string) {
+    let parsed = sourcePaths.get(path);
+    if (!parsed) {
+        if (sourcePaths.size >= MAX_SOURCE_PATHS) {
+            sourcePaths.clear();
+        }
+        parsed = toPath(path);
+        sourcePaths.set(path, parsed);
+    }
+    return parsed;
+}
 
 interface Props {
     hovered: TooltipDataChunk[];
@@ -90,9 +110,9 @@ export const DefaultTooltipContent = ({
         }
 
         return (
-            get(tooltipDataChunk, cell.source) ??
-            get(tooltipDataChunk, 'data.' + cell.source) ??
-            get(tooltipDataChunk, 'series.' + cell.source)
+            get(tooltipDataChunk, getSourcePath(cell.source)) ??
+            get(tooltipDataChunk, getSourcePath('data.' + cell.source)) ??
+            get(tooltipDataChunk, getSourcePath('series.' + cell.source))
         );
     };
 

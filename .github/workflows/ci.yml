@@ -27,6 +27,8 @@ jobs:
         run: npm run typecheck
       - name: Build
         run: npm run build
+      - name: Check Build
+        run: npm run test:build
       - name: Size Limit
         run: npm run size
 

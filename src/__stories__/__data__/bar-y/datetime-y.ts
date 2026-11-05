@@ -1,4 +1,4 @@
-import range from 'lodash/range';
+import range from 'es-toolkit/compat/range';
 
 import type {ChartData} from '../../../types';
 
@@ -22,7 +22,7 @@ function prepareData(): ChartData {
         yAxis: [
             {
                 type: 'datetime',
-                maxPadding: 0,
+                padding: {max: 0},
             },
         ],
     };
