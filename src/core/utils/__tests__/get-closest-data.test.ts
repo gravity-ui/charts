@@ -461,6 +461,8 @@ describe('getClosestPoints geometry', () => {
         const scatterId = scatter[0].point.series.id;
         const points: PixelPoint[] = [
             [100, 300],
+            [100, 300],
+            [200, 300],
             [200, 300],
         ];
         const butt = await prepareLine(points, {lineWidth: 20, linecap: 'butt', interpolation});

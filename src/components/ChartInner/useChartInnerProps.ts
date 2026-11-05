@@ -330,7 +330,7 @@ export function useChartInnerProps(props: Props) {
                 effectiveZoomState.y = zoomState.y;
             }
 
-            const {preparedSeries, preparedShapesSeries} = getZoomedSeriesData({
+            const {preparedSeries, preparedShapesSeries, preparedAxisSeries} = getZoomedSeriesData({
                 seriesData: visiblePreparedSeries,
                 xAxis: normalizedXAxis,
                 yAxis: normalizedYAxis,
@@ -358,13 +358,7 @@ export function useChartInnerProps(props: Props) {
                 preparedChart,
                 legendConfig,
                 preparedLegend,
-                // A series without samples in the viewport can still have a crossing segment.
-                // Its retained anchors keep the axis domains from collapsing to other series.
-                preparedSeries: preparedSeries.map((series, index) =>
-                    Array.isArray(series.data) && series.data.length === 0
-                        ? preparedShapesSeries[index]
-                        : series,
-                ),
+                preparedSeries: preparedAxisSeries,
                 preparedSeriesOptions,
                 width,
                 xAxis: normalizedXAxis,
@@ -580,8 +574,11 @@ export function useChartInnerProps(props: Props) {
 
     const handleAttemptToSetZoomState = React.useCallback(
         (nextZoomState: Partial<ZoomState>) => {
-            const {preparedSeries: nextZoomedSeriesData} = getZoomedSeriesData({
-                seriesData: chartState?.preparedSeries ?? [],
+            const {preparedShapesSeries: nextZoomedSeriesData} = getZoomedSeriesData({
+                seriesData: getVisibleSeries({
+                    preparedSeries: chartState?.allPreparedSeries ?? [],
+                    activeLegendItems,
+                }),
                 xAxis,
                 yAxis,
                 zoomState: nextZoomState,
@@ -593,7 +590,7 @@ export function useChartInnerProps(props: Props) {
                 updateZoomState(nextZoomState);
             }
         },
-        [chartState?.preparedSeries, updateZoomState, xAxis, yAxis],
+        [chartState?.allPreparedSeries, activeLegendItems, updateZoomState, xAxis, yAxis],
     );
 
     useZoom({

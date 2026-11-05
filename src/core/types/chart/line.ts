@@ -76,7 +76,7 @@ export type LineSeriesInterpolation =
            * - `'middle'`: Change Y halfway between x1 and x2.
            * - `'before'`: Change Y at x1, then continue horizontally.
            * - `'after'`: Continue horizontally at y1 until x2, then change Y.
-           * @default 'middle'
+           * @default 'after'
            */
           position?: 'middle' | 'before' | 'after';
       };
@@ -153,7 +153,7 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
      * - `'linear'`: Straight line segments (default behavior)
      * - `'monotone'`: Smooth curve for data ordered monotonically by x that passes through every data point without introducing artificial extrema
      * - `'cardinal'`: Cardinal spline with optional `tension` parameter (0–1, default 0)
-     * - `'step'`: Horizontal and vertical segments with optional `position` (`'middle'` by default)
+     * - `'step'`: Horizontal and vertical segments with optional `position` (`'after'` by default)
      *
      * Markers and tooltip values remain attached to original data points.
      * Line interactions and automatic data-label placement follow the interpolated geometry.

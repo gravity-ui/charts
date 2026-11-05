@@ -388,11 +388,12 @@ describe('legend and domain updates', () => {
     });
 
     test.each(['linear', 'datetime'] as const)(
-        'retained anchors keep %s axis domains when a line has no samples inside the zoom',
+        'uses the visible line values for %s axis domains throughout an X zoom',
         async (type) => {
             const props = getProps({
                 legend: {enabled: false},
                 xAxis: {type, padding: {max: 0}},
+                yAxis: [{startOnTick: false, endOnTick: false, padding: {min: 0, max: 0}}],
                 series: {
                     data: [
                         {
@@ -408,15 +409,25 @@ describe('legend and domain updates', () => {
                     ],
                 },
             });
-            const {result} = renderHook(useChartInnerProps, {
+            const {result, rerender} = renderHook(useChartInnerProps, {
                 initialProps: {...props, zoomState: {x: [2, 4] as [number, number]}},
             });
             await waitFor(() => expect(result.current.shapesReady).toBe(true));
             expect(result.current.preparedSeries[0].data).toEqual([]);
             expect(result.current.xScale?.domain().map(Number)).toEqual([2, 4]);
             const yDomain = result.current.yScale?.[0]?.domain().map(Number) ?? [];
-            expect(Math.min(...yDomain)).toBeLessThanOrEqual(20);
-            expect(Math.max(...yDomain)).toBeGreaterThanOrEqual(80);
+            expect(yDomain).toEqual([20, 50]);
+            for (const range of [
+                [type === 'datetime' ? 0 : -1, 4],
+                [2, 10],
+            ] as [number, number][]) {
+                const previousShapes = result.current.shapesData;
+                rerender({...props, zoomState: {x: range}});
+                await waitFor(() => expect(result.current.shapesData).not.toBe(previousShapes));
+                expect(result.current.yScale?.[0]?.domain().map(Number)).toEqual(
+                    range[1] === 10 ? [20, 80] : [20, 50],
+                );
+            }
         },
     );
 

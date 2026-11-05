@@ -20,10 +20,10 @@ export function getCurveFactory(interpolation?: LineSeriesInterpolation): CurveF
             switch (interpolation.position) {
                 case 'before':
                     return curveStepBefore;
-                case 'after':
-                    return curveStepAfter;
-                default:
+                case 'middle':
                     return curveStep;
+                default:
+                    return curveStepAfter;
             }
         default:
             return curveLinear;

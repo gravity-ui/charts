@@ -383,6 +383,8 @@ export type PreparedLineSeries = {
     /** Full-series paint references, shared across filtered copies. */
     gradientState?: SeriesGradientState;
     data: LineSeriesData[];
+    /** Visible line vertices used only for the Y domain during X zoom. */
+    axisDomainData?: LineSeriesData[];
     lineWidth: number;
     dataLabels: {
         enabled: boolean;

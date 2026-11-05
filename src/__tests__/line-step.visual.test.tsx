@@ -121,7 +121,6 @@ test.describe('Step interpolation', () => {
                             {x: 10, y: 80},
                         ],
                     },
-                    {type: 'scatter', name: 'Reference', data: [{x: 3, y: 50}]},
                 ],
             },
             xAxis: {min: 0, max: 10},
@@ -165,6 +164,85 @@ test.describe('Step interpolation', () => {
             });
         }, plot);
         expect(onPlateau).toBe(true);
+
+        const zoomedPath = (await path.getAttribute('d')) ?? '';
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-chart__content .gcharts-brush .overlay',
+            getDragOptions: ({boundingBox}) => ({
+                from: [
+                    boundingBox.x + boundingBox.width * 0.3,
+                    boundingBox.y + boundingBox.height / 2,
+                ],
+                to: [
+                    boundingBox.x + boundingBox.width * 0.7,
+                    boundingBox.y + boundingBox.height / 2,
+                ],
+            }),
+        });
+        await expect(path).not.toHaveAttribute('d', zoomedPath);
+        await expect(path).toHaveAttribute('d', /M/);
+    });
+
+    test('keeps the plateau with automatic Y bounds when zoom includes the next change', async ({
+        mount,
+        page,
+    }) => {
+        const data: ChartData = {
+            chart: {zoom: {enabled: true, type: 'x'}},
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Price',
+                        interpolation: {type: 'step'},
+                        lineWidth: 2,
+                        data: [
+                            {x: 0, y: 20},
+                            {x: 10, y: 80},
+                        ],
+                    },
+                    {type: 'scatter', name: 'Reference', data: [{x: 3, y: 50}]},
+                ],
+            },
+            xAxis: {min: 0, max: 10},
+        };
+        const component = await mount(
+            <ChartTestStory data={data} styles={{width: 640, height: 360}} />,
+        );
+        const path = component.locator('.gcharts-line > path');
+        await expect(path).toHaveAttribute('d', /M/);
+        const initialPath = await path.getAttribute('d');
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-chart__content .gcharts-brush .overlay',
+            getDragOptions: ({boundingBox}) => ({
+                from: [
+                    boundingBox.x + boundingBox.width * 0.2,
+                    boundingBox.y + boundingBox.height / 2,
+                ],
+                to: [boundingBox.x + boundingBox.width, boundingBox.y + boundingBox.height / 2],
+            }),
+        });
+        await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+        await expect(path).not.toHaveAttribute('d', initialPath ?? '');
+        const plot = await getLocatorBoundingBox(
+            component.locator('.gcharts-chart__content .gcharts-brush .overlay'),
+        );
+        const plateau = await path.evaluate((node) => {
+            const line = node as SVGPathElement;
+            const matrix = line.getScreenCTM();
+            if (!matrix) throw new Error('Line transform is unavailable');
+            const start = line.getPointAtLength(0).matrixTransform(matrix);
+            return {y: start.y};
+        });
+        expect(plateau.y).toBeGreaterThanOrEqual(plot.y);
+        expect(plateau.y).toBeLessThanOrEqual(plot.y + plot.height);
+        await page.mouse.move(0, 0);
+        await expect(component.locator('.gcharts-chart > svg')).toHaveScreenshot();
     });
 
     test('clicks the step and keeps tooltip values at original points', async ({mount, page}) => {

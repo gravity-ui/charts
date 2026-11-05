@@ -67,7 +67,7 @@ describe('chart config artifacts', () => {
         );
         expect(step.properties.position).toMatchObject({
             enum: ['middle', 'before', 'after'],
-            default: 'middle',
+            default: 'after',
             enumDescriptions: [
                 'Change Y halfway between x1 and x2.',
                 'Change Y at x1, then continue horizontally.',

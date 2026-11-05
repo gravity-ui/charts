@@ -67,7 +67,7 @@ function isPreparedZoomableSeries(series: PreparedSeries): series is PreparedZoo
     return Array.isArray(series.data);
 }
 
-function spansXRange(
+function spansRange(
     from: number | string | null | undefined,
     to: number | string | null | undefined,
     [min, max]: [number, number],
@@ -89,11 +89,16 @@ export function getZoomedSeriesData(args: {
     const {seriesData, xAxis, yAxis, zoomState} = args;
 
     if (Object.keys(zoomState).length <= 0) {
-        return {preparedSeries: seriesData, preparedShapesSeries: seriesData};
+        return {
+            preparedSeries: seriesData,
+            preparedShapesSeries: seriesData,
+            preparedAxisSeries: seriesData,
+        };
     }
 
     const zoomedSeriesData: PreparedSeries[] = [];
     const zoomedShapesSeriesData: PreparedSeries[] = [];
+    const zoomedAxisSeriesData: PreparedSeries[] = [];
 
     seriesData.forEach((seriesItem) => {
         const zoomOptions = getSeriesPlugin(seriesItem.type).zoom;
@@ -125,6 +130,8 @@ export function getZoomedSeriesData(args: {
             isStacked && 'valueAxis' in seriesItem ? seriesItem.valueAxis : undefined;
         const skipXFilter = stackedValueAxis === 'x';
         const skipYFilter = stackedValueAxis === 'y';
+        const yAxisIndex = 'yAxis' in seriesItem ? (seriesItem.yAxis ?? 0) : 0;
+        const zoomStateY = zoomState.y?.[yAxisIndex];
 
         seriesItem.data.forEach((point, i) => {
             const prevPoint = seriesItem.data[i - 1];
@@ -162,12 +169,6 @@ export function getZoomedSeriesData(args: {
             }
 
             if (zoomState.y && !skipYFilter) {
-                const yAxisIndex =
-                    'yAxis' in seriesItem && typeof seriesItem.yAxis === 'number'
-                        ? seriesItem.yAxis
-                        : 0;
-                const zoomStateY = zoomState.y[yAxisIndex];
-
                 if (zoomStateY) {
                     const [yMin, yMax] = zoomStateY;
                     const y = 'y' in point ? (point.y ?? undefined) : undefined;
@@ -199,11 +200,18 @@ export function getZoomedSeriesData(args: {
                 } else if (prevPointInRange) {
                     appendShapePoint(i);
                 } else if (
-                    zoomState.x &&
                     prevPoint &&
-                    'x' in prevPoint &&
-                    'x' in point &&
-                    spansXRange(prevPoint.x, point.x, zoomState.x)
+                    ((zoomState.x &&
+                        !skipXFilter &&
+                        'x' in prevPoint &&
+                        'x' in point &&
+                        spansRange(prevPoint.x, point.x, zoomState.x)) ||
+                        (zoomStateY &&
+                            !skipYFilter &&
+                            yAxis?.[yAxisIndex]?.type !== 'category' &&
+                            'y' in prevPoint &&
+                            'y' in point &&
+                            spansRange(prevPoint.y, point.y, zoomStateY)))
                 ) {
                     // Both anchors can be outside the viewport while their segment crosses it.
                     appendShapePoint(i - 1);
@@ -212,19 +220,34 @@ export function getZoomedSeriesData(args: {
             }
         });
 
-        zoomedSeriesData.push({
+        const zoomedSeries = {
             ...(seriesItem as Omit<PreparedSeries, 'data'>),
             data: filteredData,
-        } as PreparedSeries);
-        zoomedShapesSeriesData.push({
+        } as PreparedSeries;
+        const shapeSeries = {
             ...(seriesItem as Omit<PreparedSeries, 'data'>),
             data: filteredShapesData || filteredData,
-        } as PreparedSeries);
+        } as PreparedSeries;
+        const axisSeries = filteredData.length ? zoomedSeries : shapeSeries;
+        zoomedSeriesData.push(zoomedSeries);
+        zoomedShapesSeriesData.push(shapeSeries);
+        zoomedAxisSeriesData.push(
+            (zoomState.x && filteredShapesData
+                ? zoomOptions?.prepareAxisSeries?.({
+                      series: axisSeries,
+                      shapeSeries,
+                      xRange: zoomState.x,
+                      xAxis,
+                      yAxis: yAxis?.[yAxisIndex],
+                  })
+                : undefined) ?? axisSeries,
+        );
     });
 
     return {
         preparedSeries: zoomedSeriesData,
         preparedShapesSeries: zoomedShapesSeriesData,
+        preparedAxisSeries: zoomedAxisSeriesData,
     };
 }
 

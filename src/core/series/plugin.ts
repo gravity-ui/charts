@@ -101,8 +101,19 @@ export interface SeriesPluginZoomOptions<T extends ChartSeries = ChartSeries> {
     types: ZoomType[];
     /** Preferred direction when chart.zoom.type is omitted. */
     defaultType?: ZoomType;
-    /** Keep neighboring shape points during filtering on continuous X axes; ignored for category X axes. */
+    /** Keep neighboring and crossing shape points on continuous axes; ignored for category X axes. */
     preserveAdjacentPoints?: boolean;
+    /**
+     * Prepare axis-only series from samples and retained shape anchors.
+     * Keep derived values separate from points used for rendering, padding, and callbacks.
+     */
+    prepareAxisSeries?(args: {
+        series: PreparedSeries & {type: T['type']};
+        shapeSeries: PreparedSeries & {type: T['type']};
+        xRange: [number, number];
+        xAxis?: ChartXAxis | PreparedXAxis | null;
+        yAxis?: ChartYAxis | PreparedYAxis;
+    }): PreparedSeries;
     /** Overrides the scalar Y check, for example to test interval overlap. */
     isYInRange?(data: T['data'][number], range: [number, number]): boolean;
 }

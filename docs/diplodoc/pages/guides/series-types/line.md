@@ -57,9 +57,9 @@ Use stepped lines for values that stay constant between changes, such as prices 
 
 The `position` controls where Y changes between adjacent points:
 
-- `'middle'` (default): halfway between their X coordinates.
+- `'middle'`: halfway between their X coordinates.
 - `'before'`: at the first point's X coordinate.
-- `'after'`: at the next point's X coordinate.
+- `'after'` (default): at the next point's X coordinate.
 
 ## Colors
 

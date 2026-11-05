@@ -1,4 +1,8 @@
-import type {PreparedSeries} from '../../series';
+import {scaleOrdinal} from 'd3-scale';
+
+import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';
+import type {PreparedLegend, PreparedSeries} from '../../series';
+import {getAxisDomainValues} from '../../series/axis-domain';
 import type {AreaRangeSeriesData, ChartXAxis, ChartYAxis} from '../../types';
 import {getZoomedSeriesData} from '../zoom';
 
@@ -138,6 +142,60 @@ describe('zoom/getZoomedSeriesData', () => {
             zoomState: {x: [2, 4]},
         });
         expect(result.preparedShapesSeries[0].data).toEqual([]);
+    });
+
+    test.each([0, 1])('retains a crossing segment in Y-only zoom on axis %s', (yAxisIndex) => {
+        const data = [
+            {x: 0, y: 20},
+            {x: 10, y: 80},
+        ];
+        const result = getZoomedSeriesData({
+            seriesData: [{type: 'line', yAxis: yAxisIndex, data}] as PreparedSeries[],
+            xAxis: linearXAxis(),
+            yAxis: [linearYAxis(), linearYAxis()],
+            zoomState: {y: yAxisIndex === 0 ? [[30, 60]] : [undefined, [30, 60]]},
+        });
+        expect(result.preparedSeries[0].data).toEqual([]);
+        expect(result.preparedShapesSeries[0].data).toEqual(data);
+    });
+
+    test.each([null, undefined])('connects a segment across y=%s before X zoom filtering', (y) => {
+        const data = [
+            {x: -5, y: 5},
+            {x: 1, y},
+            {x: 20, y: 5},
+        ];
+        const series = prepareLineSeries({
+            series: [{type: 'line', name: 'Connected', nullMode: 'connect', data}],
+            colorScale: scaleOrdinal<string, string>().range(['#000']),
+            colors: [],
+            legend: {enabled: false} as PreparedLegend,
+        });
+        const result = getZoomedSeriesData({
+            seriesData: series,
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        expect(result.preparedSeries[0].data).toEqual([]);
+        expect(result.preparedShapesSeries[0].data).toEqual([data[0], data[2]]);
+        expect(data[1].y).toBe(y);
+    });
+
+    test('keeps the original X-domain and marker points when resolving the visible Y domain', () => {
+        const data = [
+            {x: 0, y: 20},
+            {x: 10, y: 80},
+        ];
+        const result = getZoomedSeriesData({
+            seriesData: [{type: 'line', interpolation: {type: 'step'}, data}] as PreparedSeries[],
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        expect(getAxisDomainValues(result.preparedAxisSeries, 'x')).toEqual([0, 10]);
+        expect(getAxisDomainValues(result.preparedAxisSeries, 'y')).toEqual([20]);
+        expect(result.preparedAxisSeries[0].data).toEqual(data);
+        expect(result.preparedShapesSeries[0].data).toEqual(data);
+        expect(result.preparedShapesSeries[0]).not.toHaveProperty('axisDomainData');
     });
 
     test.each(['line', 'area', 'area-range'] as const)(

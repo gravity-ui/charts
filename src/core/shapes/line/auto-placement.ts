@@ -1,5 +1,5 @@
 import type {CurveFactory} from 'd3-shape';
-import {line as lineGenerator} from 'd3-shape';
+import {curveLinear, line as lineGenerator} from 'd3-shape';
 
 import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '../../../types';
 import type {PreparedLineSeries} from '../../series/types';
@@ -181,9 +181,8 @@ class SegmentCollector {
 }
 
 /**
- * Segments of all visible lines in the layer. Without a curve factory these are the
- * chords between array-adjacent drawn points; with one, the line is drawn through the
- * curve exactly as the renderer does and flattened into segments.
+ * Segments of all visible lines in the layer, following the renderer's curve and
+ * defined-point predicate. Bézier curves are flattened into straight segments.
  */
 export function getLineSegments(
     data: Array<{curveFactory?: CurveFactory; lineWidth: number; points: PointData[]}>,
@@ -191,26 +190,16 @@ export function getLineSegments(
     const segments: PlacementSegment[] = [];
     for (const d of data) {
         const halfWidth = d.lineWidth / 2;
-        if (d.curveFactory) {
-            const collector = new SegmentCollector(halfWidth);
-            lineGenerator<PointData>()
-                .defined(isDrawnPoint)
-                .x((p) => p.x as number)
-                .y((p) => p.y as number)
-                .curve(d.curveFactory)
-                .context(collector as unknown as CanvasRenderingContext2D)(d.points);
-            // Pushed one by one: spreading tens of thousands of segments overflows the stack.
-            for (const segment of collector.segments) {
-                segments.push(segment);
-            }
-            continue;
-        }
-        for (let i = 1; i < d.points.length; i++) {
-            const p1 = d.points[i - 1];
-            const p2 = d.points[i];
-            if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
-                segments.push(makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth));
-            }
+        const collector = new SegmentCollector(halfWidth);
+        lineGenerator<PointData>()
+            .defined(isDrawnPoint)
+            .x((p) => p.x as number)
+            .y((p) => p.y as number)
+            .curve(d.curveFactory ?? curveLinear)
+            .context(collector as unknown as CanvasRenderingContext2D)(d.points);
+        // Pushed one by one: spreading tens of thousands of segments overflows the stack.
+        for (const segment of collector.segments) {
+            segments.push(segment);
         }
     }
 
