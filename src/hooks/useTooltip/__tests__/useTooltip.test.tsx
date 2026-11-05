@@ -5,7 +5,13 @@ import {act, renderHook} from '@testing-library/react';
 import type {PreparedSeries} from '~core/series/types';
 import {getDispatcher} from '~core/utils/dispatcher';
 
-import type {PointPosition, TooltipDataChunkBarY} from '../../../types';
+import type {
+    PointPosition,
+    TooltipDataChunk,
+    TooltipDataChunkBarY,
+    TooltipDataChunkLine,
+    TooltipDataChunkWaterfall,
+} from '../../../types';
 import type {PreparedTooltip} from '../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../useAxis/types';
 import {useTooltip} from '../index';
@@ -33,7 +39,7 @@ function setup() {
         {data: {x: 1, y: 1}, series: {type: 'bar-y', name: 'Series', data: []}},
     ];
     const pointerPosition: PointPosition = [10, 20];
-    const hover = (nextHovered = hovered) => {
+    const hover = (nextHovered: TooltipDataChunk[] = hovered) => {
         act(() =>
             dispatcher.call('hover-shape', undefined, nextHovered, pointerPosition, {
                 bands: [],
@@ -112,5 +118,33 @@ describe.each(['xAxis', 'yAxis'] as const)('hover state on %s updates', (axisKey
         const previousHovered = result.current.hovered;
         rerender(updateAxis(continuousAxes, {categories: ['C', 'D']}));
         expect(result.current.hovered).toBe(previousHovered);
+    });
+});
+
+describe('filtering of points with no value', () => {
+    it('drops a regular point with y: null but keeps waterfall totals with y: null or omitted y', () => {
+        const {hover, result} = setup();
+        const nullYPoint: TooltipDataChunkLine = {
+            data: {x: 1, y: null},
+            series: {type: 'line', id: 'line', name: 'Series'},
+        };
+        const totalWithNullY: TooltipDataChunkWaterfall = {
+            data: {x: 'Total', total: true, y: null},
+            series: {type: 'waterfall', name: 'Series', data: []},
+            subTotal: 70,
+        };
+        const totalWithOmittedY: TooltipDataChunkWaterfall = {
+            data: {x: 'Total', total: true},
+            series: {type: 'waterfall', name: 'Series', data: []},
+            subTotal: 70,
+        };
+        const nonTotalWithNullY: TooltipDataChunkWaterfall = {
+            data: {x: 'Point', y: null},
+            series: {type: 'waterfall', name: 'Series', data: []},
+        };
+
+        hover([nullYPoint, totalWithNullY, totalWithOmittedY, nonTotalWithNullY]);
+
+        expect(result.current.hovered).toEqual([totalWithNullY, totalWithOmittedY]);
     });
 });
