@@ -9,7 +9,9 @@ import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types
 import {
     filterOverlappingLabels,
     getHtmlLabelConstraintedPosition,
+    getLabelRect,
     getSvgLabelConstraintedPosition,
+    isLabelsOverlapping,
     isPointDataLabelEnabled,
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
@@ -17,24 +19,31 @@ import {getPositiveShare} from '../../utils/percentage';
 import {hasOutsideOnlyPlacement, placeRectLabel} from '../../utils/rect-label-placement';
 import {createLabelMeasurer} from '../../utils/text';
 import {getBarWidthBySeries} from '../bar-width';
+import type {LabelRect} from '../types';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 import {getBarYRect} from './utils';
 
-export async function prepareBarYData(args: {
-    boundsHeight: number;
-    boundsWidth: number;
+interface PrepareBarYGeometryArgs {
     series: PreparedBarYSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
-}): Promise<BarYShapesArgs> {
+}
+
+interface BarYPreparationItem {
+    shape: PreparedBarYData;
+    /** Allows outside labels at the end of each left- or right-extending stack branch. */
+    isStackEnd: boolean;
+    /** Screen direction from the segment's base toward its value along the value axis. */
+    valueAxisDirection: 'left' | 'right';
+}
+
+export function prepareBarYGeometry(args: PrepareBarYGeometryArgs): BarYPreparationItem[] {
     const {
-        boundsHeight,
-        boundsWidth,
         series,
         seriesOptions,
         xAxis,
@@ -49,14 +58,7 @@ export async function prepareBarYData(args: {
     const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
 
     if (!yLinearScale) {
-        return {
-            shapes: [],
-            labels: [],
-            htmlLabels: [],
-            markers: [],
-            getHoverMarkers: () => [],
-            annotations: [],
-        };
+        return [];
     }
 
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
@@ -92,14 +94,6 @@ export async function prepareBarYData(args: {
 
     const categoryDomain =
         yAxis[0].type === 'category' ? new Set((yScale as ScaleBand<string>).domain()) : undefined;
-    interface BarYPreparationItem {
-        shape: PreparedBarYData;
-        /** Allows outside labels at the end of each left- or right-extending stack branch. */
-        isStackEnd: boolean;
-        /** Screen direction from the segment's base toward its value along the value axis. */
-        valueAxisDirection: 'left' | 'right';
-    }
-
     const result: BarYPreparationItem[] = [];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         let center;
@@ -267,6 +261,16 @@ export async function prepareBarYData(args: {
         );
     }
 
+    return result;
+}
+
+export async function prepareBarYData(args: {
+    data: BarYPreparationItem[];
+    boundsWidth: number;
+    boundsHeight: number;
+    obstacles?: LabelRect[];
+}): Promise<BarYShapesArgs> {
+    const {data: result, boundsWidth, boundsHeight, obstacles} = args;
     let labels: LabelData[] = [];
     let htmlLabels: HtmlItem[] = [];
 
@@ -339,22 +343,43 @@ export async function prepareBarYData(args: {
                           hangingOffset,
                       });
             }
+
             if (dataLabels.html) {
-                htmlLabels.push({
+                const label = {
                     content,
                     size: {width, height},
                     style: dataLabels.style,
                     ...position,
-                });
+                };
+
+                if (
+                    !dataLabels.allowOverlap &&
+                    obstacles?.some((obstacle) => isLabelsOverlapping(label, obstacle))
+                ) {
+                    continue;
+                }
+
+                htmlLabels.push(label);
             } else {
-                labels.push({
+                const measuredSize = {width, height, hangingOffset};
+                const label: LabelData = {
                     size: dataLabels.placement ? {width, height, hangingOffset} : {width, height},
                     series: prepared.series,
                     style: dataLabels.style,
                     text: content,
                     textAnchor: 'start',
                     ...position,
-                });
+                };
+                const labelRect = getLabelRect({...label, size: measuredSize});
+
+                if (
+                    !dataLabels.allowOverlap &&
+                    obstacles?.some((obstacle) => isLabelsOverlapping(labelRect, obstacle))
+                ) {
+                    continue;
+                }
+
+                labels.push(label);
             }
         }
     }

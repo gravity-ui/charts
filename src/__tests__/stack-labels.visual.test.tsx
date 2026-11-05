@@ -1,7 +1,6 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
-import type {Locator} from '@playwright/test';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {getStackLabelsData} from '../__stories__/__data__/stack-labels';
@@ -10,14 +9,40 @@ import type {ChartData} from '../types';
 
 import {AreaStackLabelsGapsTestStory} from './components/AreaStackLabelsGapsTestStory';
 import {StackLabelsAggregationTestStory} from './components/StackLabelsAggregationTestStory';
+import {getLocatorBoundingBox, getOverlappingLabelPairs} from './utils';
 
 const labelSelector = '.gcharts-stack-labels__label';
 
-async function getBoundingBox(locator: Locator) {
-    const box = await locator.boundingBox();
-    if (!box) throw new Error('Expected a visible chart element');
-    return box;
-}
+const stackLabelPriorityCases = [
+    {
+        name: 'SVG: total hides a positive segment label',
+        html: false,
+        sign: 1,
+        totalAllowOverlap: false,
+        segmentAllowOverlap: false,
+    },
+    {
+        name: 'HTML: negative segment label may overlap the total',
+        html: true,
+        sign: -1,
+        totalAllowOverlap: false,
+        segmentAllowOverlap: true,
+    },
+    {
+        name: 'SVG: negative segment label and totals may overlap',
+        html: false,
+        sign: -1,
+        totalAllowOverlap: true,
+        segmentAllowOverlap: true,
+    },
+    {
+        name: 'HTML: total hides a negative segment label even when totals may overlap',
+        html: true,
+        sign: -1,
+        totalAllowOverlap: true,
+        segmentAllowOverlap: false,
+    },
+];
 
 function getBoundaryTestData(): ChartData {
     return {
@@ -167,8 +192,8 @@ test.describe('Stack labels', () => {
         );
         const label = component.locator(labelSelector);
         await expect(label).toHaveText('0.3');
-        const plot = await getBoundingBox(component.locator('svg'));
-        const box = await getBoundingBox(label);
+        const plot = await getLocatorBoundingBox(component.locator('svg'));
+        const box = await getLocatorBoundingBox(label);
         expect(box.x).toBeGreaterThanOrEqual(plot.x - 0.1);
         expect(box.y).toBeGreaterThanOrEqual(plot.y - 0.1);
         expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width + 0.1);
@@ -256,38 +281,104 @@ test.describe('Stack labels', () => {
         }
     }
 
-    test('the label of a small top segment takes priority over its total', async ({mount}) => {
-        for (const allowOverlap of [false, true]) {
+    for (const type of ['bar-x', 'bar-y'] as const) {
+        for (const {
+            name,
+            html,
+            sign,
+            totalAllowOverlap,
+            segmentAllowOverlap,
+        } of stackLabelPriorityCases) {
+            test(`${type}: ${name}`, async ({mount}) => {
+                const data = getBoundaryTestData();
+                const horizontal = type === 'bar-y';
+                data.xAxis = {
+                    visible: false,
+                    min: horizontal ? -30 : 0,
+                    max: horizontal ? 30 : 2,
+                };
+                data.yAxis = [
+                    {
+                        visible: false,
+                        min: horizontal ? 0 : -30,
+                        max: horizontal ? 2 : 30,
+                    },
+                ];
+                data.series.data = [20, 1].map((value) => ({
+                    type,
+                    name: String(value),
+                    stacking: 'normal',
+                    data: [
+                        {
+                            x: horizontal ? sign * value : 1,
+                            y: horizontal ? 1 : sign * value,
+                            label: 'segment',
+                        },
+                    ],
+                    stackLabels: {enabled: true, allowOverlap: totalAllowOverlap},
+                    dataLabels: {
+                        enabled: value === 1,
+                        html,
+                        allowOverlap: segmentAllowOverlap,
+                        placement: ['outside'],
+                        padding: 5,
+                    },
+                }));
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: 400, height: 200}} />,
+                );
+                const totalLabel = component.locator(labelSelector);
+                const pointLabel = component.getByText('segment', {exact: true});
+
+                for (const width of [400, 240]) {
+                    await component.update(
+                        <ChartTestStory data={data} styles={{width, height: 200}} />,
+                    );
+                    await expect(totalLabel).toHaveText(String(sign * 21));
+                    await expect(pointLabel).toHaveCount(segmentAllowOverlap ? 1 : 0);
+                    if (segmentAllowOverlap) {
+                        expect(
+                            await getOverlappingLabelPairs(totalLabel.or(pointLabel)),
+                        ).toHaveLength(1);
+                    }
+                }
+            });
+        }
+        test(`${type}: neighboring totals respect their own overlap setting`, async ({mount}) => {
+            const horizontal = type === 'bar-y';
             const data = getBoundaryTestData();
-            data.xAxis = {visible: false, min: 0, max: 2};
-            data.yAxis = [{visible: false, min: 0, max: 30}];
-            data.series.data = [20, 1].map((y) => ({
-                type: 'bar-x',
-                name: String(y),
-                stacking: 'normal',
-                data: [{x: 1, y}],
-                stackLabels: {enabled: true, allowOverlap},
-                dataLabels: {enabled: y === 1, padding: 5},
-            }));
+            data.xAxis = {visible: false, min: 0, max: horizontal ? 2000 : 2};
+            data.yAxis = [{visible: false, min: 0, max: horizontal ? 2 : 2000}];
+            data.series.data = [
+                {
+                    type,
+                    name: 'Totals',
+                    stacking: 'normal',
+                    data: [1, 1.01].map((category) => ({
+                        x: horizontal ? 1000 : category,
+                        y: horizontal ? category : 1000,
+                    })),
+                },
+            ];
+            data.series.options = {[type]: {stackLabels: {enabled: true}}};
             const component = await mount(
                 <ChartTestStory data={data} styles={{width: 400, height: 200}} />,
             );
-            const pointLabel = component.getByText('1', {exact: true});
-            await expect(pointLabel).toBeVisible();
-            await expect(component.locator(labelSelector)).toHaveCount(allowOverlap ? 1 : 0);
-            if (allowOverlap) {
-                const point = await getBoundingBox(pointLabel);
-                const total = await getBoundingBox(component.locator(labelSelector));
-                expect(Math.min(point.y + point.height, total.y + total.height)).toBeGreaterThan(
-                    Math.max(point.y, total.y),
-                );
-                expect(Math.min(point.x + point.width, total.x + total.width)).toBeGreaterThan(
-                    Math.max(point.x, total.x),
-                );
-            }
-            await component.unmount();
-        }
-    });
+            await expect(component.locator(labelSelector)).toHaveCount(1);
+
+            const overlappingData: ChartData = {
+                ...data,
+                series: {
+                    ...data.series,
+                    options: {[type]: {stackLabels: {enabled: true, allowOverlap: true}}},
+                },
+            };
+            await component.update(
+                <ChartTestStory data={overlappingData} styles={{width: 400, height: 200}} />,
+            );
+            await expect(component.locator(labelSelector)).toHaveCount(2);
+        });
+    }
 
     for (const borderWidth of [0, 2]) {
         test(`bar-y: percent totals at the plot edge with border ${borderWidth}`, async ({
@@ -311,8 +402,8 @@ test.describe('Stack labels', () => {
                 );
                 const label = component.locator(labelSelector);
                 await expect(label).toHaveText('30');
-                const plot = await getBoundingBox(component.locator('svg'));
-                const box = await getBoundingBox(label);
+                const plot = await getLocatorBoundingBox(component.locator('svg'));
+                const box = await getLocatorBoundingBox(label);
                 expect(box.x + box.width).toBeLessThanOrEqual(plot.x + plot.width + 0.1);
                 await component.unmount();
             }
@@ -341,9 +432,9 @@ test.describe('Stack labels', () => {
         );
         const labels = component.locator(labelSelector);
         await expect(labels).toHaveText(['30', '30']);
-        const plot = await getBoundingBox(component.locator('svg'));
+        const plot = await getLocatorBoundingBox(component.locator('svg'));
         for (const label of await labels.all()) {
-            const box = await getBoundingBox(label);
+            const box = await getLocatorBoundingBox(label);
             expect(box.y).toBeGreaterThanOrEqual(plot.y + (200 * 2) / 3 - 0.1);
         }
     });
@@ -380,10 +471,10 @@ test.describe('Stack labels', () => {
                     };
                 }),
             );
-        const positive = await getBoundingBox(
+        const positive = await getLocatorBoundingBox(
             component.locator(labelSelector).filter({hasText: '30'}),
         );
-        const negative = await getBoundingBox(
+        const negative = await getLocatorBoundingBox(
             component.locator(labelSelector).filter({hasText: '-40'}),
         );
         expect(positive.x + positive.width).toBeLessThan(
@@ -426,24 +517,9 @@ test.describe('Stack labels', () => {
                         .locator(labelSelector)
                         .or(component.getByText('point', {exact: true}));
                     await expect(labels).toHaveCount(allowOverlap ? 2 : 1);
-                    const boxes = await labels.evaluateAll((elements) =>
-                        elements.map((el) => {
-                            const box = el.getBoundingClientRect();
-                            return {
-                                left: box.left,
-                                right: box.right,
-                                top: box.top,
-                                bottom: box.bottom,
-                            };
-                        }),
+                    expect(await getOverlappingLabelPairs(labels)).toHaveLength(
+                        allowOverlap ? 1 : 0,
                     );
-                    const overlaps =
-                        boxes.length === 2 &&
-                        boxes[0].left < boxes[1].right &&
-                        boxes[1].left < boxes[0].right &&
-                        boxes[0].top < boxes[1].bottom &&
-                        boxes[1].top < boxes[0].bottom;
-                    expect(overlaps).toBe(allowOverlap);
                     await component.unmount();
                 }
             }

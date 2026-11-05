@@ -32,6 +32,27 @@ export function getStackLabelsData(
     };
 }
 
+export function getStackLabelsPriorityData(type: 'bar-x' | 'bar-y'): ChartData {
+    const horizontal = type === 'bar-y';
+    const categoryAxis = {type: 'category' as const, categories: ['A']};
+    const valueAxis = {min: 0, max: 30};
+
+    return {
+        xAxis: horizontal ? valueAxis : categoryAxis,
+        yAxis: [horizontal ? categoryAxis : valueAxis],
+        series: {
+            data: [20, 1].map((value) => ({
+                type,
+                name: value === 20 ? 'Desktop' : 'Mobile',
+                stacking: 'normal',
+                data: [horizontal ? {x: value, y: 0} : {x: 0, y: value}],
+                dataLabels: {enabled: true, placement: ['outside'], padding: 5},
+            })),
+            options: {[type]: {stackLabels: {enabled: true}}},
+        },
+    };
+}
+
 export function getStackLabelsAggregationData(type: 'bar-x' | 'bar-y' | 'area'): ChartData {
     const data = getStackLabelsData(type);
     const orders = [

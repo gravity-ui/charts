@@ -13,7 +13,7 @@ import {getDomainDataXBySeries, getDomainDataYBySeries} from '../../utils/common
 import {getClosestPoints} from '../../utils/get-closest-data';
 import {prepareBarXData} from '../bar-x/prepare-data';
 import {getBarXPaths} from '../bar-x/utils';
-import {prepareBarYData} from '../bar-y/prepare-data';
+import {prepareBarYGeometry} from '../bar-y/prepare-data';
 
 interface SeriesInput {
     value: number | null;
@@ -115,16 +115,16 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             const rawBefore = JSON.stringify(raw);
             const series = await prepareBarYSeries({...common, series: raw});
             domainValues = getDomainDataXBySeries(series);
-            const {shapes} = await prepareBarYData({
+            const prepared = prepareBarYGeometry({
                 series: series.filter((s) => s.visible),
                 seriesOptions,
                 xAxis: {type: 'linear'} as PreparedXAxis,
                 xScale: valueScale,
                 yAxis: [{type: 'category', categories}] as PreparedYAxis[],
                 yScale: [categoryScale],
-                boundsHeight: size,
-                boundsWidth: 400,
             });
+            const shapes = prepared.map((item) => item.shape);
+
             geometry = shapes.map((d) => ({
                 center: d.y + d.height / 2,
                 thickness: d.height,

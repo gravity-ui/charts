@@ -127,6 +127,37 @@ describe('bar-x stack label anchors', () => {
 });
 
 describe.each(plugins)('$type stack labels', (plugin) => {
+    test.each([false, true])(
+        'totals take priority over overlapping segment labels, point allowOverlap=%s',
+        async (allowOverlap) => {
+            jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async (text) => ({
+                width: text.length * 7,
+                height: 12,
+                hangingOffset: 2,
+            }));
+            const {result} = await prepare(
+                plugin,
+                [[20], [1]],
+                'normal',
+                {enabled: true},
+                [],
+                (series) =>
+                    series.forEach((item) => {
+                        item.dataLabels = {enabled: true, allowOverlap, inside: false, padding: 5};
+                    }),
+            );
+            expect(texts(result.labels)).toEqual(['21']);
+
+            const pointLabels =
+                plugin.type === 'bar-y'
+                    ? (result.renderData as BarYShapesArgs[]).flatMap((item) => item.labels)
+                    : (result.renderData as PreparedBarXData[]).flatMap((item) => item.svgLabels);
+            const nonOverlappingLabels = plugin.type === 'area' ? ['1'] : [];
+
+            expect(texts(pointLabels)).toEqual(allowOverlap ? ['1', '20'] : nonOverlappingLabels);
+        },
+    );
+
     test.each(['normal', 'percent'] as const)(
         'aggregates original custom data independently of geometry in %s stacks',
         async (stacking) => {

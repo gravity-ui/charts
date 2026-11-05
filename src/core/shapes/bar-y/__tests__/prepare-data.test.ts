@@ -8,12 +8,19 @@ import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import {seriesOptionsDefaults} from '../../../constants';
 import type {PreparedLegend} from '../../../series/types';
 import * as textUtils from '../../../utils/text';
-import {prepareBarYData} from '../prepare-data';
+import type {LabelRect} from '../../types';
+import {prepareBarYData, prepareBarYGeometry} from '../prepare-data';
+
+const defaultSvgLabelObstacleCases = [
+    {name: 'overlapping the visible top edge', y: 95, expectedCount: 0},
+    {name: 'below the visible bottom edge', y: 106, expectedCount: 1},
+];
 
 interface PrepareOptions {
     height?: number;
     reversed?: boolean;
     logarithmic?: boolean;
+    obstacles?: LabelRect[];
     series?: Pick<BarYSeries, 'barPadding' | 'borderWidth' | 'borderRadius' | 'dataLabels'>;
     seriesOptions?: ChartSeriesOptions['bar-y'];
 }
@@ -40,7 +47,7 @@ async function prepare(
         legend: {enabled: false} as PreparedLegend,
         seriesOptions: {'bar-y': options.seriesOptions},
     });
-    return prepareBarYData({
+    const geometry = prepareBarYGeometry({
         series,
         seriesOptions: {
             ...seriesOptionsDefaults,
@@ -52,8 +59,13 @@ async function prepare(
             .range(options.reversed ? [width, 0] : [0, width]),
         yAxis: [{type: 'category', categories: ['A']}] as PreparedYAxis[],
         yScale: [scaleBand().domain(['A']).range([0, height])],
+    });
+
+    return prepareBarYData({
+        data: geometry,
         boundsWidth: width,
         boundsHeight: height,
+        obstacles: options.obstacles,
     });
 }
 
@@ -66,6 +78,22 @@ describe('bar-y label placement', () => {
         }));
     });
     afterEach(() => jest.restoreAllMocks());
+
+    test.each(defaultSvgLabelObstacleCases)(
+        'checks a default SVG label against an obstacle $name',
+        async ({y, expectedCount}) => {
+            const obstacles: LabelRect[] = [{x: 85, y, size: {width: 40, height: 1}}];
+            const {labels} = await prepare([20], undefined, 400, {
+                series: {dataLabels: {enabled: true, padding: 5}},
+                obstacles,
+            });
+
+            expect(labels).toHaveLength(expectedCount);
+            if (expectedCount > 0) {
+                expect(labels[0].size).toEqual({width: 40, height: 10});
+            }
+        },
+    );
 
     test('places logarithmic labels at the value end', async () => {
         const {shapes, labels} = await prepare([100], undefined, 400, {
