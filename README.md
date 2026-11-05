@@ -1,6 +1,6 @@
 # Gravity UI Charts · [![npm package](https://img.shields.io/npm/v/@gravity-ui/charts)](https://www.npmjs.com/package/@gravity-ui/charts) [![License](https://img.shields.io/github/license/gravity-ui/charts)](LICENSE) [![CI](https://img.shields.io/github/actions/workflow/status/gravity-ui/charts/.github/workflows/ci.yml?label=CI&logo=github)](https://github.com/gravity-ui/charts/actions/workflows/ci.yml?query=branch:main) [![storybook](https://img.shields.io/badge/Storybook-deployed-ff4685)](https://preview.gravity-ui.com/charts/)
 
-Declarative React charting library for Gravity UI apps: line, area, bar, pie, scatter, treemap, sankey, heatmap, and more, rendered from a single data config.
+Declarative React charting library: line, area, bar, pie, scatter, treemap, sankey, heatmap, and more, rendered from a single data config.
 
 ## Install
 
@@ -69,7 +69,7 @@ Distributed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## For AI agents
 
-A declarative React charting library for Gravity UI apps — render line, area, bar, pie, scatter, treemap, sankey, heatmap, and other charts from a single `data` config, themed to match the rest of the app.
+A declarative React charting library — render line, area, bar, pie, scatter, treemap, sankey, heatmap, and other charts from a single `data` config, with built-in light and dark themes.
 
 ### When to use
 

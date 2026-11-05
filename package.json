@@ -1,7 +1,7 @@
 {
   "name": "@gravity-ui/charts",
   "version": "2.0.0",
-  "description": "Declarative React charting library for Gravity UI apps: line, area, bar, pie, scatter, treemap, sankey, heatmap, and more, rendered from a single data config",
+  "description": "Declarative React charting library: line, area, bar, pie, scatter, treemap, sankey, heatmap, and more, rendered from a single data config",
   "keywords": [
     "charts",
     "chart",
