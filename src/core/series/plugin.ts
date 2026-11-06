@@ -2,6 +2,7 @@ import type {Dispatch} from 'd3-dispatch';
 import type {ScaleOrdinal} from 'd3-scale';
 
 import type {
+    ChartAxisType,
     ChartInteractionItem,
     ChartSeries,
     ChartSeriesOptions,
@@ -44,10 +45,24 @@ export interface GetClipPathArgs {
 
 export type SeriesClipPath = 'bounds' | 'horizontal' | false;
 
+export interface DomainAxis {
+    type: ChartAxisType;
+    /** Active zoom/range-slider bounds; category bounds are indices into categories. */
+    range?: readonly [number, number];
+    categories?: readonly string[];
+}
+
+export interface DomainViewport {
+    x: DomainAxis;
+    y: DomainAxis;
+}
+
 export interface GetAxisDomainValuesArgs<TSeries> {
-    /** Series of this plugin for the current axis, in input order. */
+    /** This plugin's series for the current axis, including points retained for geometry. */
     series: readonly TSeries[];
     axis: 'x' | 'y';
+    /** Active window and coordinate systems. Undefined means no viewport filtering. */
+    viewport?: DomainViewport;
 }
 
 export interface PrepareSeriesArgs<T = ChartSeries> {
@@ -101,7 +116,7 @@ export interface SeriesPluginZoomOptions<T extends ChartSeries = ChartSeries> {
     types: ZoomType[];
     /** Preferred direction when chart.zoom.type is omitted. */
     defaultType?: ZoomType;
-    /** Keep neighboring shape points during filtering on continuous X axes; ignored for category X axes. */
+    /** Keep neighboring and crossing shape points on continuous axes; ignored for category X axes. */
     preserveAdjacentPoints?: boolean;
     /** Overrides the scalar Y check, for example to test interval overlap. */
     isYInRange?(data: T['data'][number], range: [number, number]): boolean;

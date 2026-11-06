@@ -8,6 +8,7 @@ import type {PreparedAxis} from '../axes/types';
 import {SERIES_TYPE} from '../constants';
 import type {PreparedSeries} from '../series';
 import {hasAxisBaseline} from '../series/axis-domain';
+import type {AxisDomainValue} from '../series/plugin';
 import {getDomainDataYBySeries, shouldSyncAxisWithPrimary} from '../utils';
 import {getBandSize} from '../utils/band-size';
 import {sumDecimals} from '../utils/math';
@@ -146,6 +147,7 @@ function getLogarithmicYMin(args: {
 }
 
 export function getDomainMinAlignedToStartTick(args: {
+    domainValues?: AxisDomainValue[];
     axis: PreparedAxis;
     range: [number, number];
     scale: ChartScaleLinear;
@@ -154,6 +156,7 @@ export function getDomainMinAlignedToStartTick(args: {
     const {axis, range, scale, series} = args;
     const [dMin, dMax] = scale.domain();
     const tickValues = getAutomaticTickValues({
+        domainValues: args.domainValues,
         axis,
         scale,
         labelLineHeight: axis.labels.lineHeight,
@@ -197,6 +200,7 @@ export function getDomainMinAlignedToStartTick(args: {
 }
 
 export function getDomainMaxAlignedToEndTick(args: {
+    domainValues?: AxisDomainValue[];
     axis: PreparedAxis;
     range: [number, number];
     scale: ChartScaleLinear;
@@ -205,6 +209,7 @@ export function getDomainMaxAlignedToEndTick(args: {
     const {axis, range, scale, series} = args;
     const [dMin, dMax] = scale.domain();
     const tickValues = getAutomaticTickValues({
+        domainValues: args.domainValues,
         axis,
         scale,
         labelLineHeight: axis.labels.lineHeight,
@@ -247,6 +252,7 @@ export function getDomainMaxAlignedToEndTick(args: {
 }
 
 export function createYScale(args: {
+    domainValues?: AxisDomainValue[];
     axis: PreparedAxis;
     boundsHeight: number;
     series: PreparedSeries[];
@@ -268,7 +274,7 @@ export function createYScale(args: {
     switch (axis.type) {
         case 'linear':
         case 'logarithmic': {
-            const domain = getDomainDataYBySeries(series);
+            const domain = args.domainValues ?? getDomainDataYBySeries(series);
             const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
             if (hasOnlyNullValues || domain.length === 0) {
@@ -394,13 +400,25 @@ export function createYScale(args: {
 
                 if (startOnTick && (!primaryAxis || !shouldBeSyncedWithPrimary)) {
                     const [_, dMax] = scale.domain();
-                    const dNewMin = getDomainMinAlignedToStartTick({axis, range, scale, series});
+                    const dNewMin = getDomainMinAlignedToStartTick({
+                        axis,
+                        range,
+                        scale,
+                        series,
+                        domainValues: args.domainValues,
+                    });
                     scale.domain([dNewMin, dMax]);
                 }
 
                 if (endOnTick && (!primaryAxis || !shouldBeSyncedWithPrimary)) {
                     const [dMin, _] = scale.domain();
-                    const dNewMax = getDomainMaxAlignedToEndTick({axis, range, scale, series});
+                    const dNewMax = getDomainMaxAlignedToEndTick({
+                        axis,
+                        range,
+                        scale,
+                        series,
+                        domainValues: args.domainValues,
+                    });
                     scale.domain([dMin, dNewMax]);
                 }
 
@@ -464,7 +482,7 @@ export function createYScale(args: {
                 }
                 return scale;
             } else {
-                const domain = getDomainDataYBySeries(series);
+                const domain = args.domainValues ?? getDomainDataYBySeries(series);
                 const {hasNumberAndNullValues, hasOnlyNullValues} = validateArrayData(domain);
 
                 if (hasOnlyNullValues || domain.length === 0) {

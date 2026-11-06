@@ -1,4 +1,8 @@
-import type {PreparedSeries} from '../../series';
+import {scaleOrdinal} from 'd3-scale';
+
+import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';
+import type {PreparedLegend, PreparedSeries} from '../../series';
+import {getAxisDomainValues} from '../../series/axis-domain';
 import type {AreaRangeSeriesData, ChartXAxis, ChartYAxis} from '../../types';
 import {getZoomedSeriesData} from '../zoom';
 
@@ -98,6 +102,111 @@ describe('zoom/getZoomedSeriesData', () => {
             expect(result.preparedShapesSeries[0].data).toEqual(data);
         },
     );
+
+    test.each(['line', 'area', 'area-range'] as const)(
+        '%s preserves a segment spanning an X range without samples',
+        (type) => {
+            const data = [-5, 0, 10, 20].map((x) => ({x, y: 5, y0: 1, y1: 5}));
+            const result = getZoomedSeriesData({
+                seriesData: [{type, data}] as unknown as PreparedSeries[],
+                xAxis: linearXAxis(),
+                zoomState: {x: [2, 4]},
+            });
+            expect(result.preparedSeries[0].data).toEqual([]);
+            expect(result.preparedShapesSeries[0].data).toEqual(data.slice(1, 3));
+        },
+    );
+
+    test('retains descending numeric-string neighbors without duplicating crossing points', () => {
+        const data = ['10', '0', '10'].map((x) => ({x, y: 5}));
+        const result = getZoomedSeriesData({
+            seriesData: [{type: 'line', data}] as unknown as PreparedSeries[],
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        expect(result.preparedShapesSeries[0].data).toEqual(data);
+    });
+
+    test('does not retain a segment entirely outside the X range', () => {
+        const result = getZoomedSeriesData({
+            seriesData: [
+                {
+                    type: 'line',
+                    data: [
+                        {x: -5, y: 5},
+                        {x: 0, y: 5},
+                    ],
+                },
+            ] as PreparedSeries[],
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        expect(result.preparedShapesSeries[0].data).toEqual([]);
+    });
+
+    test.each([0, 1])('retains a crossing segment in Y-only zoom on axis %s', (yAxisIndex) => {
+        const data = [
+            {x: 0, y: 20},
+            {x: 10, y: 80},
+        ];
+        const result = getZoomedSeriesData({
+            seriesData: [{type: 'line', yAxis: yAxisIndex, data}] as PreparedSeries[],
+            xAxis: linearXAxis(),
+            yAxis: [linearYAxis(), linearYAxis()],
+            zoomState: {y: yAxisIndex === 0 ? [[30, 60]] : [undefined, [30, 60]]},
+        });
+        expect(result.preparedSeries[0].data).toEqual([]);
+        expect(result.preparedShapesSeries[0].data).toEqual(data);
+    });
+
+    test.each([null, undefined])('connects a segment across y=%s before X zoom filtering', (y) => {
+        const data = [
+            {x: -5, y: 5},
+            {x: 1, y},
+            {x: 20, y: 5},
+        ];
+        const series = prepareLineSeries({
+            series: [{type: 'line', name: 'Connected', nullMode: 'connect', data}],
+            colorScale: scaleOrdinal<string, string>().range(['#000']),
+            colors: [],
+            legend: {enabled: false} as PreparedLegend,
+        });
+        const result = getZoomedSeriesData({
+            seriesData: series,
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        expect(result.preparedSeries[0].data).toEqual([]);
+        expect(result.preparedShapesSeries[0].data).toEqual([data[0], data[2]]);
+        expect(data[1].y).toBe(y);
+    });
+
+    test('keeps the original X-domain and marker points when resolving the visible Y domain', () => {
+        const data = [
+            {x: 0, y: 20},
+            {x: 10, y: 80},
+        ];
+        const prepared = prepareLineSeries({
+            series: [{type: 'line', name: 'Price', interpolation: {type: 'step'}, data}],
+            colorScale: scaleOrdinal<string, string>().range(['#000']),
+            colors: [],
+            legend: {enabled: false} as PreparedLegend,
+        });
+        const result = getZoomedSeriesData({
+            seriesData: prepared,
+            xAxis: linearXAxis(),
+            zoomState: {x: [2, 4]},
+        });
+        const viewport = {
+            x: {type: 'linear' as const, range: [2, 4] as const},
+            y: {type: 'linear' as const},
+        };
+        expect(getAxisDomainValues(result.preparedShapesSeries, 'x', {viewport})).toEqual([0, 10]);
+        expect(getAxisDomainValues(result.preparedShapesSeries, 'y', {viewport})).toEqual([20]);
+        expect(getAxisDomainValues(result.preparedShapesSeries, 'y')).toEqual([20, 80]);
+        expect(result.preparedShapesSeries[0].data).toEqual(data);
+        expect(prepared[0].data).toBe(data);
+    });
 
     test.each(['line', 'area', 'area-range'] as const)(
         '%s does not preserve neighbors on a category X axis',

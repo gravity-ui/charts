@@ -45,6 +45,13 @@ const LineInterpolationComparison = () => {
     set(cardinalData, 'title', {text: 'Cardinal (tension 0.5)'});
     set(cardinalData, 'series.data[0].interpolation', {type: 'cardinal', tension: 0.5});
 
+    const stepData = ['middle', 'before', 'after'].map((position) => {
+        const data: ChartData = cloneDeep(baseData);
+        set(data, 'title', {text: `Step (${position})`});
+        set(data, 'series.data[0].interpolation', {type: 'step', position});
+        return data;
+    });
+
     return (
         <Container rowGap="spacing-5">
             <Row gap="spacing-3">
@@ -57,6 +64,13 @@ const LineInterpolationComparison = () => {
                 <Col size={{xs: 12, m: 4}}>
                     <ChartStory data={cardinalData} />
                 </Col>
+            </Row>
+            <Row gap="spacing-3">
+                {stepData.map((data) => (
+                    <Col key={data.title?.text} size={{xs: 12, m: 4}}>
+                        <ChartStory data={data} />
+                    </Col>
+                ))}
             </Row>
         </Container>
     );

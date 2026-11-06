@@ -41,6 +41,59 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
+    test('step interpolation is available only on line series', () => {
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'line-step-usage.ts'),
+                declaration +
+                    `
+                const series: LineSeries = {type: 'line', name: 'Price', data: [], interpolation: {type: 'step'}};
+                series.interpolation = {type: 'step', position: 'middle'};
+                series.interpolation = {type: 'step', position: 'before'};
+                series.interpolation = {type: 'step', position: 'after'};
+                // @ts-expect-error Unknown step position.
+                series.interpolation = {type: 'step', position: 'start'};
+                // @ts-expect-error Step position belongs to step interpolation.
+                series.interpolation = {type: 'linear', position: 'after'};
+                // @ts-expect-error Area interpolation is not supported.
+                const area: AreaSeries = {type: 'area', name: 'Price', data: [], interpolation: {type: 'step'}};
+                void [series, area];
+            `,
+            ),
+        ).not.toThrow();
+
+        const step = schema.definitions.LineSeriesInterpolation.anyOf.find(
+            (option) => option.properties.type.const === 'step',
+        );
+        expect(step.properties.position).toMatchObject({
+            enum: ['middle', 'before', 'after'],
+            default: 'after',
+            enumDescriptions: [
+                'Change Y halfway between x1 and x2.',
+                'Change Y at x1, then continue horizontally.',
+                'Continue horizontally at y1 until x2, then change Y.',
+            ],
+        });
+
+        const validate = createSchemaValidator().compile(schema);
+        for (const position of [undefined, 'middle', 'before', 'after', 'start', null, 0, {}]) {
+            expect(
+                validate({
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Price',
+                                data: [],
+                                interpolation: {type: 'step', position},
+                            },
+                        ],
+                    },
+                }),
+            ).toBe(position === undefined || ['middle', 'before', 'after'].includes(position));
+        }
+    });
+
     test('v2 removes only aliases with a verified v1 adapter', () => {
         expect(() =>
             validateDeclaration(

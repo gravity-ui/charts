@@ -1,4 +1,5 @@
 import {i18n} from '~core/i18n';
+import {getDomainPoints} from '~core/series/domain-points';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -21,11 +22,15 @@ import {
 } from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaRangeSeries, TooltipDataChunkAreaRange} from '../../types';
+import type {AreaRangeSeries, AreaRangeSeriesData, TooltipDataChunkAreaRange} from '../../types';
 
 import {getAreaRangeAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
+
+function isYInRange({y0, y1}: AreaRangeSeriesData, [min, max]: readonly [number, number]) {
+    return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
+}
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
     type: 'area-range',
@@ -34,16 +39,16 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
         preserveAdjacentPoints: true,
-        isYInRange: ({y0, y1}, [min, max]) => y0 !== null && y1 !== null && y0 <= max && y1 >= min,
+        isYInRange,
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
     prepareSeries: prepareAreaRangeSeries,
-    getAxisDomainValues: ({series, axis}) => {
+    getAxisDomainValues: ({series, axis, viewport}) => {
         if (axis === 'x') {
             return undefined;
         }
         return series.flatMap((item) =>
-            item.data.flatMap((point) =>
+            getDomainPoints(item.data, viewport, {isYInRange}).flatMap((point) =>
                 point.y0 === null || point.y1 === null ? [] : [point.y0, point.y1],
             ),
         );

@@ -15,6 +15,7 @@ import {
 } from '../constants';
 import type {ChartScale} from '../scales/types';
 import {createYScale} from '../scales/y-scale';
+import type {AxisDomainValue} from '../series/plugin';
 import type {PreparedSeries} from '../series/types';
 import {
     calculateNumericProperty,
@@ -36,6 +37,7 @@ export const getYAxisLabelMaxWidth = async (args: {
     axis: PreparedYAxis;
     seriesData: PreparedSeries[];
     scale?: ChartScale;
+    domainValues?: AxisDomainValue[];
 }) => {
     const {axis, scale, seriesData} = args;
 
@@ -45,7 +47,13 @@ export const getYAxisLabelMaxWidth = async (args: {
 
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
-    const tickValues = getTickValues({axis, scale, labelLineHeight, series: seriesData});
+    const tickValues = getTickValues({
+        axis,
+        scale,
+        labelLineHeight,
+        series: seriesData,
+        domainValues: args.domainValues,
+    });
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
 
     if (axis.type === 'datetime' && !axis.labels.dateFormat) {
@@ -91,12 +99,14 @@ function getAxisTitleRotation(
 }
 
 export const getPreparedYAxis = ({
+    domainValues,
     height,
     boundsHeight,
     width,
     seriesData,
     yAxis,
 }: {
+    domainValues?: AxisDomainValue[][];
     height: number;
     boundsHeight: number;
     width: number;
@@ -311,11 +321,13 @@ export const getPreparedYAxis = ({
 
             if (labelsEnabled) {
                 const scale = createYScale({
+                    domainValues: domainValues?.[axisIndex],
                     axis: preparedAxis,
                     boundsHeight,
                     series: axisSeriesData,
                 });
                 const {height: labelsHeight, width: labelsWidth} = await getYAxisLabelMaxWidth({
+                    domainValues: domainValues?.[axisIndex],
                     axis: preparedAxis,
                     seriesData: axisSeriesData,
                     scale,

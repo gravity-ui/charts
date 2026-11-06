@@ -1,5 +1,5 @@
 import type {CurveFactory} from 'd3-shape';
-import {line as lineGenerator} from 'd3-shape';
+import {curveLinear, line as lineGenerator} from 'd3-shape';
 
 import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '../../../types';
 import type {PreparedLineSeries} from '../../series/types';
@@ -122,6 +122,7 @@ const CURVE_STEPS = 8;
 class SegmentCollector {
     readonly segments: PlacementSegment[] = [];
     private readonly halfWidth: number;
+    private runStart = 0;
     private x = 0;
     private y = 0;
 
@@ -130,11 +131,22 @@ class SegmentCollector {
     }
 
     moveTo(x: number, y: number) {
+        this.runStart = this.segments.length;
         this.x = x;
         this.y = y;
     }
 
     lineTo(x: number, y: number) {
+        // Repeated vertices must not turn an endpoint cap into an internal round join.
+        // Keep one zero-length segment only when the whole run is coincident.
+        if (this.x === x && this.y === y) {
+            if (this.segments.length > this.runStart) return;
+        } else if (this.segments.length === this.runStart + 1) {
+            const first = this.segments[this.runStart];
+            if (first.x1 === first.x2 && first.y1 === first.y2) {
+                this.segments.pop();
+            }
+        }
         this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
         this.x = x;
         this.y = y;
@@ -169,9 +181,8 @@ class SegmentCollector {
 }
 
 /**
- * Segments of all visible lines in the layer. Without a curve factory these are the
- * chords between array-adjacent drawn points; with one, the line is drawn through the
- * curve exactly as the renderer does and flattened into segments.
+ * Segments of all visible lines in the layer, following the renderer's curve and
+ * defined-point predicate. Bézier curves are flattened into straight segments.
  */
 export function getLineSegments(
     data: Array<{curveFactory?: CurveFactory; lineWidth: number; points: PointData[]}>,
@@ -179,26 +190,16 @@ export function getLineSegments(
     const segments: PlacementSegment[] = [];
     for (const d of data) {
         const halfWidth = d.lineWidth / 2;
-        if (d.curveFactory) {
-            const collector = new SegmentCollector(halfWidth);
-            lineGenerator<PointData>()
-                .defined(isDrawnPoint)
-                .x((p) => p.x as number)
-                .y((p) => p.y as number)
-                .curve(d.curveFactory)
-                .context(collector as unknown as CanvasRenderingContext2D)(d.points);
-            // Pushed one by one: spreading tens of thousands of segments overflows the stack.
-            for (const segment of collector.segments) {
-                segments.push(segment);
-            }
-            continue;
-        }
-        for (let i = 1; i < d.points.length; i++) {
-            const p1 = d.points[i - 1];
-            const p2 = d.points[i];
-            if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
-                segments.push(makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth));
-            }
+        const collector = new SegmentCollector(halfWidth);
+        lineGenerator<PointData>()
+            .defined(isDrawnPoint)
+            .x((p) => p.x as number)
+            .y((p) => p.y as number)
+            .curve(d.curveFactory ?? curveLinear)
+            .context(collector as unknown as CanvasRenderingContext2D)(d.points);
+        // Pushed one by one: spreading tens of thousands of segments overflows the stack.
+        for (const segment of collector.segments) {
+            segments.push(segment);
         }
     }
 

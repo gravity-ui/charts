@@ -14,6 +14,7 @@ import {getDomainDataXBySeries, getEffectiveXRange} from '../utils';
 import {getBandSize} from '../utils/band-size';
 
 import {getDomainPadding, getPaddedDomain} from './axis-padding-options';
+import {getDatetimeDomain} from './datetime-domain';
 import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
@@ -213,20 +214,12 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
-                const isPointDomain = checkIsPointDomain([xMinTimestamp, xMaxTimestamp]);
-                const xMin =
-                    typeof xMinPropsOrState === 'number' &&
-                    xMinPropsOrState > xMinTimestamp &&
-                    !isPointDomain
-                        ? xMinPropsOrState
-                        : xMinTimestamp;
-                const xMax =
-                    typeof xMaxPropsOrState === 'number' &&
-                    xMaxPropsOrState < xMaxTimestamp &&
-                    !isPointDomain
-                        ? xMaxPropsOrState
-                        : xMaxTimestamp;
-                domain = [xMin, xMax];
+                domain = getDatetimeDomain(
+                    [xMinTimestamp, xMaxTimestamp],
+                    xMinPropsOrState,
+                    xMaxPropsOrState,
+                );
+                const [xMin, xMax] = domain;
 
                 const scale = scaleUtc().domain(domain).range(range);
 

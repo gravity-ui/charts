@@ -1,5 +1,7 @@
 import {i18n} from '~core/i18n';
+import {getDomainPoints} from '~core/series/domain-points';
 import type {
+    DomainViewport,
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
     RenderShapesArgs,
@@ -32,9 +34,13 @@ import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {getAreaStackLabelAnchors} from './stack-labels';
 
-function getAreaDomainData(series: Pick<AreaSeries, 'data'>) {
+function getAreaDomainData(
+    series: Pick<AreaSeries, 'data' | 'stacking'>,
+    viewport?: DomainViewport,
+) {
     // Area projection keeps the last point at each X, including an explicit null.
-    return [...new Map(series.data.map((point) => [String(point.x), point])).values()];
+    const points = getDomainPoints(series.data, viewport, {filterY: !series.stacking});
+    return [...new Map(points.map((point) => [String(point.x), point])).values()];
 }
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
@@ -73,13 +79,13 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         }
     },
     getColorValue: (d) => d.y,
-    getAxisDomainValues: ({series, axis}) =>
+    getAxisDomainValues: ({series, axis, viewport}) =>
         axis === 'y'
             ? getStackedDomainValues({
                   series,
                   categoryKey: 'x',
                   valueKey: 'y',
-                  getData: getAreaDomainData,
+                  getData: (item) => getAreaDomainData(item, viewport),
               })
             : undefined,
     prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
