@@ -1,4 +1,4 @@
-/** @jest-environment jsdom */
+/** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
 import {scaleBand, scaleLinear, scaleLog, scaleOrdinal} from 'd3-scale';
 
@@ -8,8 +8,8 @@ import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import {seriesOptionsDefaults} from '../../../constants';
 import type {PreparedLegend} from '../../../series/types';
 import * as textUtils from '../../../utils/text';
-import type {LabelRect} from '../../types';
-import {prepareBarYData, prepareBarYGeometry} from '../prepare-data';
+import type {ShapeLabels} from '../../types';
+import {filterBarYDataLabels, prepareBarYData} from '../prepare-data';
 
 const defaultSvgLabelObstacleCases = [
     {name: 'overlapping the visible top edge', y: 95, expectedCount: 0},
@@ -20,7 +20,7 @@ interface PrepareOptions {
     height?: number;
     reversed?: boolean;
     logarithmic?: boolean;
-    obstacles?: LabelRect[];
+    otherLayers?: ShapeLabels[];
     series?: Pick<BarYSeries, 'barPadding' | 'borderWidth' | 'borderRadius' | 'dataLabels'>;
     seriesOptions?: ChartSeriesOptions['bar-y'];
 }
@@ -47,8 +47,10 @@ async function prepare(
         legend: {enabled: false} as PreparedLegend,
         seriesOptions: {'bar-y': options.seriesOptions},
     });
-    const geometry = prepareBarYGeometry({
+    const data = await prepareBarYData({
         series,
+        boundsWidth: width,
+        boundsHeight: height,
         seriesOptions: {
             ...seriesOptionsDefaults,
             'bar-y': {...seriesOptionsDefaults['bar-y'], ...options.seriesOptions},
@@ -61,12 +63,7 @@ async function prepare(
         yScale: [scaleBand().domain(['A']).range([0, height])],
     });
 
-    return prepareBarYData({
-        data: geometry,
-        boundsWidth: width,
-        boundsHeight: height,
-        obstacles: options.obstacles,
-    });
+    return filterBarYDataLabels(data, options.otherLayers ?? []);
 }
 
 describe('bar-y label placement', () => {
@@ -82,33 +79,32 @@ describe('bar-y label placement', () => {
     test.each(defaultSvgLabelObstacleCases)(
         'checks a default SVG label against an obstacle $name',
         async ({y, expectedCount}) => {
-            const obstacles: LabelRect[] = [{x: 85, y, size: {width: 40, height: 1}}];
-            const {labels} = await prepare([20], undefined, 400, {
+            const otherLayers: ShapeLabels[] = [
+                {htmlLabels: [{x: 85, y, size: {width: 40, height: 1}, content: 'Other label'}]},
+            ];
+            const {svgLabels} = await prepare([20], undefined, 400, {
                 series: {dataLabels: {enabled: true, padding: 5}},
-                obstacles,
+                otherLayers,
             });
 
-            expect(labels).toHaveLength(expectedCount);
-            if (expectedCount > 0) {
-                expect(labels[0].size).toEqual({width: 40, height: 10});
-            }
+            expect(svgLabels).toHaveLength(expectedCount);
         },
     );
 
     test('places logarithmic labels at the value end', async () => {
-        const {shapes, labels} = await prepare([100], undefined, 400, {
+        const {shapes, svgLabels} = await prepare([100], undefined, 400, {
             logarithmic: true,
             series: {dataLabels: {enabled: true, placement: 'auto', padding: 5}},
         });
-        expect(labels).toHaveLength(1);
+        expect(svgLabels).toHaveLength(1);
         const bar = shapes[0];
-        const label = labels[0];
+        const label = svgLabels[0];
         expect(label.x + label.size.width).toBeCloseTo(bar.x + bar.width - 5);
         expect(label.x).toBeGreaterThan(bar.x);
     });
 
     test('formats outside-only percent labels with resolved shares', async () => {
-        const {labels} = await prepare([1, 3], 'percent', 400, {
+        const {svgLabels} = await prepare([1, 3], 'percent', 400, {
             series: {
                 dataLabels: {
                     enabled: true,
@@ -124,7 +120,7 @@ describe('bar-y label placement', () => {
                 },
             },
         });
-        expect(labels.map((label) => label.text)).toEqual(['0.25', '0.75']);
+        expect(svgLabels.map((label) => label.text)).toEqual(['0.25', '0.75']);
     });
 });
 

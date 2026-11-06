@@ -6,11 +6,10 @@ import type {
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedBarYSeries} from '~core/series/types';
-import {prepareBarYData, prepareBarYGeometry} from '~core/shapes/bar-y/prepare-data';
+import {filterBarYDataLabels, prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
-import {getLabelRect} from '~core/utils/labels';
 import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
 import {
     validateAxisPlotValues,
@@ -40,9 +39,11 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         return {renderData: [], tooltipItems: []};
     }
 
-    const geometry = prepareBarYGeometry({
+    const data = await prepareBarYData({
         series: series as PreparedBarYSeries[],
         seriesOptions,
+        boundsWidth,
+        boundsHeight,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
@@ -53,24 +54,20 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         ...args,
         anchors: args.isRangeSlider
             ? []
-            : getBarYStackLabelAnchors(
-                  geometry.map((item) => item.shape),
-                  {
-                      xScale,
-                      boundsWidth,
-                      seriesOptions,
-                      yAxis,
-                  },
-              ),
+            : getBarYStackLabelAnchors(data.shapes, {
+                  xScale,
+                  boundsWidth,
+                  seriesOptions,
+                  yAxis,
+              }),
     });
 
-    const data = await prepareBarYData({
-        data: geometry,
-        boundsWidth,
-        boundsHeight,
-        obstacles: labels.map(getLabelRect),
-    });
-    return {renderData: [data], tooltipItems: data.shapes, labels};
+    const filteredData = filterBarYDataLabels(data, [
+        ...(args.otherLayers ?? []),
+        {svgLabels: labels, htmlLabels: []},
+    ]);
+
+    return {renderData: [filteredData], tooltipItems: data.shapes, labels};
 }
 
 function renderShapes({

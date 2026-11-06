@@ -1,17 +1,15 @@
-import {ascending, descending, sort} from 'd3-array';
+import {ascending, descending, group, sort} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {HtmlItem, LabelData} from '../../../types';
+import type {LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types';
 import {
-    filterOverlappingLabels,
+    filterLayerLabels,
     getHtmlLabelConstraintedPosition,
-    getLabelRect,
     getSvgLabelConstraintedPosition,
-    isLabelsOverlapping,
     isPointDataLabelEnabled,
 } from '../../utils';
 import {getFormattedValue} from '../../utils/format';
@@ -19,13 +17,13 @@ import {getPositiveShare} from '../../utils/percentage';
 import {hasOutsideOnlyPlacement, placeRectLabel} from '../../utils/rect-label-placement';
 import {createLabelMeasurer} from '../../utils/text';
 import {getBarWidthBySeries} from '../bar-width';
-import type {LabelRect} from '../types';
+import type {ShapeLabels} from '../types';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 import {getBarYRect} from './utils';
 
-interface PrepareBarYGeometryArgs {
+interface PrepareBarYDataArgs {
     series: PreparedBarYSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
@@ -36,13 +34,13 @@ interface PrepareBarYGeometryArgs {
 
 interface BarYPreparationItem {
     shape: PreparedBarYData;
-    /** Allows outside labels at the end of each left- or right-extending stack branch. */
+    /** Allows outside svgLabels at the end of each left- or right-extending stack branch. */
     isStackEnd: boolean;
     /** Screen direction from the segment's base toward its value along the value axis. */
     valueAxisDirection: 'left' | 'right';
 }
 
-export function prepareBarYGeometry(args: PrepareBarYGeometryArgs): BarYPreparationItem[] {
+function prepareBarYGeometry(args: PrepareBarYDataArgs): BarYPreparationItem[] {
     const {
         series,
         seriesOptions,
@@ -264,15 +262,13 @@ export function prepareBarYGeometry(args: PrepareBarYGeometryArgs): BarYPreparat
     return result;
 }
 
-export async function prepareBarYData(args: {
-    data: BarYPreparationItem[];
-    boundsWidth: number;
-    boundsHeight: number;
-    obstacles?: LabelRect[];
-}): Promise<BarYShapesArgs> {
-    const {data: result, boundsWidth, boundsHeight, obstacles} = args;
-    let labels: LabelData[] = [];
-    let htmlLabels: HtmlItem[] = [];
+export async function prepareBarYData(
+    args: PrepareBarYDataArgs & {boundsWidth: number; boundsHeight: number},
+): Promise<BarYShapesArgs> {
+    const {boundsWidth, boundsHeight} = args;
+    const result = prepareBarYGeometry(args);
+    const svgLabels: LabelData[] = [];
+    const htmlLabels: BarYShapesArgs['htmlLabels'] = [];
 
     const measureLabel = createLabelMeasurer();
     for (let i = 0; i < result.length; i++) {
@@ -345,59 +341,56 @@ export async function prepareBarYData(args: {
             }
 
             if (dataLabels.html) {
-                const label = {
+                htmlLabels.push({
+                    series: prepared.series,
                     content,
                     size: {width, height},
                     style: dataLabels.style,
                     ...position,
-                };
-
-                if (
-                    !dataLabels.allowOverlap &&
-                    obstacles?.some((obstacle) => isLabelsOverlapping(label, obstacle))
-                ) {
-                    continue;
-                }
-
-                htmlLabels.push(label);
+                });
             } else {
-                const measuredSize = {width, height, hangingOffset};
-                const label: LabelData = {
-                    size: dataLabels.placement ? {width, height, hangingOffset} : {width, height},
+                svgLabels.push({
+                    size: {width, height, hangingOffset},
                     series: prepared.series,
                     style: dataLabels.style,
                     text: content,
                     textAnchor: 'start',
                     ...position,
-                };
-                const labelRect = getLabelRect({...label, size: measuredSize});
-
-                if (
-                    !dataLabels.allowOverlap &&
-                    obstacles?.some((obstacle) => isLabelsOverlapping(labelRect, obstacle))
-                ) {
-                    continue;
-                }
-
-                labels.push(label);
+                });
             }
         }
     }
 
-    const allowOverlap = result[0]?.shape.series.dataLabels.allowOverlap;
-
-    if (labels.length && !allowOverlap) {
-        labels = filterOverlappingLabels(labels);
-    } else if (htmlLabels.length && !allowOverlap) {
-        htmlLabels = filterOverlappingLabels(htmlLabels);
-    }
-
     return {
         shapes: result.map((item) => item.shape),
-        labels,
+        svgLabels,
         htmlLabels,
         markers: [],
         getHoverMarkers: () => [],
         annotations: [],
+    };
+}
+
+export function filterBarYDataLabels(
+    data: BarYShapesArgs,
+    otherLayers: ShapeLabels[],
+): BarYShapesArgs {
+    const series = [...new Set(data.shapes.map((shape) => shape.series))];
+    const svgLabelsBySeries = group(data.svgLabels, (label) => label.series);
+    const htmlLabelsBySeries = group(data.htmlLabels, (label) => label.series);
+
+    const filtered = filterLayerLabels(
+        series.map((item) => ({
+            series: item,
+            svgLabels: svgLabelsBySeries.get(item) ?? [],
+            htmlLabels: htmlLabelsBySeries.get(item) ?? [],
+        })),
+        otherLayers,
+    );
+
+    return {
+        ...data,
+        svgLabels: filtered.flatMap((item) => item.svgLabels),
+        htmlLabels: filtered.flatMap((item) => item.htmlLabels),
     };
 }
