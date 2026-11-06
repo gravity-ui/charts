@@ -4,6 +4,7 @@ import {act, renderHook, waitFor} from '@testing-library/react';
 import {dispatch} from 'd3-dispatch';
 
 import {DAY} from '~core/constants';
+import {EventType} from '~core/utils';
 
 import type {PreparedAreaData} from '../../../core/shapes/area/types';
 import type {PreparedBarXData} from '../../../core/shapes/bar-x/types';
@@ -428,6 +429,50 @@ describe('legend and domain updates', () => {
                     range[1] === 10 ? [20, 80] : [20, 50],
                 );
             }
+        },
+    );
+
+    test.each(['zoom', 'slider'] as const)(
+        'uses the rendered datetime X extent for Y bounds during %s updates',
+        async (mode) => {
+            const props = getProps({
+                legend: {enabled: false},
+                xAxis: {
+                    type: 'datetime',
+                    rangeSlider: {enabled: mode === 'slider'},
+                    padding: {min: 0, max: 0},
+                },
+                yAxis: [{padding: {min: 0, max: 0}}],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Temperature',
+                            data: [-34, -29, -31, -22, -25].map((y, day) => ({
+                                x: day * DAY,
+                                y,
+                            })),
+                        },
+                    ],
+                },
+            });
+            props.dispatcher = dispatch(EventType.HOVER_SHAPE);
+            const {result} = renderHook(() => {
+                const state = useChartInnerState({dispatcher: props.dispatcher});
+                return {...state, ...useChartInnerProps({...props, ...state})};
+            });
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            const previousShapes = result.current.shapesData;
+            act(() => {
+                if (mode === 'slider') {
+                    result.current.updateRangeSliderState({min: DAY / 2, max: 3.5 * DAY});
+                } else {
+                    result.current.updateZoomState({x: [DAY / 2, 3.5 * DAY]});
+                }
+            });
+            await waitFor(() => expect(result.current.shapesData).not.toBe(previousShapes));
+            expect(result.current.xScale?.domain().map(Number)).toEqual([DAY, 3 * DAY]);
+            expect(result.current.yScale?.[0]?.domain()).toEqual([-31, -22]);
         },
     );
 

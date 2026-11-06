@@ -1,5 +1,6 @@
-import {group} from 'd3-array';
+import {extent, group} from 'd3-array';
 
+import {getDatetimeDomain} from '../scales/datetime-domain';
 import type {ChartSeries, ChartXAxis, ChartYAxis} from '../types';
 import {isAxisRelatedSeries} from '../utils/series-type-guards';
 import type {UnknownSeries} from '../utils/series-type-guards';
@@ -59,6 +60,21 @@ export function collectYAxisDomainValues(args: {
     const {series, fallbackSeries, xAxis, yAxis, zoomState} = args;
     if (!zoomState.x && !zoomState.y) return undefined;
 
+    let xRange = zoomState.x;
+    if (xRange && xAxis?.type === 'datetime') {
+        const visible = fallbackSeries.filter((item) => item.visible);
+        const values =
+            xAxis.timestamps ?? getAxisDomainValues(visible.length ? visible : fallbackSeries, 'x');
+        if (values.length) {
+            // Match the datetime X scale's data-clipped viewport, using the same axis series.
+            xRange = getDatetimeDomain(
+                extent(values as number[]) as [number, number],
+                xRange[0],
+                xRange[1],
+            );
+        }
+    }
+
     const select = (items: PreparedSeries[], index: number) => {
         const assigned = items.filter(
             (item) => ('yAxis' in item ? (item.yAxis ?? 0) : 0) === index,
@@ -73,7 +89,7 @@ export function collectYAxisDomainValues(args: {
             viewport: {
                 x: {
                     type: xAxis?.type ?? 'linear',
-                    range: zoomState.x,
+                    range: xRange,
                     categories: xAxis?.categories,
                 },
                 y: {
