@@ -180,8 +180,18 @@ export function markHiddenPointsOutOfYRange<
     };
 
     const inRange = points.map(isInRange);
+    const crossesRange = (a: P | undefined, b: P | undefined): boolean => {
+        if (!a || !b || a.y === null || b.y === null) return false;
+        return (a.y < yMinPx && b.y > yMaxPx) || (b.y < yMinPx && a.y > yMaxPx);
+    };
     for (let idx = 0; idx < points.length; idx++) {
-        if (!inRange[idx] && !inRange[idx - 1] && !inRange[idx + 1]) {
+        if (
+            !inRange[idx] &&
+            !inRange[idx - 1] &&
+            !inRange[idx + 1] &&
+            !crossesRange(points[idx - 1], points[idx]) &&
+            !crossesRange(points[idx], points[idx + 1])
+        ) {
             points[idx].hiddenInLine = true;
         }
     }

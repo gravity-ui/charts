@@ -17,6 +17,7 @@ import {
     validateStacking,
     validateXYSeries,
 } from '~core/validation/helpers';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import type {BarYFormatContext, BarYSeries, TooltipDataChunkBarY} from '../../types';
 import {getBarDomainData} from '../bar-domain';
@@ -26,6 +27,7 @@ import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
+import {getPercentStackDomain} from '../stacked-axis';
 
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -83,9 +85,33 @@ function renderShapes({
 
 export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
-    axisBaseline: 'x',
-    isAxisDomainFixed: ({series, axis}) => axis === 'x' && series.stacking === 'percent',
-    zoom: {types: ['y', 'xy'], defaultType: 'y'},
+    axes: {
+        x: {
+            baseline: 0,
+            getFixedDomain: getPercentStackDomain,
+            getData: ({series}) => ({
+                domainValues: getStackedDomainValues({
+                    series,
+                    categoryKey: 'y',
+                    valueKey: 'x',
+                    getData: (item) => getBarDomainData(item, 'y', 'x'),
+                }),
+            }),
+        },
+        y: {
+            bandPadding: 0.5,
+            getTicks: ({values, count}) =>
+                values.length < 3
+                    ? {values: values as readonly number[]}
+                    : {count: Math.min(count ?? values.length, values.length)},
+        },
+    },
+    zoom: {
+        types: ['y', 'xy'],
+        defaultType: 'y',
+        filterData: ({series, viewport}) =>
+            filterPoints(series.data, viewport, {axes: series.stacking ? 'y' : 'xy'}),
+    },
     prepareSeries: prepareBarYSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateBarLabelPlacement(series.dataLabels);
@@ -107,15 +133,6 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         validateBarGrouping({series, allSeries});
         validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
     },
-    getAxisDomainValues: ({series, axis}) =>
-        axis === 'x'
-            ? getStackedDomainValues({
-                  series,
-                  categoryKey: 'y',
-                  valueKey: 'x',
-                  getData: (item) => getBarDomainData(item, 'y', 'x'),
-              })
-            : undefined,
     getXAxisPadding: ({dataLabels, stacking}) =>
         stacking !== 'percent' &&
         (hasOutsideOnlyPlacement(dataLabels.placement) ||

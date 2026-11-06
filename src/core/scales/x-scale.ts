@@ -4,21 +4,22 @@ import {scaleBand, scaleLinear, scaleLog, scaleUtc} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 
 import type {PreparedAxis} from '../axes/types';
-import {DEFAULT_AXIS_TYPE, SERIES_TYPE} from '../constants';
+import {DEFAULT_AXIS_TYPE} from '../constants';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
 import {hasAxisBaseline} from '../series/axis-domain';
+import {getSeriesAxisRequirements} from '../series/axis-policies';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {ChartAxis, ChartAxisType} from '../types';
 import {getDomainDataXBySeries, getEffectiveXRange} from '../utils';
 import {getBandSize} from '../utils/band-size';
 
 import {getDomainPadding, getPaddedDomain} from './axis-padding-options';
+import {getDatetimeDomain} from './datetime-domain';
 import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
     getMinMaxPropsOrState,
-    hasOnlyMarkerSeries,
     validateArrayData,
 } from './utils';
 
@@ -35,11 +36,6 @@ function calculateXAxisPadding(series: PreparedSeries[]) {
     });
 
     return result;
-}
-
-function isSeriesWithXAxisOffset(series: PreparedSeries[]) {
-    const types = [SERIES_TYPE.Heatmap, SERIES_TYPE.BarX] as string[];
-    return series.some((s) => types.includes(s.type));
 }
 
 function getXScaleRange({boundsWidth, hasZoomX}: {boundsWidth: number; hasZoomX?: boolean}) {
@@ -59,6 +55,7 @@ export function createXScale(args: {
     zoomStateX?: [number, number];
 }) {
     const {axis, boundsWidth, series, rangeSliderState, zoomStateX} = args;
+    const requirements = getSeriesAxisRequirements(series, 'x', axis.type ?? DEFAULT_AXIS_TYPE);
 
     const effectiveX = getEffectiveXRange(zoomStateX, rangeSliderState);
     const effectiveXMin = effectiveX?.[0];
@@ -100,8 +97,11 @@ export function createXScale(args: {
                 return undefined;
             }
 
-            if (series.some((s) => s.type === 'bar-y' && s.stacking === 'percent')) {
-                return scaleLinear().domain([0, 100]).range(range);
+            if (requirements.fixedDomain) {
+                const {min, max, type = xType} = requirements.fixedDomain;
+                return (type === 'logarithmic' ? scaleLog() : scaleLinear())
+                    .domain([min, max])
+                    .range(range);
             }
 
             if (hasNumberAndNullValues) {
@@ -109,7 +109,7 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
-                const isPointDomain = hasOnlyMarkerSeries(series)
+                const isPointDomain = requirements.centerSingleValue
                     ? checkIsPointDomain([xMinDomain, xMaxDomain])
                     : false;
                 const hasBaseline = hasAxisBaseline(series, 'x');
@@ -135,7 +135,7 @@ export function createXScale(args: {
 
                 let offsetMin = 0;
                 let offsetMax = xAxisPadding;
-                const hasOffset = isSeriesWithXAxisOffset(series);
+                const hasOffset = requirements.bandPadding > 0;
                 if (hasOffset) {
                     if (domainData.length > 1) {
                         const bandWidth = getBandSize({
@@ -143,8 +143,8 @@ export function createXScale(args: {
                             domain: domainData as AxisDomain[],
                         });
 
-                        offsetMin += bandWidth / 2;
-                        offsetMax += bandWidth / 2;
+                        offsetMin += bandWidth * requirements.bandPadding;
+                        offsetMax += bandWidth * requirements.bandPadding;
                     }
                 }
 
@@ -213,26 +213,18 @@ export function createXScale(args: {
                     number,
                     number,
                 ];
-                const isPointDomain = checkIsPointDomain([xMinTimestamp, xMaxTimestamp]);
-                const xMin =
-                    typeof xMinPropsOrState === 'number' &&
-                    xMinPropsOrState > xMinTimestamp &&
-                    !isPointDomain
-                        ? xMinPropsOrState
-                        : xMinTimestamp;
-                const xMax =
-                    typeof xMaxPropsOrState === 'number' &&
-                    xMaxPropsOrState < xMaxTimestamp &&
-                    !isPointDomain
-                        ? xMaxPropsOrState
-                        : xMaxTimestamp;
-                domain = [xMin, xMax];
+                domain = getDatetimeDomain(
+                    [xMinTimestamp, xMaxTimestamp],
+                    xMinPropsOrState,
+                    xMaxPropsOrState,
+                );
+                const [xMin, xMax] = domain;
 
                 const scale = scaleUtc().domain(domain).range(range);
 
                 let offsetMin = 0;
                 let offsetMax = xAxisPadding;
-                const hasOffset = isSeriesWithXAxisOffset(series);
+                const hasOffset = requirements.bandPadding > 0;
                 if (hasOffset) {
                     if (domainData.length > 1) {
                         const bandWidth = getBandSize({
@@ -240,8 +232,8 @@ export function createXScale(args: {
                             domain: domainData as AxisDomain[],
                         });
 
-                        offsetMin += bandWidth / 2;
-                        offsetMax += bandWidth / 2;
+                        offsetMin += bandWidth * requirements.bandPadding;
+                        offsetMax += bandWidth * requirements.bandPadding;
                     }
                 }
 

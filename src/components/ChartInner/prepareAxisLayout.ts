@@ -41,6 +41,7 @@ export async function prepareAxisLayout(args: Args) {
         });
         const scales = args.preparedSeries.some(isAxisRelatedSeries)
             ? createScales({
+                  yDomainValues: args.yDomainValues,
                   boundsWidth,
                   boundsHeight,
                   series: args.preparedSeries,
@@ -57,6 +58,7 @@ export async function prepareAxisLayout(args: Args) {
 
     const layout = await calculate();
     const adjustedYAxis = await recalculateYAxisLabelsWidth({
+        yDomainValues: args.yDomainValues,
         seriesData: args.preparedSeries,
         yAxis,
         yScale: layout.yScale,

@@ -1,81 +1,25 @@
 # Series plugin migration plan
 
-The main pipeline already delegates series preparation, geometry, rendering, validation, tooltip lookup and rows, continuous color values, and some zoom behavior to `SeriesPlugin`. However, shared code still selects behavior by series type, especially in axes and scales.
+The main pipeline delegates series preparation, geometry, rendering, validation, tooltip lookup and rows, continuous color values, axis policies, and viewport selection to `SeriesPlugin`. Remaining work concerns series defaults, implementation ownership, and the complete plugin type contract.
 
-The goal is to make each built-in plugin own its behavior while the core coordinates plugins and provides reusable primitives. Public support for third-party plugins is a separate, optional goal.
+The goal is to make each plugin own its behavior while the core coordinates plugins and provides reusable primitives. Design contracts for authors who know their own data and the plugin interface, without requiring core internals. Public registration and selective imports remain a separate delivery step.
 
 ## Migration sequence
 
-Deliver the migration incrementally, preserving behavior. The axis-domain and scale stages are the largest and should be split into focused changes.
+Completed tooltip delegation, layer grouping and clipping, axis policies and domains, preprocessing, and viewport/zoom selection. Plugins declare their behavior through optional adapters and policies; core merges contributions and provides reusable primitives while preserving public chart configuration and exports.
 
-Stages 1–3 are complete. Next: stage 4, remaining axis and scale policies.
+### 1. Delegate series defaults
 
-### 1. Complete tooltip delegation — completed
+Move type-specific defaults from [series-options.ts](../../src/core/constants/defaults/series-options.ts) into plugins. Keep the merge mechanism shared, preserve option precedence, and document plugin-owned defaults in the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md).
 
-- Implement `tooltip.getValue` for the remaining plugins and remove the type switch in [getHoveredValues](../../src/components/Tooltip/DefaultTooltipContent/utils.ts).
-- Delegate complete header resolution to plugins instead of combining `tooltip.headerAxis` with shared series-type checks. A plugin should supply the raw header value and axis/formatting context, or declare that there is no header. Cover Cartesian X/Y headers, radar categories, and plugins that suppress the header; series without axes must not inherit an implicit X header. Remove the corresponding rules from `getMeasureValue` in the same file and [getDefaultTooltipHeaderFormat](../../src/core/utils/tooltip.ts).
-- Keep sorting, aggregation, formatting, and rendering shared. Define how header contributions combine in mixed charts, preserving current precedence.
-
-Verify mixed-series tooltips, totals, sorting, category/date formatting, and the raw values supplied to custom formatters and renderers. Preserve the distinction between no header and a missing header value that a custom formatter can replace with a placeholder.
-
-Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): tooltip value/header hooks and mixed-chart precedence.
-
-### 2. Delegate layer grouping and clipping — completed
-
-- Added optional `SeriesPlugin.getLayerKey({series, seriesKey})` for one occurrence of the plugin's raw or prepared series. Omitting the hook groups by `series.type`. Equal keys share a layer; core rejects keys shared by different series types. Core supplies a per-occurrence key, retains object references and member order, and orders layers by their first occurrence. [Shared layer coordination](../../src/core/series/layers.ts) replaces the line branches in [series preparation](../../src/core/series/prepareSeries.ts) and [shape preparation](../../src/hooks/useShapes/index.tsx).
-- Replaced `useClipPath`, line-specific clipping, and scatter override tables with optional `getClipPath({isRangeSlider, yAxis, zoomState})`. Plugins return `'bounds'` (default), `'horizontal'`, or `false`; core owns SVG IDs and geometry.
-- Preserved independent line layers, one layer per type for other plugins, reverse shape preparation for label priority, React keys, hover namespaces, tooltip ordering, and main-plot clipping behavior. Public config and exports are unchanged.
-- Fixed an existing bug in `main`: range-slider lines without explicit Y bounds referenced a horizontal clipPath that the preview does not define. The line plugin now selects the preview's bounds clipPath, preventing strokes from overflowing the preview.
-- Updated the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md) and added layer, clipping, and architecture regression coverage.
-
-Deferred work:
-
-- Interleaved layers such as `line1 → [bar1.1 + bar1.2 stack] → line2 → bar2` remain unsupported. Keep the TODO on [SeriesPlugin.getLayerKey](../../src/core/series/plugin.ts): separate shared bar geometry from render layers, retain source order through preparation, and define placement when group members straddle other layers. Splitting current bar groups alone would change widths, offsets, and stacking.
-
-### 3. Delegate axis-domain contributions — completed
-
-- [x] Replaced point callbacks with grouped `getAxisDomainValues({series, axis})` and removed the obsolete `getStackedDomainData` hook. Plugins own bar/area stacking and waterfall accumulation; scalar extraction remains the default when the callback is omitted or returns `undefined`.
-- [x] Added separate `axisBaseline?: 'x' | 'y'` metadata, replacing shared volume-series lists while preserving bounds, zoom, and logarithmic baseline behavior.
-- [x] Kept contribution merging in [shared coordination](../../src/core/series/axis-domain.ts) and parameterized [stacking math](../../src/core/series/stacked-domain.ts). Baseline calculations reuse collected values.
-- [x] Added domain regression and architecture coverage and updated the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md). Public chart config and root exports are unchanged.
-
-Issue audit (fixes remain separate): [#785](https://github.com/gravity-ui/charts/issues/785#issuecomment-6370692582), [#786](https://github.com/gravity-ui/charts/issues/786#issuecomment-6370698187), [#795](https://github.com/gravity-ui/charts/issues/795#issuecomment-6370698486), [#348](https://github.com/gravity-ui/charts/issues/348#issuecomment-6370698832), [#342](https://github.com/gravity-ui/charts/issues/342#issuecomment-6370699159), [#395](https://github.com/gravity-ui/charts/issues/395#issuecomment-6370699492), [#587](https://github.com/gravity-ui/charts/issues/587#issuecomment-6370699826).
-
-### 4. Delegate remaining axis and scale policies
-
-Move these decisions into plugin metadata or narrowly scoped callbacks:
-
-| Remaining policy                         | Current location                                                                               |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Whether a series uses axes               | [series-type-guards.ts](../../src/core/utils/series-type-guards.ts)                            |
-| Percent-stack domains and bar offsets    | [x-scale.ts](../../src/core/scales/x-scale.ts), [y-scale.ts](../../src/core/scales/y-scale.ts) |
-| Special handling of single-value domains | [scales/utils.ts](../../src/core/scales/utils.ts)                                              |
-| Heatmap padding and grid suppression     | [x-axis.ts](../../src/core/axes/x-axis.ts), [y-axis.ts](../../src/core/axes/y-axis.ts)         |
-| X-range and bar-y tick policies          | [X ticks](../../src/core/utils/axis/x-axis.ts), [Y ticks](../../src/components/AxisY/utils.ts) |
-
-Keep D3 scale construction, label measurement, and layout shared. Specify how plugin requirements combine and how they interact with explicit user settings. Axis participation must not imply that every point has scalar numeric `x` and `y` fields.
-
-X-axis label space is delegated through `SeriesPlugin.getXAxisPadding`: plugins request pixels, core takes the largest request and expands only the max end of an autoscaled domain. Bar-y owns the label-space policy; explicit `xAxis.max` takes precedence.
-
-Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): axis participation and scale policies.
-
-### 5. Finish preprocessing, defaults, and zoom delegation
-
-- Move area-specific X sorting from [getSortedSeriesData](../../src/core/utils/series/sorting.ts) into area preparation, preserving its order relative to category normalization.
-- Move type-specific defaults from [series-options.ts](../../src/core/constants/defaults/series-options.ts) into plugins. Keep the merge mechanism shared and preserve option precedence.
-- Move recognition and filtering of `x0`/`x1` intervals out of [zoom.ts](../../src/core/zoom/zoom.ts), following the existing `zoom.isYInRange` extension pattern.
-
-Preserve raw user fields and store resolved values separately. Any intended change to interval-filtering semantics should be a separate behavioral fix.
-
-Update the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md): plugin-owned defaults, preprocessing, and interval filtering.
-
-### 6. Consolidate plugin implementation and types
+### 2. Consolidate plugin implementation and types
 
 Plugins currently import much of their implementation from `core/shapes/<series>`. Once shared behavioral dependencies are removed:
 
 - Colocate series-specific geometry, renderers, tooltip lookup, helpers, and styles under `plugins/<series>/`. Include the series-specific rules in [useShapes/styles.scss](../../src/hooks/useShapes/styles.scss).
 - Keep reusable label, marker, measurement, and geometry primitives shared.
-- Associate raw series, prepared series, shape data, and tooltip types throughout the plugin contract to reduce repeated casts. Split series-specific prepared types out of [series/types.ts](../../src/core/series/types.ts) while preserving existing exports.
+- Associate plugin-owned raw series, prepared series, shape data, and interaction/tooltip payloads throughout the complete `SeriesPlugin` contract, without closed built-in unions or implementation imports from core. Split series-specific prepared types out of [series/types.ts](../../src/core/series/types.ts) while preserving existing exports, and verify the contract with a complete custom-plugin fixture using its own data types and the documented interface.
+- Reconcile `getAxisPadding` (paint extents) and `getXAxisPadding` (label-space reserve) into a coherent axis-padding contract. Specify their contexts, units, combination rules, and timing while preserving explicit bounds, zoom, and range-slider behavior.
 
 Use small, behavior-preserving moves. Avoid introducing a broad public abstraction solely to reorganize internal code.
 

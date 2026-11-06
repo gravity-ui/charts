@@ -2,13 +2,9 @@ import get from 'es-toolkit/compat/get';
 
 import type {ChartAxis, ChartSeries} from '../../types';
 import type {PreparedAxis, PreparedYAxis} from '../axes/types';
-import {SERIES_TYPE} from '../constants';
-import type {SeriesType} from '../constants';
 import type {PreparedSeries} from '../series';
+import {getAxisCoordinateValues} from '../series/axis-domain';
 import type {AxisDirection} from '../utils';
-import {getDataCategoryValue, isSeriesWithCategoryValues} from '../utils';
-
-const MARKER_SERIES_TYPES: SeriesType[] = [SERIES_TYPE.Area, SERIES_TYPE.Line, SERIES_TYPE.Scatter];
 
 type OptionalNumber = number | undefined;
 
@@ -50,10 +46,6 @@ export function getMinMaxPropsOrState(args: {
  */
 export function checkIsPointDomain(domain: [number, number]) {
     return domain[0] === domain[1];
-}
-
-export function hasOnlyMarkerSeries(series: (PreparedSeries | ChartSeries)[]): boolean {
-    return series.every((s) => MARKER_SERIES_TYPES.includes(s.type));
 }
 
 export function clusterYAxes(yAxes: PreparedYAxis[]): [PreparedYAxis, PreparedYAxis?][] {
@@ -115,14 +107,7 @@ export function filterCategoriesByVisibleSeries(args: {
 }) {
     const {axisDirection, categories, series} = args;
 
-    const visibleCategories = new Set();
-    series.forEach((s) => {
-        if (isSeriesWithCategoryValues(s)) {
-            s.data.forEach((d) => {
-                visibleCategories.add(getDataCategoryValue({axisDirection, categories, data: d}));
-            });
-        }
-    });
+    const visibleCategories = new Set(getAxisCoordinateValues(series, axisDirection, categories));
     const filteredCategories = categories.filter((c) => visibleCategories.has(c));
 
     return filteredCategories.length > 0 ? filteredCategories : categories;

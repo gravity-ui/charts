@@ -8,6 +8,8 @@ import type {
     LineSeries,
     ScatterSeries,
 } from '../../../types';
+import {getPreparedSeries} from '../../series/prepareSeries';
+import type {PreparedLegendOptions} from '../../series/types';
 import {getSortedSeriesData} from '../series/sorting';
 
 const categories = ['a', 'b', 'c'];
@@ -39,6 +41,36 @@ function getYValues(series: LineSeries, yAxis: ChartAxis[]) {
 }
 
 describe('getSortedSeriesData', () => {
+    test('area owns X sorting after category normalization and preserves normalized point identity', async () => {
+        const source = {
+            type: 'area' as const,
+            name: 'Area',
+            data: [
+                {x: 0, y: 10},
+                {x: 2, y: 20},
+                {x: 1, y: 30},
+            ],
+        };
+        const normalized = getSortedSeriesData({
+            seriesData: [source],
+            xAxis: {type: 'category', categories, order: 'reverse'},
+        });
+        expect(normalized[0].data.map((point) => get(point, 'x'))).toEqual([2, 0, 1]);
+        const prepared = await getPreparedSeries({
+            seriesData: normalized,
+            seriesOptions: undefined,
+            colors: ['black'],
+            preparedLegend: {enabled: false} as PreparedLegendOptions,
+        });
+        expect(prepared[0].data).toEqual([
+            {x: 0, y: 20},
+            {x: 1, y: 30},
+            {x: 2, y: 10},
+        ]);
+        const area = prepared.find((series) => series.type === 'area');
+        expect(area?.data[0]).toBe(normalized[0].data[1]);
+        expect(source.data.map((point) => point.x)).toEqual([0, 2, 1]);
+    });
     test.each<{title: string; xAxis: ChartXAxis; input: (number | string)[]; expected: unknown[]}>([
         {
             title: 'keeps category names as is',

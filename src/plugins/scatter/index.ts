@@ -74,6 +74,7 @@ function renderShapes({
 
 export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
+    axes: {x: {singleValueDomain: 'center'}, y: {singleValueDomain: 'center'}},
     getAxisPadding: getScatterAxisPadding,
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},

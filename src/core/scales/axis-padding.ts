@@ -4,6 +4,8 @@ import {scaleLinear} from 'd3-scale';
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
+import type {AxisDomainValue} from '../series/axis-contract';
+import {getSeriesAxisRequirements} from '../series/axis-policies';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '../series/types';
 import type {ChartMargin} from '../types';
@@ -52,6 +54,7 @@ function hasPadding(axis: PreparedAxis) {
 }
 
 function fitAxis(args: {
+    domainValues?: AxisDomainValue[];
     axis: PreparedAxis;
     direction: 'x' | 'y';
     scale: ChartScale;
@@ -219,6 +222,7 @@ function fitAxis(args: {
             // Use the same tick thinning as the rendered Y axis. A generic nice()
             // alone may choose an end tick that gets dropped on a short chart.
             const tickArgs = {
+                domainValues: args.domainValues,
                 axis,
                 range: [range[0], range[1]] as [number, number],
                 scale: candidate as ChartScaleLinear,
@@ -249,7 +253,11 @@ function fitAxis(args: {
 }
 
 export function applyAxisPadding(
-    args: PrepareAxisPaddingArgs & {fixedX?: boolean; fixedY?: boolean[]},
+    args: PrepareAxisPaddingArgs & {
+        fixedX?: boolean;
+        fixedY?: boolean[];
+        domainValues?: AxisDomainValue[][];
+    },
 ) {
     const {xAxis, yAxis, xScale, yScale, series} = args;
     if (!hasPadding(xAxis) && !yAxis.some(hasPadding)) return;
@@ -261,9 +269,7 @@ export function applyAxisPadding(
         return visible.length ? visible : items;
     });
     const isFixed = (items: PreparedSeries[], direction: 'x' | 'y') =>
-        items.some((s) =>
-            getSeriesPlugin(s.type).isAxisDomainFixed?.({series: s, axis: direction}),
-        );
+        Boolean(getSeriesAxisRequirements(items, direction).fixedDomain);
     const fixedY = ySeries.map((items, index) => args.fixedY?.[index] || isFixed(items, 'y'));
     const padX = !args.fixedX && !isFixed(xSeries, 'x') && hasPadding(xAxis);
     const padY = yAxis.map((axis, index) => !fixedY[index] && hasPadding(axis));
@@ -309,6 +315,7 @@ export function applyAxisPadding(
         if (!padY[index] && !syncTicks) return;
         const primaryTicksCount = syncWithPrimary
             ? getAutomaticTickValues({
+                  domainValues: args.domainValues?.[primaryIndex],
                   axis: primary,
                   scale: primaryScale,
                   labelLineHeight: primary.labels.lineHeight,
@@ -317,6 +324,7 @@ export function applyAxisPadding(
             : undefined;
         const previousDomain = scale.domain().map(Number);
         fitAxis({
+            domainValues: args.domainValues?.[index],
             axis,
             direction: 'y',
             scale,

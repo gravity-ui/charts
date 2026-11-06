@@ -5,8 +5,9 @@ import type * as LinePreparation from '../../../plugins/line/prepare-line-series
 import type * as XRangePlugin from '../../../plugins/x-range';
 import type {PreparedAxis} from '../../axes/types';
 import type * as XScale from '../../scales/x-scale';
-import type {ChartSeries} from '../../types';
+import type {ChartSeries, LineSeries} from '../../types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '../../utils/common';
+import type {GetAxisDataArgs} from '../axis-contract';
 import type * as AxisDomain from '../axis-domain';
 import {getAxisDomainValues} from '../axis-domain';
 import type * as Registry from '../seriesRegistry';
@@ -21,14 +22,12 @@ it('groups contributions once per plugin, retaining series order, references and
         expect(registry.getRegisteredSeriesTypes()).toEqual([]);
         expect(domain.getAxisDomainValues([], 'x')).toEqual([]);
 
-        const getValues = jest.fn(
-            ({axis}: Parameters<NonNullable<typeof linePlugin.getAxisDomainValues>>[0]) =>
-                axis === 'x' ? [8, 12] : [],
-        );
+        const getValues = jest.fn(({axis}: GetAxisDataArgs<LineSeries>) => ({
+            domainValues: axis === 'x' ? [8, 12] : [],
+        }));
         registry.registerSeriesPlugin({
             ...linePlugin,
-            axisBaseline: 'x',
-            getAxisDomainValues: getValues,
+            axes: {x: {baseline: 0, getData: getValues}, y: {getData: getValues}},
         });
         registry.registerSeriesPlugin(xRangePlugin);
         const series: ChartSeries[] = [
@@ -36,12 +35,17 @@ it('groups contributions once per plugin, retaining series order, references and
             {type: 'x-range', name: 'Range', data: [{x0: -10, x1: 20, y: 1}]},
             {type: 'line', name: 'Last', data: [{x: 200, y: 2}]},
         ];
-        expect(domain.getAxisDomainValues(series, 'x')).toEqual([8, 12, -10, 20]);
+        const viewport = {
+            x: {type: 'linear' as const, range: [3, 9] as const},
+            y: {type: 'linear' as const},
+        };
+        expect(domain.getAxisDomainValues(series, 'x', {viewport})).toEqual([8, 12, -10, 20]);
         expect(getValues).toHaveBeenCalledTimes(1);
         const args = getValues.mock.calls[0][0];
         expect(args.series[0]).toBe(series[0]);
         expect(args.series[1]).toBe(series[2]);
         expect(args.axis).toBe('x');
+        expect(args.viewport).toBe(viewport);
         expect(domain.hasAxisBaseline(series, 'x')).toBe(true);
         expect(domain.hasAxisBaseline(series, 'y')).toBe(false);
         expect(registry.getRegisteredSeriesTypes()).toEqual(['line', 'x-range']);

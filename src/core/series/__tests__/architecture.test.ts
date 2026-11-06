@@ -158,6 +158,20 @@ it('keeps axis-domain coordination and stacking primitives independent of built-
         'core/utils/common.ts',
         'core/series/axis-domain.ts',
         'core/series/stacked-domain.ts',
+        'core/series/axis-contract.ts',
+        'core/series/axis-policies.ts',
+        'core/utils/series-type-guards.ts',
+        'core/scales/x-scale.ts',
+        'core/scales/y-scale.ts',
+        'core/scales/utils.ts',
+        'core/scales/axis-padding.ts',
+        'core/axes/x-axis.ts',
+        'core/axes/y-axis.ts',
+        'core/utils/axis/x-axis.ts',
+        'components/AxisY/utils.ts',
+        'core/zoom/zoom.ts',
+        'core/zoom/filter-data.ts',
+        'core/utils/series/sorting.ts',
     ];
     const violations = files.flatMap((file) =>
         getSeriesDependencies(readFileSync(path.join(sourceRoot, file), 'utf8')).map(
