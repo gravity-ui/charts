@@ -185,6 +185,72 @@ test.describe('Zoom', () => {
             await testZoom({component, getZoomOptions: getZoomXOptions});
         });
 
+        test('a narrow single-point zoom preserves the line across the plot', async ({
+            mount,
+            page,
+        }) => {
+            const data: ChartData = {
+                chart: {zoom: {enabled: true, type: 'x'}},
+                legend: {enabled: false},
+                xAxis: {min: 0, max: 10, padding: {min: 0, max: 0}},
+                yAxis: [{padding: {min: 0, max: 0}}],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Peak',
+                            data: [
+                                {x: 0, y: 0},
+                                {x: 5, y: 100},
+                                {x: 10, y: 0},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 600, height: 360}} />,
+            );
+            const path = component.locator('.gcharts-line > path');
+            await expect(path).toHaveAttribute('d', /M/);
+            const initialPath = await path.getAttribute('d');
+            const initialBounds = await component.locator('.gcharts-brush .overlay').boundingBox();
+            if (!initialBounds) throw new Error('Plot bounds are unavailable');
+            const brushY = initialBounds.y + initialBounds.height / 2;
+            await page.mouse.move(initialBounds.x + initialBounds.width * 0.49, brushY);
+            await page.mouse.down();
+            await page.mouse.move(initialBounds.x + initialBounds.width * 0.51, brushY, {steps: 4});
+            await page.mouse.up();
+            await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+            await expect(path).not.toHaveAttribute('d', initialPath ?? '');
+            const bounds = await component.locator('.gcharts-brush .overlay').boundingBox();
+            if (!bounds) throw new Error('Plot bounds are unavailable');
+            const edgeHeights = await path.evaluate((node, plot) => {
+                const line = node as SVGPathElement;
+                const matrix = line.getScreenCTM();
+                if (!matrix) throw new Error('Line transform is unavailable');
+                const length = line.getTotalLength();
+                return [0.1, 0.9].map((fraction) => {
+                    const target = plot.x + plot.width * fraction;
+                    let min = 0;
+                    let max = length;
+                    // This fixture is monotonic in X; find its height near each plot edge.
+                    for (let i = 0; i < 32; i++) {
+                        const point = line.getPointAtLength((min + max) / 2);
+                        const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix);
+                        if (screen.x < target) min = (min + max) / 2;
+                        else max = (min + max) / 2;
+                    }
+                    const point = line.getPointAtLength((min + max) / 2);
+                    return new DOMPoint(point.x, point.y).matrixTransform(matrix).y;
+                });
+            }, bounds);
+            for (const y of edgeHeights) {
+                expect(y).toBeGreaterThanOrEqual(bounds.y);
+                expect(y).toBeLessThanOrEqual(bounds.y + bounds.height);
+            }
+        });
+
         test('keeps visible line geometry through repeated zooms without interior samples', async ({
             mount,
         }) => {

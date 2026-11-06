@@ -484,10 +484,13 @@ export function createYScale(args: {
                 }
 
                 if (hasNumberAndNullValues) {
-                    const [yMinTimestamp, yMaxTimestamp] = extent(domain as [number, number]) as [
+                    const [dataMin, dataMax] = extent(domain as [number, number]) as [
                         number,
                         number,
                     ];
+                    // Interpolated bounds may contain fractional milliseconds, which Dates truncate.
+                    const yMinTimestamp = Math.floor(dataMin);
+                    const yMaxTimestamp = Math.ceil(dataMax);
                     const isPointDomain = requirements.centerSingleValue
                         ? checkIsPointDomain([yMinTimestamp, yMaxTimestamp])
                         : false;

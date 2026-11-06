@@ -86,8 +86,14 @@ export interface PlacementSegment {
     yMin: number;
 }
 
+interface LinePoint {
+    x: number | null;
+    y: number | null;
+    hiddenInLine?: boolean;
+}
+
 /** Mirrors the d3 line `defined()` predicate from the line renderer */
-export function isDrawnPoint(p: PointData): p is PointData & {x: number; y: number} {
+export function isDrawnPoint<T extends LinePoint>(p: T): p is T & {x: number; y: number} {
     return p.x !== null && p.y !== null && !p.hiddenInLine;
 }
 
@@ -174,14 +180,14 @@ class SegmentCollector {
  * curve exactly as the renderer does and flattened into segments.
  */
 export function getLineSegments(
-    data: Array<{curveFactory?: CurveFactory; lineWidth: number; points: PointData[]}>,
+    data: Array<{curveFactory?: CurveFactory; lineWidth: number; points: LinePoint[]}>,
 ): PlacementSegment[] {
     const segments: PlacementSegment[] = [];
     for (const d of data) {
         const halfWidth = d.lineWidth / 2;
         if (d.curveFactory) {
             const collector = new SegmentCollector(halfWidth);
-            lineGenerator<PointData>()
+            lineGenerator<LinePoint>()
                 .defined(isDrawnPoint)
                 .x((p) => p.x as number)
                 .y((p) => p.y as number)

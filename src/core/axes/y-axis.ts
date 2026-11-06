@@ -230,8 +230,6 @@ export const getPreparedYAxis = ({
                 min: get(axisItem, 'min'),
                 max: get(axisItem, 'max'),
                 padding: {
-                    ...defaultPadding,
-                    ...axisItem.padding,
                     min: axisItem.padding?.min ?? defaultPadding.min,
                     max:
                         axisItem.padding?.max ??

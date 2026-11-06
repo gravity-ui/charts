@@ -17,7 +17,6 @@ import {
     validateSeriesColor,
     validateXYSeries,
 } from '~core/validation/helpers';
-import {filterPoints} from '~core/zoom/filter-data';
 
 import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
@@ -26,7 +25,7 @@ import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
 import {validateInterpolation, validateLabelAnchor} from './validation';
-import {getLineAxisData} from './zoom';
+import {filterLineData, getLineAxisData} from './zoom';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -104,7 +103,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
-        filterData: ({series, viewport}) => filterPoints(series.data, viewport, {mode: 'path'}),
+        filterData: filterLineData,
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
     prepareSeries: prepareLineSeries,

@@ -267,8 +267,6 @@ export const getPreparedXAxis = async ({
         startOnTick: get(xAxis, 'startOnTick'),
         endOnTick: get(xAxis, 'endOnTick'),
         padding: {
-            ...defaultPadding,
-            ...xAxis?.padding,
             min: xAxis?.padding?.min ?? defaultPadding.min,
             max: xAxis?.padding?.max ?? defaultPadding.max ?? '1%',
         },

@@ -1,10 +1,122 @@
 import type {DomainViewport} from '../../series/axis-contract';
 import {getPreparedSeries} from '../../series/prepareSeries';
 import type {PreparedLegendOptions} from '../../series/types';
+import type {ChartXAxis, ChartYAxis, LineSeries} from '../../types';
 import {filterPoints} from '../filter-data';
+import type {ZoomState} from '../types';
 import {getZoomedSeriesData} from '../zoom';
 
 const viewport: DomainViewport = {x: {type: 'linear', range: [2, 4]}, y: {type: 'linear'}};
+
+interface LineSelectionCase {
+    title: string;
+    series: LineSeries;
+    zoomState: Partial<ZoomState>;
+    xAxis?: ChartXAxis;
+    yAxis?: ChartYAxis[];
+    visible: boolean;
+}
+
+test.each<LineSelectionCase>([
+    {
+        title: 'a null gap crossing X',
+        series: {
+            type: 'line',
+            name: 'Gap',
+            data: [
+                {x: 0, y: 20},
+                {x: 10, y: null},
+                {x: 20, y: 80},
+            ],
+        },
+        zoomState: {x: [2, 4]},
+        visible: false,
+    },
+    {
+        title: 'a segment crossing X outside the selected Y range',
+        series: {
+            type: 'line',
+            name: 'Line',
+            data: [
+                {x: 0, y: 20},
+                {x: 10, y: 80},
+            ],
+        },
+        zoomState: {x: [2, 4], y: [[65, 75]]},
+        visible: false,
+    },
+    {
+        title: 'a curve missing the selected rectangle',
+        series: {
+            type: 'line',
+            name: 'Curve',
+            interpolation: {type: 'cardinal'},
+            data: [
+                {x: 0, y: 20},
+                {x: 10, y: 80},
+                {x: 0, y: 90},
+            ],
+        },
+        zoomState: {x: [2, 4], y: [[65, 75]]},
+        visible: false,
+    },
+    {
+        title: 'a segment crossing the selected rectangle',
+        series: {
+            type: 'line',
+            name: 'Line',
+            data: [
+                {x: 0, y: 20},
+                {x: 10, y: 80},
+            ],
+        },
+        zoomState: {x: [2, 4], y: [[35, 40]]},
+        visible: true,
+    },
+    {
+        title: 'a segment crossing the rectangle on logarithmic X',
+        series: {
+            type: 'line',
+            name: 'Line',
+            data: [
+                {x: 1, y: 20},
+                {x: 100, y: 80},
+            ],
+        },
+        zoomState: {x: [10, 20], y: [[45, 65]]},
+        xAxis: {type: 'logarithmic'},
+        visible: true,
+    },
+    {
+        title: 'a segment crossing X with category names on Y',
+        series: {
+            type: 'line',
+            name: 'Line',
+            data: [
+                {x: 0, y: 'Low'},
+                {x: 10, y: 'High'},
+            ],
+        },
+        zoomState: {x: [2, 4]},
+        yAxis: [{type: 'category', categories: ['Low', 'Middle', 'High']}],
+        visible: true,
+    },
+])('line selection retains geometry only for a visible path: $title', async (args) => {
+    const series = await getPreparedSeries({
+        seriesData: [args.series],
+        seriesOptions: undefined,
+        colors: ['black'],
+        preparedLegend: {enabled: false} as PreparedLegendOptions,
+    });
+    const selection = getZoomedSeriesData({
+        seriesData: series,
+        zoomState: args.zoomState,
+        xAxis: args.xAxis,
+        yAxis: args.yAxis,
+    });
+    expect(selection.preparedSeries[0].data).toEqual([]);
+    expect(selection.preparedShapesSeries[0].data).toEqual(args.visible ? args.series.data : []);
+});
 
 test('custom coordinate readers preserve original samples without requiring core point types', () => {
     const points = [

@@ -7,7 +7,7 @@ import type {UnknownSeries} from '../utils/series-type-guards';
 import type {ZoomState} from '../zoom/types';
 
 import type {AxisDomainValue, DomainViewport} from './axis-contract';
-import {getAxisSeriesGroups, getSeriesAxis} from './axis-policies';
+import {getAxisSeriesGroups, getSeriesAxis, getSeriesAxisRequirements} from './axis-policies';
 import type {AxisSeriesGroup} from './axis-policies';
 import type {PreparedSeries} from './types';
 
@@ -82,8 +82,9 @@ export function getAxisDomainValues(
         ? group(options.fallbackSeries, (item) => item.type)
         : undefined;
     for (const [type, items] of group(series, (item) => item.type)) {
-        if (!getSeriesAxis(items[0], axis)) continue;
-        const axisData = getSeriesAxis(items[0], axis)?.getData?.({
+        const seriesAxis = getSeriesAxis(items[0], axis);
+        if (!seriesAxis) continue;
+        const axisData = seriesAxis.getData?.({
             series: items as (ChartSeries | PreparedSeries)[],
             axis,
             viewport: options?.viewport,
@@ -114,17 +115,26 @@ export function collectYAxisDomainValues(args: {
     if (!zoomState.x && !zoomState.y) return undefined;
 
     let xRange = zoomState.x;
-    if (xRange && xAxis?.type === 'datetime') {
+    if (xRange && xAxis?.type !== 'category') {
         const visible = fallbackSeries.filter((item) => item.visible);
-        const values =
-            xAxis.timestamps ?? getAxisDomainValues(visible.length ? visible : fallbackSeries, 'x');
-        if (values.length) {
-            // Match the datetime X scale's data-clipped viewport, using the same axis series.
-            xRange = getDatetimeDomain(
-                extent(values as number[]) as [number, number],
-                xRange[0],
-                xRange[1],
-            );
+        const axisSeries = visible.length ? visible : fallbackSeries;
+        const requirements = getSeriesAxisRequirements(axisSeries, 'x');
+        if (
+            xAxis?.type === 'datetime' ||
+            (requirements.centerSingleValue && !requirements.fixedDomain)
+        ) {
+            const values =
+                (xAxis?.type === 'datetime' ? xAxis.timestamps : undefined) ??
+                getAxisDomainValues(axisSeries, 'x');
+            if (values.length) {
+                const domain = extent(values as number[]) as [number, number];
+                if (xAxis?.type === 'datetime') {
+                    xRange = getDatetimeDomain(domain, xRange[0], xRange[1]);
+                } else if (domain[0] === domain[1]) {
+                    // A centered X domain uses neighbor-based projection; preserve its sample Y domain.
+                    xRange = domain;
+                }
+            }
         }
     }
 
