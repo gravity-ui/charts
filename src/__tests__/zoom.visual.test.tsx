@@ -358,6 +358,64 @@ test.describe('Zoom', () => {
     });
 
     test.describe('Type xy', () => {
+        test('retains a line crossing adjacent selection edges without samples', async ({
+            mount,
+            page,
+        }) => {
+            const data: ChartData = {
+                chart: {zoom: {enabled: true, type: 'xy'}},
+                legend: {enabled: false},
+                xAxis: {
+                    min: 0,
+                    max: 100,
+                    startOnTick: false,
+                    endOnTick: false,
+                    padding: {min: 0, max: 0},
+                },
+                yAxis: [{min: 0, max: 100, padding: {min: 0, max: 0}}],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Line',
+                            data: [
+                                {x: 0, y: 60},
+                                {x: 60, y: 0},
+                            ],
+                        },
+                    ],
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 600, height: 360}} />,
+            );
+            const path = component.locator('.gcharts-line > path');
+            await expect(path).toHaveAttribute('d', /M/);
+            const initialPath = await path.getAttribute('d');
+            const box = await component.locator('.gcharts-brush .overlay').boundingBox();
+            if (!box) throw new Error('Plot bounds are unavailable');
+            await page.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.2);
+            await page.mouse.down();
+            await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.8, {steps: 4});
+            await page.mouse.up();
+            await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+            await expect(path).not.toHaveAttribute('d', initialPath ?? '');
+            const bounds = await component.locator('.gcharts-brush .overlay').boundingBox();
+            if (!bounds) throw new Error('Plot bounds are unavailable');
+            const midpoint = await path.evaluate((node) => {
+                const line = node as SVGPathElement;
+                const matrix = line.getScreenCTM();
+                if (!matrix) throw new Error('Line transform is unavailable');
+                const point = line.getPointAtLength(line.getTotalLength() / 2);
+                const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix);
+                return {x: screen.x, y: screen.y};
+            });
+            expect(midpoint.x).toBeGreaterThan(bounds.x);
+            expect(midpoint.x).toBeLessThan(bounds.x + bounds.width);
+            expect(midpoint.y).toBeGreaterThan(bounds.y);
+            expect(midpoint.y).toBeLessThan(bounds.y + bounds.height);
+        });
+
         test('Datetime x, linear y', async ({mount}) => {
             const data = cloneDeep(scatterBasicData);
             set(data, 'chart.zoom', {enabled: true, type: 'xy'});

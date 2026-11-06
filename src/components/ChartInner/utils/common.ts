@@ -6,22 +6,13 @@ import isEqual from 'es-toolkit/compat/isEqual';
 import type {PreparedAxis, PreparedSeries} from '../../../hooks';
 import type {PreparedZoom} from '../../../hooks/types';
 
+/** Check plots represented by the caller's visible series, including their empty selections. */
 export function hasAtLeastOneSeriesDataPerPlot(
     seriesData: PreparedSeries[],
     yAxes: PreparedAxis[] = [],
 ) {
+    if (yAxes.length === 0) return false;
     const hasDataMap = new Map<number, boolean>();
-    yAxes.forEach((yAxis) => {
-        const plotIndex = yAxis.plotIndex ?? 0;
-        if (!hasDataMap.has(plotIndex)) {
-            hasDataMap.set(plotIndex, false);
-        }
-    });
-
-    if (hasDataMap.size === 0) {
-        return false;
-    }
-
     seriesData.forEach((seriesDataChunk) => {
         let yAxisIndex = 0;
 
@@ -31,15 +22,11 @@ export function hasAtLeastOneSeriesDataPerPlot(
 
         const yAxis = yAxes[yAxisIndex];
         const plotIndex = yAxis?.plotIndex ?? 0;
-
-        if (!hasDataMap.get(plotIndex)) {
-            if (Array.isArray(seriesDataChunk.data) && seriesDataChunk.data.length > 0) {
-                hasDataMap.set(plotIndex, true);
-            }
-        }
+        const hasData = Array.isArray(seriesDataChunk.data) && seriesDataChunk.data.length > 0;
+        hasDataMap.set(plotIndex, hasDataMap.get(plotIndex) || hasData);
     });
 
-    return [...hasDataMap.values()].every((hasData) => hasData);
+    return hasDataMap.size > 0 && [...hasDataMap.values()].every((hasData) => hasData);
 }
 
 export function useAsyncState<T>(

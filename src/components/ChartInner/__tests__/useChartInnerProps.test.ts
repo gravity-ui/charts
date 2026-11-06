@@ -10,6 +10,7 @@ import type {PreparedAreaData} from '../../../core/shapes/area/types';
 import type {PreparedBarXData} from '../../../core/shapes/bar-x/types';
 import type {PreparedBarYData} from '../../../core/shapes/bar-y/types';
 import * as shapes from '../../../hooks/useShapes';
+import * as zoom from '../../../hooks/useZoom';
 import type {ChartData} from '../../../types';
 import * as gradientReference from '../prepareGradientReference';
 import {useChartInnerProps} from '../useChartInnerProps';
@@ -386,6 +387,56 @@ describe('legend and domain updates', () => {
         ).toBeGreaterThan(-100);
         const area = result.current.shapesData[0] as PreparedAreaData;
         expect(area.points.map((point) => point.data.y)).toEqual([-75]);
+    });
+
+    test('only visible series can permit a zoom with no interior samples', async () => {
+        const useZoom = jest.spyOn(zoom, 'useZoom').mockImplementation(() => {});
+        const props = getProps({
+            legend: {enabled: true},
+            series: {
+                data: [
+                    {
+                        type: 'scatter',
+                        name: 'Samples',
+                        data: [
+                            {x: 0, y: 20},
+                            {x: 20, y: 80},
+                        ],
+                    },
+                    {
+                        type: 'line',
+                        name: 'Line',
+                        visible: false,
+                        data: [
+                            {x: 0, y: 20},
+                            {x: 20, y: 80},
+                        ],
+                    },
+                ],
+            },
+        });
+        const {result} = renderHook(useChartInnerProps, {initialProps: props});
+        await waitFor(() => expect(result.current.shapesReady).toBe(true));
+        const nextZoomState = {x: [2, 4] as [number, number]};
+        act(() => useZoom.mock.lastCall?.[0].onUpdate(nextZoomState));
+        expect(props.updateZoomState).not.toHaveBeenCalled();
+
+        const line = result.current.preparedSeries.find((series) => series.type === 'line');
+        if (!line) throw new Error('Line series is unavailable');
+        act(() =>
+            result.current.handleLegendItemClick({
+                id: line.legend.groupId,
+                name: line.name,
+                metaKey: true,
+            }),
+        );
+        await waitFor(() =>
+            expect(
+                result.current.preparedSeries.find((series) => series.type === 'line')?.visible,
+            ).toBe(true),
+        );
+        act(() => useZoom.mock.lastCall?.[0].onUpdate(nextZoomState));
+        expect(props.updateZoomState).toHaveBeenCalledWith(nextZoomState);
     });
 
     test.each(['linear', 'datetime'] as const)(

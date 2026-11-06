@@ -1,7 +1,7 @@
 import type {DomainViewport} from '../../series/axis-contract';
 import {getPreparedSeries} from '../../series/prepareSeries';
 import type {PreparedLegendOptions} from '../../series/types';
-import type {ChartXAxis, ChartYAxis, LineSeries} from '../../types';
+import type {ChartSeries, ChartXAxis, ChartYAxis, LineSeries} from '../../types';
 import {filterPoints} from '../filter-data';
 import type {ZoomState} from '../types';
 import {getZoomedSeriesData} from '../zoom';
@@ -61,6 +61,50 @@ test.each<LineSelectionCase>([
         visible: false,
     },
     {
+        title: 'a segment entering adjacent rectangle edges',
+        series: {
+            type: 'line',
+            name: 'Line',
+            data: [
+                {x: 0, y: 60},
+                {x: 60, y: 0},
+            ],
+        },
+        zoomState: {x: [20, 80], y: [[20, 80]]},
+        visible: true,
+    },
+    {
+        title: 'a corner crossing beside a separate segment outside the selected rectangle',
+        series: {
+            type: 'line',
+            name: 'Line',
+            data: [
+                {x: 0, y: 60},
+                {x: 60, y: 0},
+                {x: 90, y: null},
+                {x: 0, y: 90},
+                {x: 100, y: 90},
+            ],
+        },
+        zoomState: {x: [20, 80], y: [[20, 80]]},
+        visible: true,
+    },
+    {
+        title: 'an excluded plot',
+        series: {
+            type: 'line',
+            name: 'Other plot',
+            yAxis: 1,
+            data: [
+                {x: 0, y: 20},
+                {x: 10, y: 80},
+            ],
+        },
+        zoomState: {x: [2, 4], y: [[30, 40], undefined]},
+        yAxis: [{type: 'linear'}, {type: 'linear', plotIndex: 1}],
+        visible: false,
+    },
+    {
         title: 'a segment crossing the selected rectangle',
         series: {
             type: 'line',
@@ -117,6 +161,52 @@ test.each<LineSelectionCase>([
     expect(selection.preparedSeries[0].data).toEqual([]);
     expect(selection.preparedShapesSeries[0].data).toEqual(args.visible ? args.series.data : []);
 });
+
+test.each(['area', 'area-range'] as const)(
+    '%s retains crossing geometry only when missing points are connected',
+    async (type) => {
+        for (const nullMode of ['skip', 'connect'] as const) {
+            const source: ChartSeries =
+                type === 'area'
+                    ? {
+                          type,
+                          name: 'Gap',
+                          nullMode,
+                          data: [
+                              {x: 0, y: 20},
+                              {x: 10, y: null},
+                              {x: 20, y: 80},
+                          ],
+                      }
+                    : {
+                          type,
+                          name: 'Gap',
+                          nullMode,
+                          data: [
+                              {x: 0, y0: 10, y1: 20},
+                              {x: 10, y0: null, y1: 30},
+                              {x: 20, y0: 40, y1: 80},
+                          ],
+                      };
+            const series = await getPreparedSeries({
+                seriesData: [source],
+                seriesOptions: undefined,
+                colors: ['black'],
+                preparedLegend: {enabled: false} as PreparedLegendOptions,
+            });
+            const selection = getZoomedSeriesData({seriesData: series, zoomState: {x: [2, 4]}});
+            expect(selection.preparedSeries[0].data).toEqual([]);
+            const anchors = selection.preparedShapesSeries[0].data;
+            if (!Array.isArray(anchors)) throw new Error('Expected point data');
+            expect(anchors).toEqual(nullMode === 'connect' ? [source.data[0], source.data[2]] : []);
+            if (nullMode === 'connect') {
+                expect(anchors[0]).toBe(source.data[0]);
+                expect(anchors[1]).toBe(source.data[2]);
+            }
+            expect(source.data).toHaveLength(3);
+        }
+    },
+);
 
 test('custom coordinate readers preserve original samples without requiring core point types', () => {
     const points = [

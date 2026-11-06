@@ -19,6 +19,8 @@ interface FilterPointsOptions<TPoint> {
     getY?(point: TPoint): AxisDomainValue;
     isXInRange?(point: TPoint, axis: DomainAxis): boolean;
     isYInRange?(point: TPoint, axis: DomainAxis): boolean;
+    /** Whether this point can form a path segment with an adjacent defined point. */
+    isDefined?(point: TPoint): boolean;
     axes?: 'x' | 'y' | 'xy';
     mode?: 'points' | 'path';
 }
@@ -81,6 +83,8 @@ export function filterPoints<TPoint>(
                 append(index);
             } else if (
                 index > 0 &&
+                options.isDefined?.(points[index - 1]) !== false &&
+                options.isDefined?.(point) !== false &&
                 ((filterX && spansRange(getX(points[index - 1]), getX(point), viewport.x)) ||
                     (filterY &&
                         viewport.y.type !== 'category' &&

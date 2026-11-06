@@ -26,7 +26,12 @@ import {
 import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../types';
+import type {
+    AreaFormatContext,
+    AreaSeries,
+    AreaSeriesData,
+    TooltipDataChunkArea,
+} from '../../types';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
@@ -43,6 +48,10 @@ function getAreaDomainData(
     // Area projection keeps the last point at each X, including an explicit null.
     const points = getDomainPoints(series.data, viewport, {axes: series.stacking ? 'x' : 'xy'});
     return [...new Map(points.map((point) => [String(point.x), point])).values()];
+}
+
+function isAreaPointDefined(point: AreaSeriesData) {
+    return point.y !== null && point.y !== undefined;
 }
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
@@ -68,7 +77,17 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
         filterData: ({series, viewport}) =>
-            filterPoints(series.data, viewport, {mode: 'path', axes: series.stacking ? 'x' : 'xy'}),
+            filterPoints(
+                series.nullMode === 'connect'
+                    ? series.data.filter(isAreaPointDefined)
+                    : series.data,
+                viewport,
+                {
+                    mode: 'path',
+                    axes: series.stacking ? 'x' : 'xy',
+                    isDefined: isAreaPointDefined,
+                },
+            ),
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
         includeSolidSeries: true,

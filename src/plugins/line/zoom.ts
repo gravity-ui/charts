@@ -32,12 +32,19 @@ function createCoordinateProjector(axis: DomainAxis) {
 
 export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeries>) {
     const selection = filterPoints(series.data, viewport, {mode: 'path'});
-    if (selection.data.length || !selection.shapeData?.length) return selection;
+    if (
+        selection.data.length ||
+        viewport.x.type === 'category' ||
+        viewport.x.excluded ||
+        viewport.y.excluded
+    )
+        return selection;
 
-    // Retained anchors can straddle an axis without a defined path entering the selected rectangle.
+    // Check the original path: segments entering adjacent rectangle edges may have no retained anchors.
+    const shapeData = series.data;
     const projectX = createCoordinateProjector(viewport.x);
     const projectY = createCoordinateProjector(viewport.y);
-    const points = selection.shapeData.map((point) => ({
+    const points = shapeData.map((point) => ({
         x: projectX(point.x),
         y: projectY(point.y),
     }));
@@ -55,7 +62,7 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
     }
     const rect = {x: xMin, y: yMin, width: xMax - xMin, height: yMax - yMin};
     const hasGeometry = segments.some((segment) => segmentIntersectsRect(segment, rect));
-    return hasGeometry ? selection : {...selection, shapeData: []};
+    return {...selection, shapeData: hasGeometry ? shapeData : []};
 }
 
 export function getLineAxisData({series, viewport}: GetAxisDataArgs<LineSeries>) {

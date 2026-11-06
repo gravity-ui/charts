@@ -23,11 +23,15 @@ import {
 import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaRangeSeries, TooltipDataChunkAreaRange} from '../../types';
+import type {AreaRangeSeries, AreaRangeSeriesData, TooltipDataChunkAreaRange} from '../../types';
 
 import {getAreaRangeAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
+
+function isAreaRangePointDefined(point: AreaRangeSeriesData) {
+    return point.y0 !== null && point.y1 !== null;
+}
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
     type: 'area-range',
@@ -50,14 +54,21 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
         filterData: ({series, viewport}) =>
-            filterPoints(series.data, viewport, {
-                mode: 'path',
-                isYInRange: ({y0, y1}, axis) => {
-                    if (!axis.range) return true;
-                    const [min, max] = axis.range;
-                    return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
+            filterPoints(
+                series.nullMode === 'connect'
+                    ? series.data.filter(isAreaRangePointDefined)
+                    : series.data,
+                viewport,
+                {
+                    mode: 'path',
+                    isDefined: isAreaRangePointDefined,
+                    isYInRange: ({y0, y1}, axis) => {
+                        if (!axis.range) return true;
+                        const [min, max] = axis.range;
+                        return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
+                    },
                 },
-            }),
+            ),
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
     prepareSeries: prepareAreaRangeSeries,
