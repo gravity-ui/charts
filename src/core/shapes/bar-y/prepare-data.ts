@@ -34,7 +34,7 @@ interface PrepareBarYDataArgs {
 
 interface BarYPreparationItem {
     shape: PreparedBarYData;
-    /** Allows outside svgLabels at the end of each left- or right-extending stack branch. */
+    /** Allows outside labels at the end of each left- or right-extending stack branch. */
     isStackEnd: boolean;
     /** Screen direction from the segment's base toward its value along the value axis. */
     valueAxisDirection: 'left' | 'right';
@@ -375,6 +375,10 @@ export function filterBarYDataLabels(
     data: BarYShapesArgs,
     otherLayers: ShapeLabels[],
 ): BarYShapesArgs {
+    if (!data.svgLabels.length && !data.htmlLabels.length) {
+        return data;
+    }
+
     const series = [...new Set(data.shapes.map((shape) => shape.series))];
     const svgLabelsBySeries = group(data.svgLabels, (label) => label.series);
     const htmlLabelsBySeries = group(data.htmlLabels, (label) => label.series);

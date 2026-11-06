@@ -23,7 +23,6 @@ describe('area stack label priority', () => {
                 hangingOffset: 2,
             });
             jest.spyOn(textUtils, 'getTextSizeFn').mockReturnValue(measure);
-            jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(measure);
 
             const series = await areaPlugin.prepareSeries({
                 series: [20, 1].map((y) => ({
@@ -31,7 +30,7 @@ describe('area stack label priority', () => {
                     name: String(y),
                     stacking: 'normal',
                     data: [{x: 1, y}],
-                    dataLabels: {enabled: true, allowOverlap, inside: false, padding: 5},
+                    dataLabels: {enabled: true, allowOverlap, padding: 5},
                 })),
                 colorScale: scaleOrdinal([] as string[], ['#000']),
                 colors: [],

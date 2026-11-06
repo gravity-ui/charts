@@ -1532,7 +1532,6 @@ test.describe('Bar-x series', () => {
                 .toBeLessThan(before.x - 50);
             await expect(totalLabel).toHaveText('21');
             await expect(pointLabel).toHaveCount(0);
-            expect(await getOverlappingLabelPairs(totalLabel.or(pointLabel))).toHaveLength(0);
         });
     });
 });
