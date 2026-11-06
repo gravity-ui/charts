@@ -22,7 +22,7 @@ export function renderBarY(
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
-    const {shapes, labels: dataLabels} = preparedData;
+    const {shapes, svgLabels: dataLabels} = preparedData;
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
     const segmentSelection = svgElement
