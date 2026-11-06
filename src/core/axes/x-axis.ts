@@ -5,13 +5,13 @@ import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     PLOT_LINE_HOVER_THRESHOLD,
-    SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
     axisTickMarksDefaults,
     xAxisTitleDefaults,
 } from '../constants';
 import {createXScale} from '../scales/x-scale';
+import {getAxisPaddingDefaults, getSeriesAxisRequirements} from '../series/axis-policies';
 import type {PreparedSeries} from '../series/types';
 import {
     TIME_UNITS,
@@ -172,14 +172,6 @@ async function setLabelSettings({
     axis.labels.rotation = rotation;
 }
 
-function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
-    if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
-        return 0;
-    }
-
-    return '1%';
-}
-
 export const getPreparedXAxis = async ({
     xAxis,
     seriesData,
@@ -197,6 +189,8 @@ export const getPreparedXAxis = async ({
     if (!hasAxisRelatedSeries) {
         return Promise.resolve(null);
     }
+    const requirements = getSeriesAxisRequirements(seriesData, 'x');
+    const defaultPadding = getAxisPaddingDefaults(requirements, boundsWidth);
 
     const isAxisVisible = xAxis?.visible ?? true;
 
@@ -230,8 +224,7 @@ export const getPreparedXAxis = async ({
             : (await getTextSizeFn({style: labelsStyle})('Tmp')).height;
     }
 
-    const shouldHideGrid =
-        isAxisVisible === false || seriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
+    const shouldHideGrid = isAxisVisible === false || requirements.hideGrid;
     const preparedRangeSlider = getPreparedRangeSlider({xAxis});
 
     const preparedXAxis: PreparedXAxis = {
@@ -274,8 +267,10 @@ export const getPreparedXAxis = async ({
         startOnTick: get(xAxis, 'startOnTick'),
         endOnTick: get(xAxis, 'endOnTick'),
         padding: {
+            ...defaultPadding,
             ...xAxis?.padding,
-            max: xAxis?.padding?.max ?? getMaxPaddingBySeries({series: seriesData}),
+            min: xAxis?.padding?.min ?? defaultPadding.min,
+            max: xAxis?.padding?.max ?? defaultPadding.max ?? '1%',
         },
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),

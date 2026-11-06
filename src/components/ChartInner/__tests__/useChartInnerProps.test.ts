@@ -4,6 +4,7 @@ import {act, renderHook, waitFor} from '@testing-library/react';
 import {dispatch} from 'd3-dispatch';
 
 import {DAY} from '~core/constants';
+import {EventType} from '~core/utils';
 
 import type {PreparedAreaData} from '../../../core/shapes/area/types';
 import type {PreparedBarXData} from '../../../core/shapes/bar-x/types';
@@ -386,6 +387,93 @@ describe('legend and domain updates', () => {
         const area = result.current.shapesData[0] as PreparedAreaData;
         expect(area.points.map((point) => point.data.y)).toEqual([-75]);
     });
+
+    test.each(['linear', 'datetime'] as const)(
+        'uses the visible line values for %s axis domains throughout an X zoom',
+        async (type) => {
+            const props = getProps({
+                legend: {enabled: false},
+                xAxis: {type, padding: {max: 0}},
+                yAxis: [{startOnTick: false, endOnTick: false, padding: {min: 0, max: 0}}],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Price',
+                            data: [
+                                {x: 0, y: 20},
+                                {x: 10, y: 80},
+                            ],
+                        },
+                        {type: 'scatter', name: 'Reference', data: [{x: 3, y: 50}]},
+                    ],
+                },
+            });
+            const {result, rerender} = renderHook(useChartInnerProps, {
+                initialProps: {...props, zoomState: {x: [2, 4] as [number, number]}},
+            });
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            expect(result.current.preparedSeries[0].data).toEqual([]);
+            expect(result.current.xScale?.domain().map(Number)).toEqual([2, 4]);
+            const yDomain = result.current.yScale?.[0]?.domain().map(Number) ?? [];
+            expect(yDomain).toEqual([32, 50]);
+            for (const range of [
+                [type === 'datetime' ? 0 : -1, 4],
+                [2, 10],
+            ] as [number, number][]) {
+                const previousShapes = result.current.shapesData;
+                rerender({...props, zoomState: {x: range}});
+                await waitFor(() => expect(result.current.shapesData).not.toBe(previousShapes));
+                expect(result.current.yScale?.[0]?.domain().map(Number)).toEqual(
+                    range[1] === 10 ? [type === 'datetime' ? 38 : 32, 80] : [20, 50],
+                );
+            }
+        },
+    );
+
+    test.each(['zoom', 'slider'] as const)(
+        'uses the rendered datetime X extent for Y bounds during %s updates',
+        async (mode) => {
+            const props = getProps({
+                legend: {enabled: false},
+                xAxis: {
+                    type: 'datetime',
+                    rangeSlider: {enabled: mode === 'slider'},
+                    padding: {min: 0, max: 0},
+                },
+                yAxis: [{padding: {min: 0, max: 0}}],
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Temperature',
+                            data: [-34, -29, -31, -22, -25].map((y, day) => ({
+                                x: day * DAY,
+                                y,
+                            })),
+                        },
+                    ],
+                },
+            });
+            props.dispatcher = dispatch(EventType.HOVER_SHAPE);
+            const {result} = renderHook(() => {
+                const state = useChartInnerState({dispatcher: props.dispatcher});
+                return {...state, ...useChartInnerProps({...props, ...state})};
+            });
+            await waitFor(() => expect(result.current.shapesReady).toBe(true));
+            const previousShapes = result.current.shapesData;
+            act(() => {
+                if (mode === 'slider') {
+                    result.current.updateRangeSliderState({min: DAY / 2, max: 3.5 * DAY});
+                } else {
+                    result.current.updateZoomState({x: [DAY / 2, 3.5 * DAY]});
+                }
+            });
+            await waitFor(() => expect(result.current.shapesData).not.toBe(previousShapes));
+            expect(result.current.xScale?.domain().map(Number)).toEqual([DAY, 3 * DAY]);
+            expect(result.current.yScale?.[0]?.domain()).toEqual([-31, -22]);
+        },
+    );
 
     test('x domain is not limited by a range slider that the next data turns off before it is prepared', async () => {
         const series: ChartData['series'] = {

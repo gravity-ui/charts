@@ -185,6 +185,64 @@ test.describe('Zoom', () => {
             await testZoom({component, getZoomOptions: getZoomXOptions});
         });
 
+        test('keeps visible line geometry through repeated zooms without interior samples', async ({
+            mount,
+        }) => {
+            const data: ChartData = {
+                chart: {zoom: {enabled: true, type: 'x'}},
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'line',
+                            name: 'Values',
+                            data: [
+                                {x: 0, y: 20},
+                                {x: 10, y: 80},
+                            ],
+                        },
+                    ],
+                },
+                xAxis: {min: 0, max: 10},
+                yAxis: [{padding: {min: 0, max: 0}}],
+            };
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 600, height: 360}} />,
+            );
+            const path = component.locator('.gcharts-line > path');
+            await expect(path).toHaveAttribute('d', /M/);
+            const initialPath = await path.getAttribute('d');
+            for (let pass = 0; pass < 2; pass++) {
+                const previous = await path.getAttribute('d');
+                await triggerZoom(component, getZoomXOptions);
+                await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+                await expect(path).not.toHaveAttribute('d', previous ?? '');
+                const bounds = await component.locator('.gcharts-brush .overlay').boundingBox();
+                if (!bounds) throw new Error('Plot bounds are unavailable');
+                const visible = await path.evaluate((node, plot) => {
+                    const line = node as SVGPathElement;
+                    const matrix = line.getScreenCTM();
+                    if (!matrix) throw new Error('Line transform is unavailable');
+                    const start = line.getPointAtLength(0);
+                    const end = line.getPointAtLength(line.getTotalLength());
+                    const target = new DOMPoint(plot.x + plot.width / 2, plot.y).matrixTransform(
+                        matrix.inverse(),
+                    );
+                    const ratio = (target.x - start.x) / (end.x - start.x);
+                    const point = new DOMPoint(target.x, start.y + ratio * (end.y - start.y));
+                    const screen = point.matrixTransform(matrix);
+                    return (
+                        line.isPointInStroke(point) &&
+                        screen.y >= plot.y &&
+                        screen.y <= plot.y + plot.height
+                    );
+                }, bounds);
+                expect(visible).toBe(true);
+            }
+            await component.locator('.gcharts-chart__reset-zoom-button').click();
+            await expect(path).toHaveAttribute('d', initialPath ?? '');
+        });
+
         test('Datetime x axis min/max', async ({mount}) => {
             const data = cloneDeep(lineTwoYAxisData);
             set(data, 'chart.zoom', {enabled: true, type: 'x'});

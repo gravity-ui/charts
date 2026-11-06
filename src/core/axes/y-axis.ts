@@ -7,7 +7,6 @@ import {
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     DEFAULT_AXIS_TYPE,
     PLOT_LINE_HOVER_THRESHOLD,
-    SERIES_TYPE,
     axisCrosshairDefaults,
     axisLabelsDefaults,
     axisTickMarksDefaults,
@@ -15,6 +14,8 @@ import {
 } from '../constants';
 import type {ChartScale} from '../scales/types';
 import {createYScale} from '../scales/y-scale';
+import type {AxisDomainValue} from '../series/axis-contract';
+import {getAxisPaddingDefaults, getSeriesAxisRequirements} from '../series/axis-policies';
 import type {PreparedSeries} from '../series/types';
 import {
     calculateNumericProperty,
@@ -36,6 +37,7 @@ export const getYAxisLabelMaxWidth = async (args: {
     axis: PreparedYAxis;
     seriesData: PreparedSeries[];
     scale?: ChartScale;
+    domainValues?: AxisDomainValue[];
 }) => {
     const {axis, scale, seriesData} = args;
 
@@ -45,7 +47,13 @@ export const getYAxisLabelMaxWidth = async (args: {
 
     const getTextSize = getTextSizeFn({style: axis.labels.style});
     const labelLineHeight = (await getTextSize('Tmp')).height;
-    const tickValues = getTickValues({axis, scale, labelLineHeight, series: seriesData});
+    const tickValues = getTickValues({
+        axis,
+        scale,
+        labelLineHeight,
+        series: seriesData,
+        domainValues: args.domainValues,
+    });
     const tickStep = getMinSpaceBetween(tickValues as {value: unknown}[], (d) => Number(d.value));
 
     if (axis.type === 'datetime' && !axis.labels.dateFormat) {
@@ -70,14 +78,6 @@ export const getYAxisLabelMaxWidth = async (args: {
     return {height: size.maxHeight, width: size.maxWidth};
 };
 
-function getMaxPaddingBySeries({series}: {series: PreparedSeries[]}) {
-    if (series.some((s) => s.type === SERIES_TYPE.Heatmap)) {
-        return 0;
-    }
-
-    return '5%';
-}
-
 const VALID_Y_AXIS_TITLE_ROTATION = [0, -90, 90];
 
 function getAxisTitleRotation(
@@ -91,12 +91,14 @@ function getAxisTitleRotation(
 }
 
 export const getPreparedYAxis = ({
+    domainValues,
     height,
     boundsHeight,
     width,
     seriesData,
     yAxis,
 }: {
+    domainValues?: AxisDomainValue[][];
     height: number;
     boundsHeight: number;
     width: number;
@@ -123,6 +125,8 @@ export const getPreparedYAxis = ({
             const axisPosition = get(axisItem, 'position', defaultAxisPosition);
 
             const axisSeriesData = seriesData.filter((s) => get(s, 'yAxis', 0) === axisIndex);
+            const requirements = getSeriesAxisRequirements(axisSeriesData, 'y');
+            const defaultPadding = getAxisPaddingDefaults(requirements, boundsHeight);
 
             const isAxisVisible = axisItem.visible ?? true;
             const labelsEnabled = isAxisVisible && get(axisItem, 'labels.enabled', true);
@@ -169,8 +173,8 @@ export const getPreparedYAxis = ({
             });
 
             const axisType = get(axisItem, 'type', DEFAULT_AXIS_TYPE);
-            const shouldHideGrid =
-                !isAxisVisible || axisSeriesData.some((s) => s.type === SERIES_TYPE.Heatmap);
+            const shouldHideGrid = !isAxisVisible || requirements.hideGrid;
+            const zeroDefaultPadding = axisItem.type === 'datetime' && Boolean(axisItem.timestamps);
 
             let gridEnabled: boolean;
 
@@ -187,6 +191,7 @@ export const getPreparedYAxis = ({
                 }
             }
             const preparedAxis: PreparedYAxis = {
+                domainValues: domainValues?.[axisIndex],
                 type: axisType,
                 labels: {
                     enabled: labelsEnabled,
@@ -225,12 +230,12 @@ export const getPreparedYAxis = ({
                 min: get(axisItem, 'min'),
                 max: get(axisItem, 'max'),
                 padding: {
+                    ...defaultPadding,
                     ...axisItem.padding,
+                    min: axisItem.padding?.min ?? defaultPadding.min,
                     max:
                         axisItem.padding?.max ??
-                        (axisItem.type === 'datetime' && axisItem.timestamps
-                            ? 0
-                            : getMaxPaddingBySeries({series: axisSeriesData})),
+                        (zeroDefaultPadding ? 0 : (defaultPadding.max ?? '5%')),
                 },
                 startOnTick: get(axisItem, 'startOnTick'),
                 endOnTick: get(axisItem, 'endOnTick'),
@@ -311,11 +316,13 @@ export const getPreparedYAxis = ({
 
             if (labelsEnabled) {
                 const scale = createYScale({
+                    domainValues: domainValues?.[axisIndex],
                     axis: preparedAxis,
                     boundsHeight,
                     series: axisSeriesData,
                 });
                 const {height: labelsHeight, width: labelsWidth} = await getYAxisLabelMaxWidth({
+                    domainValues: domainValues?.[axisIndex],
                     axis: preparedAxis,
                     seriesData: axisSeriesData,
                     scale,

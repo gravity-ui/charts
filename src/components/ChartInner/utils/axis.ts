@@ -2,11 +2,13 @@ import get from 'es-toolkit/compat/get';
 
 import {getYAxisLabelMaxWidth} from '~core/axes/y-axis';
 import type {ChartScale} from '~core/scales/types';
+import type {AxisDomainValue} from '~core/series/plugin';
 import type {PreparedSeries} from '~core/series/types';
 
 import type {PreparedYAxis} from '../../../hooks';
 
 export async function recalculateYAxisLabelsWidth(props: {
+    yDomainValues?: AxisDomainValue[][];
     seriesData: PreparedSeries[];
     yAxis: PreparedYAxis[];
     yScale?: (ChartScale | undefined)[];
@@ -30,6 +32,7 @@ export async function recalculateYAxisLabelsWidth(props: {
             }
 
             const res = await getYAxisLabelMaxWidth({
+                domainValues: props.yDomainValues?.[i],
                 axis,
                 seriesData: axisSeriesData,
                 scale,

@@ -51,6 +51,10 @@ function renderShapes({
 
 export const heatmapPlugin: SeriesPlugin<HeatmapSeries, TooltipDataChunkHeatmap> = {
     type: 'heatmap',
+    axes: {
+        x: {bandPadding: 0.5, grid: 'hidden', padding: {max: 0}},
+        y: {bandPadding: 0.5, grid: 'hidden', padding: {max: 0}},
+    },
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareHeatmapSeries({
             series: series as HeatmapSeries[],

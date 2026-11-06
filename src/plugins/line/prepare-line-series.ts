@@ -120,7 +120,7 @@ function prepareSeriesData(series: LineSeries): LineSeriesData[] {
         case 'zero':
             return data.map((p) => withSourcePoint(p, {...p, y: p.y ?? 0}));
         case 'connect':
-            return data.filter((p) => p.y !== null);
+            return data.filter((p) => p.y !== null && p.y !== undefined);
         case 'skip':
         default:
             return data;

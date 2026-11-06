@@ -17,6 +17,7 @@ import {
     validateSeriesColor,
     validateXYSeries,
 } from '~core/validation/helpers';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import type {LineSeries, TooltipDataChunkLine} from '../../types';
 
@@ -25,6 +26,7 @@ import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
 import {validateInterpolation, validateLabelAnchor} from './validation';
+import {getLineAxisData} from './zoom';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -85,6 +87,10 @@ function renderShapes({
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
+    axes: {
+        x: {singleValueDomain: 'center'},
+        y: {singleValueDomain: 'center', getData: getLineAxisData},
+    },
     getAxisPadding: getLineAxisPadding,
     getLayerKey: ({seriesKey}) => seriesKey,
     getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
@@ -95,7 +101,11 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
         const hasZoom = zoomState && Object.keys(zoomState).length > 0;
         return hasZoom || hasMinOrMax ? 'bounds' : 'horizontal';
     },
-    zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
+    zoom: {
+        types: ['x', 'xy', 'y'],
+        defaultType: 'x',
+        filterData: ({series, viewport}) => filterPoints(series.data, viewport, {mode: 'path'}),
+    },
     prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
     prepareSeries: prepareLineSeries,
     validate: ({series, xAxis, yAxis}) => {

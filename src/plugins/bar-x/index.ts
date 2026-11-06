@@ -18,6 +18,7 @@ import {
     validateStacking,
     validateXYSeries,
 } from '~core/validation/helpers';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../types';
 import {getBarDomainData} from '../bar-domain';
@@ -27,6 +28,7 @@ import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
+import {getPercentStackDomain} from '../stacked-axis';
 
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarXSeries} from './prepare-bar-x-series';
@@ -98,9 +100,27 @@ function renderShapes({
 
 export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
     type: 'bar-x',
-    axisBaseline: 'y',
-    isAxisDomainFixed: ({series, axis}) => axis === 'y' && series.stacking === 'percent',
-    zoom: {types: ['x', 'xy'], defaultType: 'x'},
+    axes: {
+        x: {bandPadding: 0.5},
+        y: {
+            baseline: 0,
+            getFixedDomain: getPercentStackDomain,
+            getData: ({series}) => ({
+                domainValues: getStackedDomainValues({
+                    series,
+                    categoryKey: 'x',
+                    valueKey: 'y',
+                    getData: (item) => getBarDomainData(item, 'x', 'y'),
+                }),
+            }),
+        },
+    },
+    zoom: {
+        types: ['x', 'xy'],
+        defaultType: 'x',
+        filterData: ({series, viewport}) =>
+            filterPoints(series.data, viewport, {axes: series.stacking ? 'x' : 'xy'}),
+    },
     prepareSeries: prepareBarXSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateBarLabelPlacement(series.dataLabels);
@@ -126,15 +146,6 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
             valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
         });
     },
-    getAxisDomainValues: ({series, axis}) =>
-        axis === 'y'
-            ? getStackedDomainValues({
-                  series,
-                  categoryKey: 'x',
-                  valueKey: 'y',
-                  getData: (item) => getBarDomainData(item, 'x', 'y'),
-              })
-            : undefined,
     getColorValue: (d) => d.y,
     prepareShapeData,
     renderShapes,
