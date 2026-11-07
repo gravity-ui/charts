@@ -89,6 +89,7 @@ A declarative React charting library — render line, area, bar, pie, scatter, t
 - **The data prop is `data`, shaped `{series: {data: [...]}}`.** Each entry in `series.data` is one series with its own `type` and `data` array — there is no top-level array of series.
 - **Nothing renders without a sized container.** `Chart` fills its parent, so give the wrapper an explicit height.
 - **Requires uikit setup.** Wrap in `Provider` and import `@gravity-ui/uikit/styles/styles.css`; `@gravity-ui/uikit` is a required peer dependency.
+- **Do not build a palette per theme.** Axes, grid, labels, tooltip and borders follow the light/dark theme through `--g-*` tokens from the surrounding uikit `Provider` (or `ThemeProvider`), and the default series palette is the same in both themes, so switching the theme needs no chart code. Swapping series colors by `useThemeType()`, reading tokens with `getComputedStyle`, or keeping light/dark color maps is unnecessary and goes stale when the theme changes. Set `data.colors` (or a series `color`) only for a deliberate brand or semantic color, once, for both themes.
 
 ### Useful docs
 
