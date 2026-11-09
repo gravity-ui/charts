@@ -64,12 +64,15 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         isRangeSlider,
     });
 
-    const filteredData = filterLayerLabels(data, otherLayers);
     const labels = await prepareStackLabels({
         ...args,
         anchors: isRangeSlider ? [] : getBarXStackLabelAnchors(data, args),
-        otherLayers: [...otherLayers, ...filteredData],
+        otherLayers,
     });
+    const filteredData = filterLayerLabels(data, [
+        ...otherLayers,
+        {svgLabels: labels, htmlLabels: []},
+    ]);
     return {renderData: filteredData, tooltipItems: filteredData, labels};
 }
 

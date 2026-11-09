@@ -22,7 +22,40 @@ import {barXBordersData} from '../__stories__/__data__/bar-x/borders';
 import type {BarXSeries, ChartData} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
-import {getLocatorBoundingBox} from './utils';
+import {getLocatorBoundingBox, getOverlappingLabelPairs} from './utils';
+
+const labelSelector = '.gcharts-stack-labels__label';
+
+const stackLabelPriorityCases = [
+    {
+        name: 'SVG: total hides a positive segment label',
+        html: false,
+        sign: 1,
+        totalAllowOverlap: false,
+        segmentAllowOverlap: false,
+    },
+    {
+        name: 'HTML: negative segment label may overlap the total',
+        html: true,
+        sign: -1,
+        totalAllowOverlap: false,
+        segmentAllowOverlap: true,
+    },
+    {
+        name: 'SVG: negative segment label and totals may overlap',
+        html: false,
+        sign: -1,
+        totalAllowOverlap: true,
+        segmentAllowOverlap: true,
+    },
+    {
+        name: 'HTML: total hides a negative segment label even when totals may overlap',
+        html: true,
+        sign: -1,
+        totalAllowOverlap: true,
+        segmentAllowOverlap: false,
+    },
+];
 
 test.describe('Bar-x series', () => {
     test('Basic', async ({mount}) => {
@@ -1410,5 +1443,101 @@ test.describe('Bar-x series', () => {
             await expect(bars.nth(index)).toHaveAttribute('opacity', String(opacity));
         }
         await expect(preview.locator('.gcharts-bar-x__segment-border')).toHaveCount(0);
+    });
+
+    test.describe('Stack label priority', () => {
+        for (const {
+            name,
+            html,
+            sign,
+            totalAllowOverlap,
+            segmentAllowOverlap,
+        } of stackLabelPriorityCases) {
+            test(name, async ({mount}) => {
+                const data: ChartData = {
+                    chart: {margin: {top: 0, right: 0, bottom: 0, left: 0}},
+                    legend: {enabled: false},
+                    xAxis: {visible: false, min: 0, max: 2},
+                    yAxis: [{visible: false, min: -30, max: 30}],
+                    series: {
+                        data: [20, 1].map((value) => ({
+                            type: 'bar-x',
+                            name: String(value),
+                            stacking: 'normal',
+                            data: [
+                                {
+                                    x: 1,
+                                    y: sign * value,
+                                    label: 'segment',
+                                },
+                            ],
+                            stackLabels: {enabled: true, allowOverlap: totalAllowOverlap},
+                            dataLabels: {
+                                enabled: value === 1,
+                                html,
+                                allowOverlap: segmentAllowOverlap,
+                                placement: ['outside'],
+                                padding: 5,
+                            },
+                        })),
+                    },
+                };
+                const component = await mount(
+                    <ChartTestStory data={data} styles={{width: 400, height: 200}} />,
+                );
+                const totalLabel = component.locator(labelSelector);
+                const pointLabel = component.getByText('segment', {exact: true});
+
+                await expect(totalLabel).toHaveText(String(sign * 21));
+                await expect(pointLabel).toHaveCount(segmentAllowOverlap ? 1 : 0);
+                if (segmentAllowOverlap) {
+                    expect(await getOverlappingLabelPairs(totalLabel.or(pointLabel))).toHaveLength(
+                        1,
+                    );
+                }
+            });
+        }
+
+        test('recalculates label priority after resizing', async ({mount}) => {
+            const data: ChartData = {
+                chart: {margin: {top: 0, right: 0, bottom: 0, left: 0}},
+                legend: {enabled: false},
+                xAxis: {visible: false, min: 0, max: 2},
+                yAxis: [{visible: false, min: 0, max: 30}],
+                series: {
+                    data: [20, 1].map((value) => ({
+                        type: 'bar-x',
+                        name: String(value),
+                        stacking: 'normal',
+                        data: [{x: 1, y: value, label: 'segment'}],
+                        stackLabels: {enabled: true},
+                        dataLabels: {
+                            enabled: value === 1,
+                            placement: ['outside'],
+                            padding: 5,
+                        },
+                    })),
+                },
+            };
+            const component = await mount(
+                <ChartTestStory data={data} styles={{width: 400, height: 200}} />,
+            );
+            const totalLabel = component.locator(labelSelector);
+            const pointLabel = component.getByText('segment', {exact: true});
+
+            await expect(totalLabel).toHaveText('21');
+            await expect(pointLabel).toHaveCount(0);
+            const before = await getLocatorBoundingBox(totalLabel);
+
+            await component.update(
+                <ChartTestStory data={data} styles={{width: 240, height: 200}} />,
+            );
+
+            await expect
+                .poll(async () => (await getLocatorBoundingBox(totalLabel)).x)
+                .toBeLessThan(before.x - 50);
+            await expect(totalLabel).toHaveText('21');
+            await expect(pointLabel).toHaveCount(0);
+        });
     });
 });

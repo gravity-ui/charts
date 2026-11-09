@@ -122,8 +122,7 @@ export interface StackLabelsOptions<T = MeaningfulAny> {
      */
     padding?: number;
     /**
-     * Allow totals to overlap other labels. Otherwise overlapping totals are hidden.
-     * Segment labels in the same plugin layer take priority, even for small top segments.
+     * Allow totals to overlap other totals and labels from other series types.
      * @default false
      */
     allowOverlap?: boolean;
