@@ -112,12 +112,15 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             isRangeSlider,
         });
 
-        const filteredData = filterLayerLabels(data, otherLayers);
         const labels = await prepareStackLabels({
             ...args,
             anchors: isRangeSlider ? [] : getAreaStackLabelAnchors(data, args),
-            otherLayers: [...otherLayers, ...filteredData],
+            otherLayers,
         });
+        const filteredData = filterLayerLabels(data, [
+            ...otherLayers,
+            {svgLabels: labels, htmlLabels: []},
+        ]);
         return {
             renderData: filteredData,
             tooltipItems: filteredData,
