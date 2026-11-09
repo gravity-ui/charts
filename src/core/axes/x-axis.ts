@@ -4,6 +4,7 @@ import type {BaseTextStyle, ChartAxisLabels, ChartXAxis} from '../../types';
 import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
+    DEFAULT_X_AXIS_MAX_PADDING,
     PLOT_LINE_HOVER_THRESHOLD,
     axisCrosshairDefaults,
     axisLabelsDefaults,
@@ -268,7 +269,7 @@ export const getPreparedXAxis = async ({
         endOnTick: get(xAxis, 'endOnTick'),
         padding: {
             min: xAxis?.padding?.min ?? defaultPadding.min,
-            max: xAxis?.padding?.max ?? defaultPadding.max ?? '1%',
+            max: xAxis?.padding?.max ?? defaultPadding.max ?? DEFAULT_X_AXIS_MAX_PADDING,
         },
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),

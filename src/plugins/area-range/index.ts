@@ -1,4 +1,5 @@
 import {i18n} from '~core/i18n';
+import type {DomainAxis} from '~core/series/axis-contract';
 import {getDomainPoints} from '~core/series/domain-points';
 import type {
     PrepareShapeDataArgs,
@@ -33,6 +34,11 @@ function isAreaRangePointDefined(point: AreaRangeSeriesData) {
     return point.y0 !== null && point.y1 !== null;
 }
 
+function isAreaRangePointInYRange({y0, y1}: AreaRangeSeriesData, {range}: DomainAxis) {
+    const [min, max] = range as readonly [number, number];
+    return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
+}
+
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
     type: 'area-range',
     axes: {
@@ -40,8 +46,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
             getData: ({series, viewport}) => ({
                 domainValues: series.flatMap((item) =>
                     getDomainPoints(item.data, viewport, {
-                        isYInRange: ({y0, y1}, [min, max]) =>
-                            y0 !== null && y1 !== null && y0 <= max && y1 >= min,
+                        isYInRange: isAreaRangePointInYRange,
                     }).flatMap((point) =>
                         point.y0 === null || point.y1 === null ? [] : [point.y0, point.y1],
                     ),
@@ -62,10 +67,13 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
                 {
                     mode: 'path',
                     isDefined: isAreaRangePointDefined,
-                    isYInRange: ({y0, y1}, axis) => {
-                        if (!axis.range) return true;
-                        const [min, max] = axis.range;
-                        return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
+                    isYInRange: isAreaRangePointInYRange,
+                    overlapsYRange: (from, to, {range}) => {
+                        const [min, max] = range as readonly [number, number];
+                        return (
+                            Math.min(from.y0 ?? NaN, to.y0 ?? NaN) <= max &&
+                            Math.max(from.y1 ?? NaN, to.y1 ?? NaN) >= min
+                        );
                     },
                 },
             ),

@@ -24,18 +24,18 @@ export function getDomainPoints<T extends {x?: AxisDomainValue; y?: AxisDomainVa
     points: readonly T[],
     viewport?: DomainViewport,
     options: {
-        axes?: 'x' | 'xy';
-        isYInRange?: (point: T, range: readonly [number, number]) => boolean;
+        axes?: 'x' | 'y' | 'xy';
+        isYInRange?: (point: T, axis: DomainAxis) => boolean;
     } = {},
 ): readonly T[] {
     if (!viewport) return points;
     const selected = points.filter(
         (point) =>
-            isValueInAxisRange(point.x, viewport.x) &&
+            (options.axes === 'y' || isValueInAxisRange(point.x, viewport.x)) &&
             (options.axes === 'x' ||
                 !viewport.y.range ||
                 (options.isYInRange
-                    ? options.isYInRange(point, viewport.y.range)
+                    ? options.isYInRange(point, viewport.y)
                     : isValueInAxisRange(point.y, viewport.y))),
     );
     return selected.length ? selected : points;

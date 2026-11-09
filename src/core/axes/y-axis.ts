@@ -6,6 +6,7 @@ import {
     DASH_STYLE,
     DEFAULT_AXIS_LABEL_FONT_SIZE,
     DEFAULT_AXIS_TYPE,
+    DEFAULT_Y_AXIS_MAX_PADDING,
     PLOT_LINE_HOVER_THRESHOLD,
     axisCrosshairDefaults,
     axisLabelsDefaults,
@@ -233,7 +234,9 @@ export const getPreparedYAxis = ({
                     min: axisItem.padding?.min ?? defaultPadding.min,
                     max:
                         axisItem.padding?.max ??
-                        (zeroDefaultPadding ? 0 : (defaultPadding.max ?? '5%')),
+                        (zeroDefaultPadding
+                            ? 0
+                            : (defaultPadding.max ?? DEFAULT_Y_AXIS_MAX_PADDING)),
                 },
                 startOnTick: get(axisItem, 'startOnTick'),
                 endOnTick: get(axisItem, 'endOnTick'),

@@ -3,7 +3,11 @@ import isNil from 'es-toolkit/compat/isNil';
 
 import type {AxisDomainValue, DomainAxis, GetAxisDataArgs} from '~core/series/axis-contract';
 import {getDomainPoints} from '~core/series/domain-points';
-import {getLineSegments, segmentIntersectsRect} from '~core/shapes/line/auto-placement';
+import {
+    getLineSegments,
+    isDrawnPoint,
+    segmentIntersectsRect,
+} from '~core/shapes/line/auto-placement';
 import {filterPoints} from '~core/zoom/filter-data';
 import type {FilterSeriesDataArgs} from '~core/zoom/filter-data';
 
@@ -11,6 +15,13 @@ import type {LineSeries} from '../../types';
 import {getVisiblePathYValues} from '../path-domain';
 
 import {getCurveFactory} from './interpolation';
+
+interface PathRun {
+    start: number;
+    end: number;
+    first: number;
+    last: number;
+}
 
 function createCoordinateProjector(axis: DomainAxis) {
     const categories = axis.type === 'category' ? new Map<string, number>() : undefined;
@@ -31,7 +42,13 @@ function createCoordinateProjector(axis: DomainAxis) {
 }
 
 export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeries>) {
-    const selection = filterPoints(series.data, viewport, {mode: 'path'});
+    const projectX = createCoordinateProjector(viewport.x);
+    const projectY = createCoordinateProjector(viewport.y);
+    const selection = filterPoints(series.data, viewport, {
+        mode: 'path',
+        isDefined: (point) => projectX(point.x) !== null && projectY(point.y) !== null,
+    });
+    const smooth = series.interpolation && series.interpolation.type !== 'linear';
     if (
         selection.data.length ||
         viewport.x.type === 'category' ||
@@ -40,16 +57,21 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
     )
         return selection;
 
+    // One defined linear X crossing needs neither a geometry scan nor gap separators.
+    if (!smooth && !viewport.y.range && selection.shapeData?.length === 2) return selection;
+
     // Check the original path: segments entering adjacent rectangle edges may have no retained anchors.
-    const shapeData = series.data;
-    const projectX = createCoordinateProjector(viewport.x);
-    const projectY = createCoordinateProjector(viewport.y);
-    const points = shapeData.map((point) => ({
+    const points = series.data.map((point) => ({
         x: projectX(point.x),
         y: projectY(point.y),
     }));
     const segments = getLineSegments([
-        {points, curveFactory: getCurveFactory(series.interpolation), lineWidth: 0},
+        {
+            points,
+            curveFactory: smooth ? getCurveFactory(series.interpolation) : undefined,
+            lineWidth: 0,
+            trackPointIndices: true,
+        },
     ]);
     const [xMin, xMax] = viewport.x.range
         ? viewport.x.range.map(projectX)
@@ -57,12 +79,61 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
     const [yMin, yMax] = viewport.y.range
         ? viewport.y.range.map(projectY)
         : [min(segments, (segment) => segment.yMin), max(segments, (segment) => segment.yMax)];
-    if (isNil(xMin) || isNil(xMax) || isNil(yMin) || isNil(yMax)) {
+    if (isNil(xMin) || isNil(xMax) || isNil(yMin) || isNil(yMax) || xMin > xMax || yMin > yMax) {
         return {...selection, shapeData: []};
     }
     const rect = {x: xMin, y: yMin, width: xMax - xMin, height: yMax - yMin};
-    const hasGeometry = segments.some((segment) => segmentIntersectsRect(segment, rect));
-    return {...selection, shapeData: hasGeometry ? shapeData : []};
+    const runs: PathRun[] = [];
+    let run: PathRun | undefined;
+    const pointRuns = points.map((point, index) => {
+        if (!isDrawnPoint(point)) {
+            run = undefined;
+            return undefined;
+        }
+        if (!run) {
+            run = {start: index, end: index, first: Infinity, last: -1};
+            runs.push(run);
+        }
+        run.end = index;
+        return run;
+    });
+    for (const segment of segments) {
+        if (!segmentIntersectsRect(segment, rect)) continue;
+        const [from, to] = segment.pointIndices as readonly [number, number];
+        const pathRun = pointRuns[from] as PathRun;
+        pathRun.first = Math.min(pathRun.first, from);
+        pathRun.last = Math.max(pathRun.last, to);
+    }
+    const shapeData: LineSeries['data'] = [];
+    let gapIndex: number | undefined;
+    for (const pathRun of runs) {
+        if (pathRun.last === -1) continue;
+        if (gapIndex !== undefined) shapeData.push(series.data[gapIndex]);
+        let {first, last} = pathRun;
+        if (smooth) {
+            // Cardinal/monotone tangents also depend on the neighboring distinct samples.
+            while (first > pathRun.start) {
+                first--;
+                if (
+                    points[first].x !== points[pathRun.first].x ||
+                    points[first].y !== points[pathRun.first].y
+                )
+                    break;
+            }
+            while (last < pathRun.end) {
+                last++;
+                if (
+                    points[last].x !== points[pathRun.last].x ||
+                    points[last].y !== points[pathRun.last].y
+                )
+                    break;
+            }
+        }
+        // Preserve intervening points so an offscreen detour keeps its original path.
+        for (let index = first; index <= last; index++) shapeData.push(series.data[index]);
+        gapIndex = pathRun.end + 1;
+    }
+    return {...selection, shapeData};
 }
 
 export function getLineAxisData({series, viewport}: GetAxisDataArgs<LineSeries>) {

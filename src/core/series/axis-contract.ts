@@ -73,7 +73,11 @@ export interface SeriesAxis<TSeries> {
      * Core takes the largest resolved request per edge; explicit axis.padding wins.
      */
     padding?: ChartAxisPadding;
-    /** Value-axis baseline on linear scales; log scales retain positive headroom. */
+    /**
+     * Request a zero value-axis baseline on linear scales. Omit for a data-derived baseline.
+     * Only zero is supported; this is a coordinate value, not an enable/disable flag.
+     * Log scales retain positive headroom instead.
+     */
     baseline?: 0;
     /**
      * Fixed numeric bounds override configured limits, zoom, padding and rounding.

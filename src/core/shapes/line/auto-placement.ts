@@ -74,6 +74,8 @@ export interface PlacementRect {
  * bounding box for the cheap intersection reject.
  */
 export interface PlacementSegment {
+    /** Original endpoint indices when trackPointIndices is requested. */
+    pointIndices?: readonly [number, number];
     /** Half of the line stroke width — the rect is inflated by it on intersection checks */
     halfWidth: number;
     x1: number;
@@ -130,35 +132,42 @@ class SegmentCollector {
     private readonly halfWidth: number;
     private x = 0;
     private y = 0;
+    private pointIndex = -1;
+    private readonly points?: readonly LinePoint[];
 
-    constructor(halfWidth: number) {
+    constructor(halfWidth: number, points?: readonly LinePoint[]) {
         this.halfWidth = halfWidth;
+        this.points = points;
     }
 
     moveTo(x: number, y: number) {
         this.x = x;
         this.y = y;
+        this.advancePoint(x, y);
     }
 
     lineTo(x: number, y: number) {
-        this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
-        this.x = x;
-        this.y = y;
+        const start = this.segments.length;
+        this.append(x, y);
+        this.setPointIndices(start, x, y);
     }
 
     quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
+        const start = this.segments.length;
         const {x: x0, y: y0} = this;
         for (let i = 1; i <= CURVE_STEPS; i++) {
             const t = i / CURVE_STEPS;
             const mt = 1 - t;
-            this.lineTo(
+            this.append(
                 mt * mt * x0 + 2 * mt * t * cpx + t * t * x,
                 mt * mt * y0 + 2 * mt * t * cpy + t * t * y,
             );
         }
+        this.setPointIndices(start, x, y);
     }
 
     bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) {
+        const start = this.segments.length;
         const {x: x0, y: y0} = this;
         for (let i = 1; i <= CURVE_STEPS; i++) {
             const t = i / CURVE_STEPS;
@@ -167,11 +176,38 @@ class SegmentCollector {
             const b = 3 * mt * mt * t;
             const c = 3 * mt * t * t;
             const d = t * t * t;
-            this.lineTo(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
+            this.append(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
         }
+        this.setPointIndices(start, x, y);
     }
 
     closePath() {}
+
+    private append(x: number, y: number) {
+        this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
+        this.x = x;
+        this.y = y;
+    }
+
+    private advancePoint(x: number, y: number) {
+        if (!this.points) return;
+        do {
+            this.pointIndex++;
+        } while (
+            this.pointIndex < this.points.length &&
+            (this.points[this.pointIndex].x !== x || this.points[this.pointIndex].y !== y)
+        );
+    }
+
+    private setPointIndices(start: number, x: number, y: number) {
+        if (!this.points) return;
+        const from = this.pointIndex;
+        this.advancePoint(x, y);
+        const pointIndices = [from, this.pointIndex] as const;
+        for (let index = start; index < this.segments.length; index++) {
+            this.segments[index].pointIndices = pointIndices;
+        }
+    }
 }
 
 /**
@@ -180,13 +216,22 @@ class SegmentCollector {
  * curve exactly as the renderer does and flattened into segments.
  */
 export function getLineSegments(
-    data: Array<{curveFactory?: CurveFactory; lineWidth: number; points: LinePoint[]}>,
+    data: Array<{
+        curveFactory?: CurveFactory;
+        lineWidth: number;
+        points: LinePoint[];
+        /** Track endpoints for curves interpolating the input points (linear, cardinal, monotone). */
+        trackPointIndices?: boolean;
+    }>,
 ): PlacementSegment[] {
     const segments: PlacementSegment[] = [];
     for (const d of data) {
         const halfWidth = d.lineWidth / 2;
         if (d.curveFactory) {
-            const collector = new SegmentCollector(halfWidth);
+            const collector = new SegmentCollector(
+                halfWidth,
+                d.trackPointIndices ? d.points : undefined,
+            );
             lineGenerator<LinePoint>()
                 .defined(isDrawnPoint)
                 .x((p) => p.x as number)
@@ -203,7 +248,9 @@ export function getLineSegments(
             const p1 = d.points[i - 1];
             const p2 = d.points[i];
             if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
-                segments.push(makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth));
+                const segment = makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth);
+                if (d.trackPointIndices) segment.pointIndices = [i - 1, i];
+                segments.push(segment);
             }
         }
     }

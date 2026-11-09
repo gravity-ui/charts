@@ -51,6 +51,12 @@ Reuse `filterPoints` for coordinate readers, interval predicates, path mode, and
 
 Filtering and axis data share `viewport`: axis types, categories, and selected ranges. An absent range is unfiltered; `excluded` marks a plot outside the active brush. Derive domains from visible geometry, accounting for retained anchors outside the viewport. `plugins/path-domain.ts` clips straight curve segments from the renderer's factory; smooth curves retain sample-based domains through `getDomainPoints`. Core reuses Y contributions for layout and rendering.
 
+{% note info %}
+
+Line additionally checks the rendered path when an XY selection contains no samples, including segments entering adjacent rectangle edges. Area and area-range retain neighbors and full-axis crossings; they do not perform this complete geometry check. Area-range Y filtering tests each sample's interval, so a band crossing only between samples may be rejected.
+
+{% endnote %}
+
 Keep sorting and missing-value handling in the plugin and consistent with rendering. Area sorts X after category normalization.
 
 ## 3. Render layers and labels

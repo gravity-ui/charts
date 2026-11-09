@@ -1,4 +1,5 @@
 import type {DomainViewport} from '../../series/axis-contract';
+import {getDomainPoints} from '../../series/domain-points';
 import {getPreparedSeries} from '../../series/prepareSeries';
 import type {PreparedLegendOptions} from '../../series/types';
 import type {ChartSeries, ChartXAxis, ChartYAxis, LineSeries} from '../../types';
@@ -15,6 +16,7 @@ interface LineSelectionCase {
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
     visible: boolean;
+    retainedIndices?: number[];
 }
 
 test.each<LineSelectionCase>([
@@ -88,6 +90,7 @@ test.each<LineSelectionCase>([
         },
         zoomState: {x: [20, 80], y: [[20, 80]]},
         visible: true,
+        retainedIndices: [0, 1],
     },
     {
         title: 'an excluded plot',
@@ -159,7 +162,68 @@ test.each<LineSelectionCase>([
         yAxis: args.yAxis,
     });
     expect(selection.preparedSeries[0].data).toEqual([]);
-    expect(selection.preparedShapesSeries[0].data).toEqual(args.visible ? args.series.data : []);
+    expect(selection.preparedShapesSeries[0].data).toEqual(
+        args.visible
+            ? (args.retainedIndices?.map((index) => args.series.data[index]) ?? args.series.data)
+            : [],
+    );
+});
+
+test.each(['area', 'area-range'] as const)(
+    '%s rejects crossing anchors outside the other selected dimension',
+    async (type) => {
+        const source: ChartSeries =
+            type === 'area'
+                ? {
+                      type,
+                      name: 'Area',
+                      data: [
+                          {x: 0, y: 0},
+                          {x: 10, y: 10},
+                      ],
+                  }
+                : {
+                      type,
+                      name: 'Band',
+                      data: [
+                          {x: 0, y0: 0, y1: 1},
+                          {x: 10, y0: 9, y1: 10},
+                      ],
+                  };
+        const series = await getPreparedSeries({
+            seriesData: [source],
+            colors: ['black'],
+            seriesOptions: undefined,
+            preparedLegend: {enabled: false} as PreparedLegendOptions,
+        });
+        for (const zoomState of [
+            {x: [20, 30], y: [[4, 6]]},
+            {x: [4, 6], y: [[20, 30]]},
+        ] satisfies Partial<ZoomState>[]) {
+            const selection = getZoomedSeriesData({seriesData: series, zoomState});
+            expect(selection.preparedSeries[0].data).toEqual([]);
+            expect(selection.preparedShapesSeries[0].data).toEqual([]);
+        }
+    },
+);
+
+test('area-range keeps X crossings when the band overlaps Y away from its lower edge', async () => {
+    const data = [
+        {x: 0, y0: 0, y1: 10},
+        {x: 10, y0: 0, y1: 10},
+    ];
+    const series = await getPreparedSeries({
+        seriesData: [{type: 'area-range', name: 'Band', data}],
+        colors: ['black'],
+        seriesOptions: undefined,
+        preparedLegend: {enabled: false} as PreparedLegendOptions,
+    });
+    const selection = getZoomedSeriesData({
+        seriesData: series,
+        zoomState: {x: [4, 6], y: [[4, 6]]},
+    });
+    expect(selection.preparedSeries[0].data).toEqual([]);
+    expect(selection.preparedShapesSeries[0].data).toEqual(data);
 });
 
 test.each(['area', 'area-range'] as const)(
@@ -249,6 +313,28 @@ test('retains crossing X and Y segments without interior samples or duplicate an
     expect(selected.shapeData).toEqual(data);
 });
 
+test.each([
+    {x: [5, 5], y: [5, 5], sampleCount: 0, anchorCount: 2},
+    {x: [-5, 15], y: [-5, 15], sampleCount: 2, anchorCount: 2},
+    {x: [6, 4], y: [4, 6], sampleCount: 0, anchorCount: 0},
+    {x: [4, 6], y: [6, 4], sampleCount: 0, anchorCount: 0},
+] satisfies {x: [number, number]; y: [number, number]; sampleCount: number; anchorCount: number}[])(
+    'path selection handles degenerate, oversized and empty windows: X $x, Y $y',
+    ({x, y, sampleCount, anchorCount}) => {
+        const points = [
+            {x: 0, y: 0},
+            {x: 10, y: 10},
+        ];
+        const selection = filterPoints(
+            points,
+            {x: {type: 'linear', range: x}, y: {type: 'linear', range: y}},
+            {mode: 'path'},
+        );
+        expect(selection.data).toHaveLength(sampleCount);
+        expect(selection.shapeData).toHaveLength(anchorCount);
+    },
+);
+
 test('coordinate dimensions determine stack filtering and excluded plots stay empty', () => {
     const points = [
         {x: 3, y: 1},
@@ -265,6 +351,25 @@ test('coordinate dimensions determine stack filtering and excluded plots stay em
     ];
     expect(filterPoints(crossing, excluded, {mode: 'path'}).shapeData).toEqual([]);
     expect(filterPoints(points, excluded, {axes: 'x'}).data).toEqual([points[0]]);
+});
+
+test('domain selection supports Y-only filtering and passes the axis to interval predicates', () => {
+    const points = [
+        {x: 0, y: 1},
+        {x: 10, y: 100},
+    ];
+    const view: DomainViewport = {...viewport, y: {type: 'linear', range: [50, 200]}};
+    expect(getDomainPoints(points, view, {axes: 'y'})).toEqual([points[1]]);
+    const bands = [
+        {x: 3, y0: 10, y1: 20},
+        {x: 3, y0: 100, y1: 150},
+    ];
+    const isYInRange = jest.fn((point: (typeof bands)[number], axis: DomainViewport['y']) => {
+        const [min, max] = axis.range as readonly [number, number];
+        return point.y0 <= max && point.y1 >= min;
+    });
+    expect(getDomainPoints(bands, view, {isYInRange})).toEqual([bands[1]]);
+    expect(isYInRange).toHaveBeenCalledWith(bands[0], view.y);
 });
 
 test('connect preprocessing retains crossing geometry and leaves missing raw fields untouched', async () => {

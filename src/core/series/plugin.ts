@@ -30,13 +30,7 @@ import type {ZoomState} from '../zoom/types';
 import type {AxisDomainValue, SeriesAxes} from './axis-contract';
 import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from './types';
 
-export type {
-    AxisDomainValue,
-    DomainAxis,
-    DomainViewport,
-    GetAxisDataArgs,
-    GetAxisDataArgs as GetAxisDomainValuesArgs,
-} from './axis-contract';
+export type {AxisDomainValue, DomainAxis, DomainViewport, GetAxisDataArgs} from './axis-contract';
 
 export interface GetLayerKeyArgs<TSeries> {
     series: TSeries;

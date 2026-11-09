@@ -1,13 +1,10 @@
 import {i18n} from '~core/i18n';
-import type {DomainViewport} from '~core/series/axis-contract';
-import {getDomainPoints} from '~core/series/domain-points';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedAreaSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
@@ -37,18 +34,10 @@ import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
 
 import {getAreaAxisPadding} from './axis-padding';
+import {getAreaAxisData} from './domain';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {getAreaStackLabelAnchors} from './stack-labels';
-
-function getAreaDomainData(
-    series: Pick<AreaSeries, 'data' | 'stacking'>,
-    viewport?: DomainViewport,
-) {
-    // Area projection keeps the last point at each X, including an explicit null.
-    const points = getDomainPoints(series.data, viewport, {axes: series.stacking ? 'x' : 'xy'});
-    return [...new Map(points.map((point) => [String(point.x), point])).values()];
-}
 
 function isAreaPointDefined(point: AreaSeriesData) {
     return point.y !== null && point.y !== undefined;
@@ -62,14 +51,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             baseline: 0,
             singleValueDomain: 'center',
             getFixedDomain: getPercentStackDomain,
-            getData: ({series, viewport}) => ({
-                domainValues: getStackedDomainValues({
-                    series,
-                    categoryKey: 'x',
-                    valueKey: 'y',
-                    getData: (item) => getAreaDomainData(item, viewport),
-                }),
-            }),
+            getData: getAreaAxisData,
         },
     },
     getAxisPadding: getAreaAxisPadding,
