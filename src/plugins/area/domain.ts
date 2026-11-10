@@ -92,9 +92,7 @@ export function getAreaAxisData({series, viewport}: GetAxisDataArgs<AreaDomainSe
     }
     const values: AxisDomainValue[] = [];
     for (const stack of group(series, getSeriesStackId).values()) {
-        const clipStack =
-            stack.some((item) => item.stacking === 'normal') &&
-            !stack.some((item) => item.stacking === 'percent');
+        const clipStack = !stack.some((item) => item.stacking === 'percent');
         const contribution = clipStack
             ? getVisibleStackValues(stack, viewport)
             : getSampleDomain(stack, viewport);

@@ -84,6 +84,46 @@ function domains(
     );
 }
 
+test('fits an unstacked area to its interpolated boundaries under X zoom', async () => {
+    const series = await prepare([
+        {
+            type: 'area',
+            name: 'Area',
+            data: [
+                {x: 0, y: 0},
+                {x: 5, y: 10},
+                {x: 6, y: 12},
+                {x: 10, y: 100},
+            ],
+        },
+    ]);
+    const [domain] = domains(series, [4, 9]);
+    expect(domain).toEqual([0, 78]);
+});
+
+test.each([
+    ['skip', 12],
+    ['connect', 78],
+    ['zero', 50],
+] as const)('clips an unstacked area with nullMode=%s', async (nullMode, max) => {
+    const series = await prepare([
+        {
+            type: 'area',
+            name: 'Area',
+            nullMode,
+            data: [
+                {x: 0, y: 0},
+                {x: 5, y: 10},
+                {x: 6, y: 12},
+                {x: 8, y: null},
+                {x: 10, y: 100},
+            ],
+        },
+    ]);
+    const [domain] = domains(series, [4, 9]);
+    expect(domain).toEqual([0, max]);
+});
+
 test.each([
     {anchor: 1000, sign: 1, min: 0, max: 228},
     {anchor: 10, sign: 1, min: 0, max: 30},
