@@ -8,6 +8,7 @@ import {
     isDrawnPoint,
     segmentIntersectsRect,
 } from '~core/shapes/line/auto-placement';
+import type {PlacementSegment} from '~core/shapes/line/auto-placement';
 import {filterPoints} from '~core/zoom/filter-data';
 import type {FilterSeriesDataArgs} from '~core/zoom/filter-data';
 
@@ -21,6 +22,57 @@ interface PathRun {
     end: number;
     first: number;
     last: number;
+}
+
+interface ProjectedPoint {
+    x: number | null;
+    y: number | null;
+}
+
+function getStepSegments(
+    points: ProjectedPoint[],
+    position: Extract<LineSeries['interpolation'], {type: 'step'}>['position'],
+): PlacementSegment[] {
+    const segments: PlacementSegment[] = [];
+    let t = 1;
+    if (position === 'before') t = 0;
+    if (position === 'middle') t = 0.5;
+    const append = (
+        x1: number,
+        y1: number,
+        x2: number,
+        y2: number,
+        pointIndices: readonly [number, number],
+    ) => {
+        segments.push({
+            halfWidth: 0,
+            x1,
+            y1,
+            x2,
+            y2,
+            xMin: Math.min(x1, x2),
+            xMax: Math.max(x1, x2),
+            yMin: Math.min(y1, y2),
+            yMax: Math.max(y1, y2),
+            pointIndices,
+        });
+    };
+    for (let index = 1; index < points.length; index++) {
+        const previous = points[index - 1];
+        const point = points[index];
+        if (!isDrawnPoint(previous) || !isDrawnPoint(point)) continue;
+        // Intermediate step vertices belong to the same pair of original samples.
+        const pointIndices = [index - 1, index] as const;
+        if (previous.x === point.x && previous.y === point.y) {
+            append(previous.x, previous.y, point.x, point.y, pointIndices);
+            continue;
+        }
+        const x = previous.x * (1 - t) + point.x * t;
+        if (previous.x !== x) append(previous.x, previous.y, x, previous.y, pointIndices);
+        if (previous.y !== point.y) append(x, previous.y, x, point.y, pointIndices);
+        if (x !== point.x) append(x, point.y, point.x, point.y, pointIndices);
+    }
+    return segments;
 }
 
 function createCoordinateProjector(axis: DomainAxis) {
@@ -42,14 +94,15 @@ function createCoordinateProjector(axis: DomainAxis) {
 }
 
 export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeries>) {
+    const {interpolation} = series;
     const projectX = createCoordinateProjector(viewport.x);
     const projectY = createCoordinateProjector(viewport.y);
     const selection = filterPoints(series.data, viewport, {
         mode: 'path',
         isDefined: (point) => projectX(point.x) !== null && projectY(point.y) !== null,
     });
-    const stepped = series.interpolation?.type === 'step';
-    const smooth = series.interpolation && series.interpolation.type !== 'linear' && !stepped;
+    const stepped = interpolation?.type === 'step';
+    const smooth = interpolation && interpolation.type !== 'linear' && !stepped;
     if (
         selection.data.length ||
         viewport.x.type === 'category' ||
@@ -66,20 +119,12 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
         x: projectX(point.x),
         y: projectY(point.y),
     }));
-    const curveFactory = getCurveFactory(series.interpolation);
-    // A step adds intermediate vertices; each pair still belongs to its original anchors.
     const segments = stepped
-        ? points.flatMap((point, index) => {
-              const previous = points[index - 1];
-              if (!previous || !isDrawnPoint(previous) || !isDrawnPoint(point)) return [];
-              return getLineSegments([{points: [previous, point], curveFactory, lineWidth: 0}]).map(
-                  (segment) => ({...segment, pointIndices: [index - 1, index] as const}),
-              );
-          })
+        ? getStepSegments(points, interpolation.position)
         : getLineSegments([
               {
                   points,
-                  curveFactory: smooth ? curveFactory : undefined,
+                  curveFactory: smooth ? getCurveFactory(interpolation) : undefined,
                   lineWidth: 0,
                   trackPointIndices: true,
               },

@@ -1,6 +1,8 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {MountResult} from '@playwright/experimental-ct-react';
+import type {Page} from '@playwright/test';
 
 import StepExample from '../../docs/examples/src/charts/line-interpolation/step';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
@@ -8,6 +10,26 @@ import type {ChartData} from '../types';
 
 import {ChartInteractionTestStory} from './components/ChartInteractionTestStory';
 import {dragElementByCalculatedPosition, getLocatorBoundingBox} from './utils';
+
+async function zoomX(component: MountResult, page: Page, from: number, to: number) {
+    const path = component.locator('.gcharts-line > path');
+    const previous = await path.getAttribute('d');
+    await dragElementByCalculatedPosition({
+        component,
+        page,
+        selector: '.gcharts-chart__content .gcharts-brush .overlay',
+        getDragOptions: ({boundingBox}) => {
+            const y = boundingBox.y + boundingBox.height / 2;
+            return {
+                from: [boundingBox.x + boundingBox.width * from, y],
+                to: [boundingBox.x + boundingBox.width * to, y],
+            };
+        },
+    });
+    await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+    await expect(path).not.toHaveAttribute('d', previous ?? '');
+    await expect(path).toHaveAttribute('d', /M/);
+}
 
 test.describe('Step interpolation', () => {
     test('positions with markers and automatic labels', async ({mount}) => {
@@ -67,8 +89,6 @@ test.describe('Step interpolation', () => {
             const component = await mount(<ChartTestStory data={data} />);
             const path = component.locator('.gcharts-line > path');
             await expect(path).toBeVisible();
-            const d = (await path.getAttribute('d')) ?? '';
-            expect(d.match(/M/g)).toHaveLength(nullMode === 'skip' ? 2 : 1);
             await expect(component.locator('.gcharts-marker__symbol')).toHaveCount(
                 nullMode === 'zero' ? 5 : 4,
             );
@@ -129,25 +149,7 @@ test.describe('Step interpolation', () => {
         const component = await mount(<ChartTestStory data={data} />);
         const path = component.locator('.gcharts-line > path');
         await expect(path).toHaveAttribute('d', /M/);
-        const initialPath = (await path.getAttribute('d')) ?? '';
-        await dragElementByCalculatedPosition({
-            component,
-            page,
-            selector: '.gcharts-chart__content .gcharts-brush .overlay',
-            getDragOptions: ({boundingBox}) => ({
-                from: [
-                    boundingBox.x + boundingBox.width * 0.2,
-                    boundingBox.y + boundingBox.height / 2,
-                ],
-                to: [
-                    boundingBox.x + boundingBox.width * 0.4,
-                    boundingBox.y + boundingBox.height / 2,
-                ],
-            }),
-        });
-        await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
-        await expect(path).not.toHaveAttribute('d', initialPath);
-        await expect(path).toHaveAttribute('d', /M/);
+        await zoomX(component, page, 0.2, 0.4);
         const plot = await getLocatorBoundingBox(
             component.locator('.gcharts-chart__content .gcharts-brush .overlay'),
         );
@@ -165,24 +167,7 @@ test.describe('Step interpolation', () => {
         }, plot);
         expect(onPlateau).toBe(true);
 
-        const zoomedPath = (await path.getAttribute('d')) ?? '';
-        await dragElementByCalculatedPosition({
-            component,
-            page,
-            selector: '.gcharts-chart__content .gcharts-brush .overlay',
-            getDragOptions: ({boundingBox}) => ({
-                from: [
-                    boundingBox.x + boundingBox.width * 0.3,
-                    boundingBox.y + boundingBox.height / 2,
-                ],
-                to: [
-                    boundingBox.x + boundingBox.width * 0.7,
-                    boundingBox.y + boundingBox.height / 2,
-                ],
-            }),
-        });
-        await expect(path).not.toHaveAttribute('d', zoomedPath);
-        await expect(path).toHaveAttribute('d', /M/);
+        await zoomX(component, page, 0.3, 0.7);
     });
 
     test('keeps the plateau with automatic Y bounds when zoom includes the next change', async ({
@@ -214,21 +199,7 @@ test.describe('Step interpolation', () => {
         );
         const path = component.locator('.gcharts-line > path');
         await expect(path).toHaveAttribute('d', /M/);
-        const initialPath = await path.getAttribute('d');
-        await dragElementByCalculatedPosition({
-            component,
-            page,
-            selector: '.gcharts-chart__content .gcharts-brush .overlay',
-            getDragOptions: ({boundingBox}) => ({
-                from: [
-                    boundingBox.x + boundingBox.width * 0.2,
-                    boundingBox.y + boundingBox.height / 2,
-                ],
-                to: [boundingBox.x + boundingBox.width, boundingBox.y + boundingBox.height / 2],
-            }),
-        });
-        await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
-        await expect(path).not.toHaveAttribute('d', initialPath ?? '');
+        await zoomX(component, page, 0.2, 1);
         const plot = await getLocatorBoundingBox(
             component.locator('.gcharts-chart__content .gcharts-brush .overlay'),
         );

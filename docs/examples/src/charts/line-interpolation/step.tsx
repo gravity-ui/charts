@@ -11,7 +11,7 @@ const data: ChartData = {
             {
                 type: 'line',
                 name: 'Price',
-                interpolation: {type: 'step', position: 'after'},
+                interpolation: {type: 'step'},
                 lineWidth: 2,
                 marker: {enabled: true},
                 data: [

@@ -28,7 +28,7 @@ Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis li
 
 ### Line interpolation
 
-By default, lines connect points with straight segments. Use `interpolation` to draw smooth curves or stepped lines. Omit the option or set `{type: 'linear'}` to keep straight segments.
+Lines connect points with straight segments by default (`interpolation: {type: 'linear'}`). Use `interpolation` to draw smooth curves or stepped lines.
 
 Markers and tooltip values stay attached to the original points. Line interactions and automatic label placement follow the interpolated line.
 
@@ -44,22 +44,22 @@ For a cardinal spline, set `interpolation: {type: 'cardinal', tension: 0.5}`. Th
 
 #### Stepped lines
 
-Use stepped lines for values that stay constant between changes, such as prices or system states. With `position: 'after'`, each value is kept until the next recorded change.
+Use stepped lines for values that stay constant between changes, such as prices or system states. By default, each value is kept until the next recorded change.
 
 <div data-chart-example="line-interpolation/step"></div>
 
 ```javascript
 {
   type: 'line',
-  interpolation: {type: 'step', position: 'after'},
+  interpolation: {type: 'step'},
 }
 ```
 
 The `position` controls where Y changes between adjacent points:
 
-- `'middle'`: halfway between their X coordinates.
-- `'before'`: at the first point's X coordinate.
 - `'after'` (default): at the next point's X coordinate.
+- `'before'`: at the first point's X coordinate.
+- `'middle'`: halfway between their X coordinates.
 
 ## Colors
 
