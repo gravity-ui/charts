@@ -1,9 +1,7 @@
-import {sort} from 'd3-array';
 import get from 'es-toolkit/compat/get';
 import isEmpty from 'es-toolkit/compat/isEmpty';
 
 import type {ChartAxis, ChartSeries, ChartSeriesData} from '../../../types';
-import {SERIES_TYPE} from '../../constants';
 import {getAxisCategories} from '../../utils';
 
 function applyAxisCategoriesOrder<T extends ChartSeries>({
@@ -78,16 +76,6 @@ export function getSortedSeriesData({
 
         sortedSeries = applyAxisCategoriesOrder({series: sortedSeries, axis: yAxisItem, key: 'y'});
         sortedSeries = applyAxisCategoriesOrder({series: sortedSeries, axis: xAxis, key: 'x'});
-
-        switch (sortedSeries.type) {
-            case SERIES_TYPE.Area: {
-                sortedSeries = {
-                    ...sortedSeries,
-                    data: sort(sortedSeries.data, (d) => d.x),
-                };
-                break;
-            }
-        }
 
         return sortedSeries;
     });

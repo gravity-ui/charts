@@ -74,6 +74,8 @@ export interface PlacementRect {
  * bounding box for the cheap intersection reject.
  */
 export interface PlacementSegment {
+    /** Original endpoint indices when trackPointIndices is requested. */
+    pointIndices?: readonly [number, number];
     /** Half of the line stroke width — the rect is inflated by it on intersection checks */
     halfWidth: number;
     x1: number;
@@ -86,8 +88,14 @@ export interface PlacementSegment {
     yMin: number;
 }
 
+interface LinePoint {
+    x: number | null;
+    y: number | null;
+    hiddenInLine?: boolean;
+}
+
 /** Mirrors the d3 line `defined()` predicate from the line renderer */
-export function isDrawnPoint(p: PointData): p is PointData & {x: number; y: number} {
+export function isDrawnPoint<T extends LinePoint>(p: T): p is T & {x: number; y: number} {
     return p.x !== null && p.y !== null && !p.hiddenInLine;
 }
 
@@ -125,46 +133,43 @@ class SegmentCollector {
     private runStart = 0;
     private x = 0;
     private y = 0;
+    private pointIndex = -1;
+    private readonly points?: readonly LinePoint[];
 
-    constructor(halfWidth: number) {
+    constructor(halfWidth: number, points?: readonly LinePoint[]) {
         this.halfWidth = halfWidth;
+        this.points = points;
     }
 
     moveTo(x: number, y: number) {
         this.runStart = this.segments.length;
         this.x = x;
         this.y = y;
+        this.advancePoint(x, y);
     }
 
     lineTo(x: number, y: number) {
-        // Repeated vertices must not turn an endpoint cap into an internal round join.
-        // Keep one zero-length segment only when the whole run is coincident.
-        if (this.x === x && this.y === y) {
-            if (this.segments.length > this.runStart) return;
-        } else if (this.segments.length === this.runStart + 1) {
-            const first = this.segments[this.runStart];
-            if (first.x1 === first.x2 && first.y1 === first.y2) {
-                this.segments.pop();
-            }
-        }
-        this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
-        this.x = x;
-        this.y = y;
+        const start = this.segments.length;
+        this.append(x, y);
+        this.setPointIndices(start, x, y);
     }
 
     quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
+        const start = this.segments.length;
         const {x: x0, y: y0} = this;
         for (let i = 1; i <= CURVE_STEPS; i++) {
             const t = i / CURVE_STEPS;
             const mt = 1 - t;
-            this.lineTo(
+            this.append(
                 mt * mt * x0 + 2 * mt * t * cpx + t * t * x,
                 mt * mt * y0 + 2 * mt * t * cpy + t * t * y,
             );
         }
+        this.setPointIndices(start, x, y);
     }
 
     bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) {
+        const start = this.segments.length;
         const {x: x0, y: y0} = this;
         for (let i = 1; i <= CURVE_STEPS; i++) {
             const t = i / CURVE_STEPS;
@@ -173,11 +178,50 @@ class SegmentCollector {
             const b = 3 * mt * mt * t;
             const c = 3 * mt * t * t;
             const d = t * t * t;
-            this.lineTo(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
+            this.append(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
         }
+        this.setPointIndices(start, x, y);
     }
 
     closePath() {}
+
+    private append(x: number, y: number) {
+        if (!this.points) {
+            // Repeated vertices must not turn an endpoint cap into an internal round join.
+            // Keep one zero-length segment only when the whole run is coincident.
+            if (this.x === x && this.y === y) {
+                if (this.segments.length > this.runStart) return;
+            } else if (this.segments.length === this.runStart + 1) {
+                const first = this.segments[this.runStart];
+                if (first.x1 === first.x2 && first.y1 === first.y2) {
+                    this.segments.pop();
+                }
+            }
+        }
+        this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
+        this.x = x;
+        this.y = y;
+    }
+
+    private advancePoint(x: number, y: number) {
+        if (!this.points) return;
+        do {
+            this.pointIndex++;
+        } while (
+            this.pointIndex < this.points.length &&
+            (this.points[this.pointIndex].x !== x || this.points[this.pointIndex].y !== y)
+        );
+    }
+
+    private setPointIndices(start: number, x: number, y: number) {
+        if (!this.points) return;
+        const from = this.pointIndex;
+        this.advancePoint(x, y);
+        const pointIndices = [from, this.pointIndex] as const;
+        for (let index = start; index < this.segments.length; index++) {
+            this.segments[index].pointIndices = pointIndices;
+        }
+    }
 }
 
 /**
@@ -185,21 +229,42 @@ class SegmentCollector {
  * defined-point predicate. Bézier curves are flattened into straight segments.
  */
 export function getLineSegments(
-    data: Array<{curveFactory?: CurveFactory; lineWidth: number; points: PointData[]}>,
+    data: Array<{
+        curveFactory?: CurveFactory;
+        lineWidth: number;
+        points: LinePoint[];
+        /** Track endpoints for curves interpolating the input points (linear, cardinal, monotone). */
+        trackPointIndices?: boolean;
+    }>,
 ): PlacementSegment[] {
     const segments: PlacementSegment[] = [];
     for (const d of data) {
         const halfWidth = d.lineWidth / 2;
-        const collector = new SegmentCollector(halfWidth);
-        lineGenerator<PointData>()
-            .defined(isDrawnPoint)
-            .x((p) => p.x as number)
-            .y((p) => p.y as number)
-            .curve(d.curveFactory ?? curveLinear)
-            .context(collector as unknown as CanvasRenderingContext2D)(d.points);
-        // Pushed one by one: spreading tens of thousands of segments overflows the stack.
-        for (const segment of collector.segments) {
-            segments.push(segment);
+        if (d.curveFactory || !d.trackPointIndices) {
+            const collector = new SegmentCollector(
+                halfWidth,
+                d.trackPointIndices ? d.points : undefined,
+            );
+            lineGenerator<LinePoint>()
+                .defined(isDrawnPoint)
+                .x((p) => p.x as number)
+                .y((p) => p.y as number)
+                .curve(d.curveFactory ?? curveLinear)
+                .context(collector as unknown as CanvasRenderingContext2D)(d.points);
+            // Pushed one by one: spreading tens of thousands of segments overflows the stack.
+            for (const segment of collector.segments) {
+                segments.push(segment);
+            }
+            continue;
+        }
+        for (let i = 1; i < d.points.length; i++) {
+            const p1 = d.points[i - 1];
+            const p2 = d.points[i];
+            if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
+                const segment = makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth);
+                if (d.trackPointIndices) segment.pointIndices = [i - 1, i];
+                segments.push(segment);
+            }
         }
     }
 

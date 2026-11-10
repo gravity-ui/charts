@@ -591,7 +591,7 @@ export function useChartInnerProps(props: Props) {
                 seriesData: getVisibleSeries({
                     preparedSeries: chartState?.allPreparedSeries ?? [],
                     activeLegendItems,
-                }),
+                }).filter((series) => series.visible),
                 xAxis,
                 yAxis,
                 zoomState: nextZoomState,

@@ -1,13 +1,10 @@
 import {i18n} from '~core/i18n';
-import {getDomainPoints} from '~core/series/domain-points';
 import type {
-    DomainViewport,
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedAreaSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
@@ -23,32 +20,57 @@ import {
     validateStacking,
     validateXYSeries,
 } from '~core/validation/helpers';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../types';
+import type {
+    AreaFormatContext,
+    AreaSeries,
+    AreaSeriesData,
+    TooltipDataChunkArea,
+} from '../../types';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
+import {getPercentStackDomain} from '../stacked-axis';
 
 import {getAreaAxisPadding} from './axis-padding';
+import {getAreaAxisData} from './domain';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {getAreaStackLabelAnchors} from './stack-labels';
 
-function getAreaDomainData(
-    series: Pick<AreaSeries, 'data' | 'stacking'>,
-    viewport?: DomainViewport,
-) {
-    // Area projection keeps the last point at each X, including an explicit null.
-    const points = getDomainPoints(series.data, viewport, {filterY: !series.stacking});
-    return [...new Map(points.map((point) => [String(point.x), point])).values()];
+function isAreaPointDefined(point: AreaSeriesData) {
+    return point.y !== null && point.y !== undefined;
 }
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
-    axisBaseline: 'y',
-    isAxisDomainFixed: ({series, axis}) => axis === 'y' && series.stacking === 'percent',
+    axes: {
+        x: {singleValueDomain: 'center'},
+        y: {
+            baseline: 0,
+            singleValueDomain: 'center',
+            getFixedDomain: getPercentStackDomain,
+            getData: getAreaAxisData,
+        },
+    },
     getAxisPadding: getAreaAxisPadding,
-    zoom: {types: ['x', 'xy', 'y'], defaultType: 'x', preserveAdjacentPoints: true},
+    zoom: {
+        types: ['x', 'xy', 'y'],
+        defaultType: 'x',
+        filterData: ({series, viewport}) =>
+            filterPoints(
+                series.nullMode === 'connect'
+                    ? series.data.filter(isAreaPointDefined)
+                    : series.data,
+                viewport,
+                {
+                    mode: 'path',
+                    axes: series.stacking ? 'x' : 'xy',
+                    isDefined: isAreaPointDefined,
+                },
+            ),
+    },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
         includeSolidSeries: true,
     }),
@@ -79,15 +101,6 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         }
     },
     getColorValue: (d) => d.y,
-    getAxisDomainValues: ({series, axis, viewport}) =>
-        axis === 'y'
-            ? getStackedDomainValues({
-                  series,
-                  categoryKey: 'x',
-                  valueKey: 'y',
-                  getData: (item) => getAreaDomainData(item, viewport),
-              })
-            : undefined,
     prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
         const {
             series,
@@ -118,12 +131,15 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             isRangeSlider,
         });
 
-        const filteredData = filterLayerLabels(data, otherLayers);
         const labels = await prepareStackLabels({
             ...args,
             anchors: isRangeSlider ? [] : getAreaStackLabelAnchors(data, args),
-            otherLayers: [...otherLayers, ...filteredData],
+            otherLayers,
         });
+        const filteredData = filterLayerLabels(data, [
+            ...otherLayers,
+            {svgLabels: labels, htmlLabels: []},
+        ]);
         return {
             renderData: filteredData,
             tooltipItems: filteredData,

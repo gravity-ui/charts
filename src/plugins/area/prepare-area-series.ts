@@ -1,3 +1,4 @@
+import {sort} from 'd3-array';
 import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
@@ -52,7 +53,7 @@ function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
 
 function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
-    const data = series.data;
+    const data = sort(series.data, (point) => point.x);
     switch (nullMode) {
         case 'zero':
             return data.map((p) => withSourcePoint(p, {...p, y: p.y ?? 0}));

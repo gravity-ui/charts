@@ -2,7 +2,6 @@ import type {Dispatch} from 'd3-dispatch';
 import type {ScaleOrdinal} from 'd3-scale';
 
 import type {
-    ChartAxisType,
     ChartInteractionItem,
     ChartSeries,
     ChartSeriesOptions,
@@ -25,11 +24,13 @@ import type {InteractionElement, InteractionElementsArgs} from '../utils/chart-i
 import type {GradientGeometry} from '../utils/gradient-reference';
 import type {NearestCandidate, PrepareNearestDataArgs} from '../utils/nearest-point';
 import type {GetTooltipDataFn} from '../utils/tooltip-helpers';
+import type {FilterSeriesDataArgs, SeriesDataSelection} from '../zoom/filter-data';
 import type {ZoomState} from '../zoom/types';
 
+import type {AxisDomainValue, SeriesAxes} from './axis-contract';
 import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from './types';
 
-export type AxisDomainValue = number | string | null | undefined;
+export type {AxisDomainValue, DomainAxis, DomainViewport, GetAxisDataArgs} from './axis-contract';
 
 export interface GetLayerKeyArgs<TSeries> {
     series: TSeries;
@@ -39,31 +40,11 @@ export interface GetLayerKeyArgs<TSeries> {
 
 export interface GetClipPathArgs {
     isRangeSlider: boolean;
-    yAxis: readonly PreparedYAxis[];
+    yAxis: readonly Pick<ChartYAxis, 'min' | 'max'>[];
     zoomState?: Readonly<Partial<ZoomState>>;
 }
 
 export type SeriesClipPath = 'bounds' | 'horizontal' | false;
-
-export interface DomainAxis {
-    type: ChartAxisType;
-    /** Active zoom/range-slider bounds; category bounds are indices into categories. */
-    range?: readonly [number, number];
-    categories?: readonly string[];
-}
-
-export interface DomainViewport {
-    x: DomainAxis;
-    y: DomainAxis;
-}
-
-export interface GetAxisDomainValuesArgs<TSeries> {
-    /** This plugin's series for the current axis, including points retained for geometry. */
-    series: readonly TSeries[];
-    axis: 'x' | 'y';
-    /** Active window and coordinate systems. Undefined means no viewport filtering. */
-    viewport?: DomainViewport;
-}
 
 export interface PrepareSeriesArgs<T = ChartSeries> {
     series: T[];
@@ -111,15 +92,13 @@ export interface GetTooltipValueArgs<TTooltipChunk extends TooltipDataChunk = To
     yAxis?: ChartYAxis;
 }
 
-export interface SeriesPluginZoomOptions<T extends ChartSeries = ChartSeries> {
+export interface SeriesPluginZoomOptions<TSeries = ChartSeries> {
     /** Supported brush directions. */
     types: ZoomType[];
     /** Preferred direction when chart.zoom.type is omitted. */
     defaultType?: ZoomType;
-    /** Keep neighboring and crossing shape points on continuous axes; ignored for category X axes. */
-    preserveAdjacentPoints?: boolean;
-    /** Overrides the scalar Y check, for example to test interval overlap. */
-    isYInRange?(data: T['data'][number], range: [number, number]): boolean;
+    /** Omit for scalar point filtering; return original points separately from retained shape anchors. */
+    filterData?(args: FilterSeriesDataArgs<TSeries>): SeriesDataSelection;
 }
 
 export interface RenderShapesArgs {
@@ -158,11 +137,8 @@ export interface SeriesPlugin<
 
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
-    /**
-     * Value axis requiring a baseline. Linear scales include zero; logarithmic Y scales
-     * reserve positive headroom. Explicit bounds and zoom take precedence.
-     */
-    axisBaseline?: 'x' | 'y';
+    /** true enables Cartesian axes with scalar defaults. Omit or use false for series without axes. */
+    axes?: boolean | SeriesAxes<T | Extract<PreparedSeries, {type: T['type']}>>;
     /**
      * Selects the layer for one raw/prepared series occurrence. Equal keys share a layer.
      * Omit to use series.type: all series of this plugin share one layer by default.
@@ -180,7 +156,7 @@ export interface SeriesPlugin<
      */
     getClipPath?(args: GetClipPathArgs): SeriesClipPath;
     /** Supported zoom directions and point-filtering behavior. Omit to disable zoom. */
-    zoom?: SeriesPluginZoomOptions<T>;
+    zoom?: SeriesPluginZoomOptions<T | Extract<PreparedSeries, {type: T['type']}>>;
 
     // --- Validation ---
 
@@ -196,11 +172,6 @@ export interface SeriesPlugin<
     prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
     /** Cached paint extents used to fit markers within free continuous axis domains. */
     getAxisPadding?(args: PrepareAxisPaddingArgs): AxisPaddingPoint[];
-    /** Domain constraints imposed by the series, such as percent normalization. */
-    isAxisDomainFixed?(args: {
-        series: Extract<PreparedSeries, {type: T['type']}>;
-        axis: 'x' | 'y';
-    }): boolean;
     /**
      * Returns the value of a data point that places it on a continuous color scale.
      * `getDomainForContinuousColorScale` coerces the result to a number and builds the `[min, max]`
@@ -208,15 +179,6 @@ export interface SeriesPlugin<
      * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
      */
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
-    /**
-     * Values contributing to one axis domain, computed once for the whole plugin group.
-     * Core merges contributions across plugins. Return [] to exclude the group.
-     * Omit or return undefined to extract scalar coordinates from axis-related series.
-     * Must not mutate series or points; visibility and axis membership are selected by the caller.
-     */
-    getAxisDomainValues?(
-        args: GetAxisDomainValuesArgs<T | Extract<PreparedSeries, {type: T['type']}>>,
-    ): AxisDomainValue[] | undefined;
     /**
      * Extra space in pixels reserved at the max end of an autoscaled X domain.
      * The largest padding requested across series is used.

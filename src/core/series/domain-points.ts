@@ -1,6 +1,7 @@
 import type {AxisDomainValue, DomainAxis, DomainViewport} from './plugin';
 
 export function isValueInAxisRange(value: AxisDomainValue, axis: DomainAxis): boolean {
+    if (axis.excluded) return false;
     if (!axis.range) return true;
     if (value === undefined || value === null) return false;
     const [min, max] = axis.range;
@@ -23,18 +24,18 @@ export function getDomainPoints<T extends {x?: AxisDomainValue; y?: AxisDomainVa
     points: readonly T[],
     viewport?: DomainViewport,
     options: {
-        filterY?: boolean;
-        isYInRange?: (point: T, range: readonly [number, number]) => boolean;
+        axes?: 'x' | 'y' | 'xy';
+        isYInRange?: (point: T, axis: DomainAxis) => boolean;
     } = {},
 ): readonly T[] {
     if (!viewport) return points;
     const selected = points.filter(
         (point) =>
-            isValueInAxisRange(point.x, viewport.x) &&
-            (options.filterY === false ||
+            (options.axes === 'y' || isValueInAxisRange(point.x, viewport.x)) &&
+            (options.axes === 'x' ||
                 !viewport.y.range ||
                 (options.isYInRange
-                    ? options.isYInRange(point, viewport.y.range)
+                    ? options.isYInRange(point, viewport.y)
                     : isValueInAxisRange(point.y, viewport.y))),
     );
     return selected.length ? selected : points;

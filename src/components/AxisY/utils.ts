@@ -1,4 +1,5 @@
-import type {AxisDomainValue} from '~core/series/plugin';
+import type {AxisDomainValue} from '~core/series/axis-contract';
+import {getSeriesAxisTicks} from '~core/series/axis-policies';
 import {
     getDomainDataYBySeries,
     getExplicitAxisTickValues,
@@ -31,20 +32,13 @@ export function getAutomaticTickValues({
         }
 
         const getScaleTicks = () => {
-            const domainData = (domainValues ?? getDomainDataYBySeries(series)) as number[];
-
-            if (series.some((s) => s.type === 'bar-y')) {
-                if (domainData.length < 3) {
-                    return domainData;
-                }
-
-                const ticksCount =
-                    getTicksCountByPixelInterval({axis, axisWidth: height}) ?? domainData.length;
-                return scale.ticks(Math.min(ticksCount, domainData.length));
-            }
-
-            const ticksCount = getTicksCountByPixelInterval({axis, axisWidth: height});
-            return scale.ticks(ticksCount);
+            const count = getTicksCountByPixelInterval({axis, axisWidth: height});
+            const request = getSeriesAxisTicks(series, 'y', {
+                getValues: () =>
+                    domainValues ?? axis.domainValues ?? getDomainDataYBySeries(series),
+                count,
+            });
+            return request.values ? [...request.values] : scale.ticks(request.count ?? count);
         };
 
         const scaleTicks = getScaleTicks();

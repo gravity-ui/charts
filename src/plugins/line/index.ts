@@ -25,7 +25,7 @@ import {getTargetElements, prepareNearestData} from './interaction';
 import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
 import {validateInterpolation, validateLabelAnchor} from './validation';
-import {getLineAxisDomainValues} from './zoom';
+import {filterLineData, getLineAxisData} from './zoom';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -86,6 +86,10 @@ function renderShapes({
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
+    axes: {
+        x: {singleValueDomain: 'center'},
+        y: {singleValueDomain: 'center', getData: getLineAxisData},
+    },
     getAxisPadding: getLineAxisPadding,
     getLayerKey: ({seriesKey}) => seriesKey,
     getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
@@ -99,9 +103,8 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
-        preserveAdjacentPoints: true,
+        filterData: filterLineData,
     },
-    getAxisDomainValues: getLineAxisDomainValues,
     prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
     prepareSeries: prepareLineSeries,
     validate: ({series, xAxis, yAxis}) => {

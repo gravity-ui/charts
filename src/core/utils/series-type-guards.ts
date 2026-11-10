@@ -1,8 +1,9 @@
-import type {ChartSeries} from '../../types';
+import {getSeriesPlugin} from '../series/seriesRegistry';
 
-const CHARTS_WITHOUT_AXIS: ChartSeries['type'][] = ['pie', 'treemap', 'sankey', 'radar', 'funnel'];
-
-export type UnknownSeries = {type: ChartSeries['type']; data: unknown};
+export interface UnknownSeries {
+    type: string;
+    data: unknown;
+}
 
 /**
  * Checks whether the series should be drawn with axes.
@@ -10,19 +11,5 @@ export type UnknownSeries = {type: ChartSeries['type']; data: unknown};
  * @returns `true` if the series should be drawn with axes, `false` otherwise.
  */
 export function isAxisRelatedSeries(series: UnknownSeries) {
-    return !CHARTS_WITHOUT_AXIS.includes(series.type);
-}
-
-export function isSeriesWithNumericalXValues(series: UnknownSeries): series is {
-    type: ChartSeries['type'];
-    data: {x: number}[];
-} {
-    return isAxisRelatedSeries(series);
-}
-
-export function isSeriesWithCategoryValues(series: UnknownSeries): series is {
-    type: ChartSeries['type'];
-    data: {category: string}[];
-} {
-    return isAxisRelatedSeries(series);
+    return Boolean(getSeriesPlugin(series.type).axes);
 }

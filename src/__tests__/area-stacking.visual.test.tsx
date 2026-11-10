@@ -24,6 +24,62 @@ const stackedSeries: AreaSeries[] = [
     },
 ];
 
+test('X zoom fits the visible boundaries of a sparse area stack', async ({mount, page}) => {
+    const data: ChartData = {
+        chart: {
+            zoom: {enabled: true, type: 'x'},
+            margin: {top: 20, right: 20, bottom: 20, left: 20},
+        },
+        legend: {enabled: false},
+        tooltip: {enabled: false},
+        xAxis: {min: 0, max: 10, padding: {min: 0, max: 0}, startOnTick: false, endOnTick: false},
+        yAxis: [{padding: {min: 0, max: 0}, startOnTick: false, endOnTick: false}],
+        series: {
+            data: [
+                {
+                    type: 'area',
+                    name: 'A',
+                    stacking: 'normal',
+                    data: [
+                        {x: 0, y: 1000},
+                        {x: 5, y: 10},
+                        {x: 10, y: 1000},
+                    ],
+                },
+                {
+                    type: 'area',
+                    name: 'B',
+                    stacking: 'normal',
+                    data: [
+                        {x: 0, y: 100},
+                        {x: 10, y: 100},
+                    ],
+                },
+            ],
+        },
+    };
+    const chart = await mount(<ChartTestStory data={data} styles={{width: 600, height: 400}} />);
+    const topPath = chart.locator('.gcharts-area__line').last();
+    await expect(topPath).toHaveAttribute('d', /M/);
+    const initialPath = await topPath.getAttribute('d');
+    await dragElementByCalculatedPosition({
+        component: chart,
+        page,
+        selector: '.gcharts-chart__content .gcharts-brush .overlay',
+        getDragOptions: ({boundingBox}) => {
+            const y = boundingBox.y + boundingBox.height / 2;
+            return {
+                from: [boundingBox.x + boundingBox.width * 0.4, y],
+                to: [boundingBox.x + boundingBox.width * 0.6, y],
+            };
+        },
+    });
+    await expect(chart.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+    await expect(topPath).not.toHaveAttribute('d', initialPath ?? '');
+    await page.mouse.move(0, 0);
+    await expect(chart.locator('svg').first()).toHaveScreenshot('area-sparse-stack-x-zoom.png');
+});
+
 for (const {name, yAxis} of [
     {name: 'logarithmic Y (#727)', yAxis: {type: 'logarithmic' as const, min: 1, max: 100}},
     {

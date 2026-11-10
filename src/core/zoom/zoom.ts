@@ -1,41 +1,15 @@
-import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
+import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries, PreparedZoomableSeries} from '../series';
-import {isValueInAxisRange} from '../series/domain-points';
+import type {DomainViewport} from '../series/axis-contract';
 import {getSeriesPlugin} from '../series/seriesRegistry';
-import type {ChartSeriesData, ChartXAxis, ChartYAxis} from '../types';
+import type {ChartXAxis, ChartYAxis} from '../types';
 
+import {filterPoints} from './filter-data';
 import type {ZoomState} from './types';
-
-function isValueInRange(args: {
-    axis?: ChartXAxis | ChartYAxis | PreparedAxis | null;
-    value?: number | string;
-    min: number | string;
-    max: number | string;
-}) {
-    const {axis, max, min, value} = args;
-    return isValueInAxisRange(value, {
-        type: axis?.type ?? 'linear',
-        categories: axis?.categories,
-        range: [Number(min), Number(max)],
-    });
-}
 
 function isPreparedZoomableSeries(series: PreparedSeries): series is PreparedZoomableSeries {
     return Array.isArray(series.data);
-}
-
-function spansRange(
-    from: number | string | null | undefined,
-    to: number | string | null | undefined,
-    [min, max]: [number, number],
-): boolean {
-    if (from === null || from === undefined || to === null || to === undefined) {
-        return false;
-    }
-    const start = Number(from);
-    const end = Number(to);
-    return (start < min && end > max) || (start > max && end < min);
 }
 
 export function getZoomedSeriesData(args: {
@@ -45,151 +19,34 @@ export function getZoomedSeriesData(args: {
     yAxis?: ChartYAxis[] | PreparedYAxis[] | null;
 }) {
     const {seriesData, xAxis, yAxis, zoomState} = args;
-
-    if (Object.keys(zoomState).length <= 0) {
-        return {
-            preparedSeries: seriesData,
-            preparedShapesSeries: seriesData,
-        };
+    if (Object.keys(zoomState).length === 0) {
+        return {preparedSeries: seriesData, preparedShapesSeries: seriesData};
     }
-
-    const zoomedSeriesData: PreparedSeries[] = [];
-    const zoomedShapesSeriesData: PreparedSeries[] = [];
-
-    seriesData.forEach((seriesItem) => {
-        const zoomOptions = getSeriesPlugin(seriesItem.type).zoom;
-        let prevPointInRange = false;
-        let currentPointInRange = false;
-
-        const filteredData: ChartSeriesData[] = [];
-        const filteredShapesData: ChartSeriesData[] | undefined =
-            zoomOptions?.preserveAdjacentPoints && xAxis?.type !== 'category' ? [] : undefined;
-
-        if (!isPreparedZoomableSeries(seriesItem)) {
-            return;
-        }
-
-        let lastShapePointIndex = -1;
-        const appendShapePoint = (index: number) => {
-            if (index > lastShapePointIndex) {
-                filteredShapesData?.push(seriesItem.data[index]);
-                lastShapePointIndex = index;
-            }
+    const preparedSeries: PreparedSeries[] = [];
+    const preparedShapesSeries: PreparedSeries[] = [];
+    for (const series of seriesData) {
+        if (!isPreparedZoomableSeries(series)) continue;
+        const yAxisIndex = 'yAxis' in series ? (series.yAxis ?? 0) : 0;
+        const axis = yAxis?.[yAxisIndex];
+        const viewport: DomainViewport = {
+            x: {type: xAxis?.type ?? 'linear', categories: xAxis?.categories, range: zoomState.x},
+            y: {
+                type: axis?.type ?? 'linear',
+                categories: axis?.categories,
+                range: zoomState.y?.[yAxisIndex],
+                excluded: Boolean(zoomState.y && !zoomState.y[yAxisIndex]),
+            },
         };
-
-        // For stacked series the chart-space position of each point is the
-        // cumulative stack sum, not its individual value, so the value-axis
-        // filter would drop segments that still need to participate in the
-        // stack. Skip it and let the axis range / clip handle visibility.
-        const isStacked = 'stacking' in seriesItem && Boolean(seriesItem.stacking);
-        const stackedValueAxis =
-            isStacked && 'valueAxis' in seriesItem ? seriesItem.valueAxis : undefined;
-        const skipXFilter = stackedValueAxis === 'x';
-        const skipYFilter = stackedValueAxis === 'y';
-        const yAxisIndex = 'yAxis' in seriesItem ? (seriesItem.yAxis ?? 0) : 0;
-        const zoomStateY = zoomState.y?.[yAxisIndex];
-
-        seriesItem.data.forEach((point, i) => {
-            const prevPoint = seriesItem.data[i - 1];
-            const isFirstPoint = i === 0;
-            let inXRange = true;
-            let inYRange = true;
-
-            prevPointInRange = currentPointInRange;
-
-            if (zoomState.x && !skipXFilter) {
-                const [xMin, xMax] = zoomState.x;
-                if ('x0' in point && 'x1' in point) {
-                    const isStartInRange = isValueInRange({
-                        axis: xAxis,
-                        value: point.x0,
-                        min: xMin,
-                        max: xMax,
-                    });
-                    const isEndInRange = isValueInRange({
-                        axis: xAxis,
-                        value: point.x1,
-                        min: xMin,
-                        max: xMax,
-                    });
-                    inXRange = isStartInRange || isEndInRange;
-                } else {
-                    const x = 'x' in point ? (point.x ?? undefined) : undefined;
-                    inXRange = isValueInRange({
-                        axis: xAxis,
-                        value: x,
-                        min: xMin,
-                        max: xMax,
-                    });
-                }
-            }
-
-            if (zoomState.y && !skipYFilter) {
-                if (zoomStateY) {
-                    const [yMin, yMax] = zoomStateY;
-                    const y = 'y' in point ? (point.y ?? undefined) : undefined;
-                    inYRange = zoomOptions?.isYInRange
-                        ? zoomOptions.isYInRange(point, [yMin, yMax])
-                        : isValueInRange({
-                              axis: yAxis?.[yAxisIndex],
-                              value: y,
-                              min: yMin,
-                              max: yMax,
-                          });
-                } else {
-                    inYRange = false;
-                }
-            }
-
-            currentPointInRange = inXRange && inYRange;
-
-            if (currentPointInRange) {
-                filteredData.push(point);
-            }
-
-            if (filteredShapesData) {
-                if (currentPointInRange) {
-                    if (!isFirstPoint && !prevPointInRange) {
-                        appendShapePoint(i - 1);
-                    }
-                    appendShapePoint(i);
-                } else if (prevPointInRange) {
-                    appendShapePoint(i);
-                } else if (
-                    prevPoint &&
-                    ((zoomState.x &&
-                        !skipXFilter &&
-                        'x' in prevPoint &&
-                        'x' in point &&
-                        spansRange(prevPoint.x, point.x, zoomState.x)) ||
-                        (zoomStateY &&
-                            !skipYFilter &&
-                            yAxis?.[yAxisIndex]?.type !== 'category' &&
-                            'y' in prevPoint &&
-                            'y' in point &&
-                            spansRange(prevPoint.y, point.y, zoomStateY)))
-                ) {
-                    // Both anchors can be outside the viewport while their segment crosses it.
-                    appendShapePoint(i - 1);
-                    appendShapePoint(i);
-                }
-            }
-        });
-
-        zoomedSeriesData.push({
-            ...(seriesItem as Omit<PreparedSeries, 'data'>),
-            data: filteredData,
+        const selection =
+            getSeriesPlugin(series.type).zoom?.filterData?.({series, viewport}) ??
+            filterPoints<unknown>(series.data, viewport);
+        preparedSeries.push({...series, data: selection.data} as PreparedSeries);
+        preparedShapesSeries.push({
+            ...series,
+            data: selection.shapeData ?? selection.data,
         } as PreparedSeries);
-        zoomedShapesSeriesData.push({
-            ...(seriesItem as Omit<PreparedSeries, 'data'>),
-            data: filteredShapesData || filteredData,
-        } as PreparedSeries);
-    });
-
-    return {
-        preparedSeries: zoomedSeriesData,
-        preparedShapesSeries: zoomedShapesSeriesData,
-    };
+    }
+    return {preparedSeries, preparedShapesSeries};
 }
 
 export function getEffectiveXRange(

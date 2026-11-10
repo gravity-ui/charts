@@ -1,7 +1,26 @@
 {
   "name": "@gravity-ui/charts",
   "version": "2.0.0",
-  "description": "A flexible JavaScript library for data visualization and chart rendering using React",
+  "description": "Declarative React charting library: line, area, bar, pie, scatter, treemap, sankey, heatmap, and more, rendered from a single data config",
+  "keywords": [
+    "charts",
+    "chart",
+    "charting",
+    "data-visualization",
+    "dataviz",
+    "d3",
+    "svg",
+    "react",
+    "react-component",
+    "typescript",
+    "gravity-ui",
+    "line-chart",
+    "bar-chart",
+    "pie-chart",
+    "treemap",
+    "sankey",
+    "heatmap"
+  ],
   "license": "MIT",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -49,7 +68,7 @@
   "bugs": {
     "url": "https://github.com/gravity-ui/charts/issues"
   },
-  "homepage": "https://github.com/gravity-ui/charts#readme",
+  "homepage": "https://gravity-ui.github.io/charts/",
   "scripts": {
     "prepare": "husky",
     "lint": "run-p lint:*",

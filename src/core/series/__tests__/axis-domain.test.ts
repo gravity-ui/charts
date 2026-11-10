@@ -5,12 +5,11 @@ import type * as LinePreparation from '../../../plugins/line/prepare-line-series
 import type * as XRangePlugin from '../../../plugins/x-range';
 import type {PreparedAxis} from '../../axes/types';
 import type * as XScale from '../../scales/x-scale';
-import type {ChartSeries} from '../../types';
+import type {ChartSeries, LineSeries} from '../../types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '../../utils/common';
-import {getZoomedSeriesData} from '../../zoom/zoom';
+import type {GetAxisDataArgs} from '../axis-contract';
 import type * as AxisDomain from '../axis-domain';
-import {collectYAxisDomainValues, getAxisDomainValues} from '../axis-domain';
-import {getPreparedSeries} from '../prepareSeries';
+import {getAxisDomainValues} from '../axis-domain';
 import type * as Registry from '../seriesRegistry';
 import type {PreparedLegendOptions} from '../types';
 
@@ -23,14 +22,12 @@ it('groups contributions once per plugin, retaining series order, references and
         expect(registry.getRegisteredSeriesTypes()).toEqual([]);
         expect(domain.getAxisDomainValues([], 'x')).toEqual([]);
 
-        const getValues = jest.fn(
-            ({axis}: Parameters<NonNullable<typeof linePlugin.getAxisDomainValues>>[0]) =>
-                axis === 'x' ? [8, 12] : [],
-        );
+        const getValues = jest.fn(({axis}: GetAxisDataArgs<LineSeries>) => ({
+            domainValues: axis === 'x' ? [8, 12] : [],
+        }));
         registry.registerSeriesPlugin({
             ...linePlugin,
-            axisBaseline: 'x',
-            getAxisDomainValues: getValues,
+            axes: {x: {baseline: 0, getData: getValues}, y: {getData: getValues}},
         });
         registry.registerSeriesPlugin(xRangePlugin);
         const series: ChartSeries[] = [
@@ -38,12 +35,17 @@ it('groups contributions once per plugin, retaining series order, references and
             {type: 'x-range', name: 'Range', data: [{x0: -10, x1: 20, y: 1}]},
             {type: 'line', name: 'Last', data: [{x: 200, y: 2}]},
         ];
-        expect(domain.getAxisDomainValues(series, 'x')).toEqual([8, 12, -10, 20]);
+        const viewport = {
+            x: {type: 'linear' as const, range: [3, 9] as const},
+            y: {type: 'linear' as const},
+        };
+        expect(domain.getAxisDomainValues(series, 'x', {viewport})).toEqual([8, 12, -10, 20]);
         expect(getValues).toHaveBeenCalledTimes(1);
         const args = getValues.mock.calls[0][0];
         expect(args.series[0]).toBe(series[0]);
         expect(args.series[1]).toBe(series[2]);
         expect(args.axis).toBe('x');
+        expect(args.viewport).toBe(viewport);
         expect(domain.hasAxisBaseline(series, 'x')).toBe(true);
         expect(domain.hasAxisBaseline(series, 'y')).toBe(false);
         expect(registry.getRegisteredSeriesTypes()).toEqual(['line', 'x-range']);
@@ -141,125 +143,4 @@ it('preserves scalar extraction and stack accumulation for sparse point arrays',
     expect(getDomainDataXBySeries([line])).toEqual([undefined, 1]);
     expect(getDomainDataYBySeries([line])).toEqual([undefined, 2]);
     expect(getDomainDataYBySeries([bars])).toEqual([2]);
-});
-
-it('keeps scalar fallback separate from geometry anchors', () => {
-    const series: ChartSeries[] = [
-        {
-            type: 'line',
-            name: 'Price',
-            data: [
-                {x: 0, y: 20},
-                {x: 10, y: 80},
-            ],
-        },
-    ];
-    const fallbackSeries: ChartSeries[] = [{...series[0], data: [{x: 10, y: 80}]} as ChartSeries];
-    const viewport = {
-        x: {type: 'linear' as const, range: [2, 10] as const},
-        y: {type: 'linear' as const},
-    };
-    expect(getAxisDomainValues(series, 'x', {viewport, fallbackSeries})).toEqual([10]);
-    expect(
-        getAxisDomainValues(series, 'y', {viewport, fallbackSeries})
-            .map(Number)
-            .sort((a, b) => a - b),
-    ).toEqual([32, 80]);
-    expect(series[0].data).toHaveLength(2);
-});
-
-it('collects visible series per axis without changing area or interval domain selection', async () => {
-    const prepared = await getPreparedSeries({
-        seriesData: [
-            {
-                type: 'line',
-                name: 'Price',
-                interpolation: {type: 'step'},
-                data: [
-                    {x: 0, y: 20},
-                    {x: 10, y: 80},
-                ],
-            },
-            {type: 'line', name: 'Hidden', visible: false, data: [{x: 3, y: 1e9}]},
-            {
-                type: 'line',
-                name: 'Other axis',
-                yAxis: 1,
-                interpolation: {type: 'step'},
-                data: [
-                    {x: 0, y: 1000},
-                    {x: 10, y: 2000},
-                ],
-            },
-            {type: 'scatter', name: 'Reference', data: [{x: 3, y: 50}]},
-            ...[10, 20].map((y) => ({
-                type: 'area' as const,
-                name: `Stack ${y}`,
-                stacking: 'normal' as const,
-                data: [
-                    {x: 0, y: 1e6},
-                    {x: 3, y},
-                    {x: 10, y: 1e6},
-                ],
-            })),
-            {
-                type: 'area-range',
-                name: 'Range',
-                data: [
-                    {x: 0, y0: 1e6, y1: 2e6},
-                    {x: 3, y0: 5, y1: 15},
-                    {x: 10, y0: 1e6, y1: 2e6},
-                ],
-            },
-        ],
-        colors: ['black'],
-        preparedLegend: {enabled: false} as PreparedLegendOptions,
-        seriesOptions: undefined,
-    });
-    const zoomState = {x: [2, 4] as [number, number]};
-    const {preparedSeries, preparedShapesSeries} = getZoomedSeriesData({
-        seriesData: prepared,
-        xAxis: {type: 'linear'},
-        zoomState,
-    });
-    const fallbackSeries = preparedSeries.map((item, index) =>
-        Array.isArray(item.data) && item.data.length === 0 ? preparedShapesSeries[index] : item,
-    );
-    const domains = collectYAxisDomainValues({
-        series: preparedShapesSeries,
-        fallbackSeries,
-        yAxis: [{}, {}],
-        zoomState,
-    });
-    expect(domains?.[0]).toEqual([20, 50, 30, 5, 15]);
-    expect(domains?.[1]).toEqual([1000]);
-});
-
-it('resolves each line independently when steps and curves share an axis', () => {
-    const series: ChartSeries[] = [
-        {
-            type: 'line',
-            name: 'Step',
-            interpolation: {type: 'step'},
-            data: [
-                {x: 0, y: 20},
-                {x: 10, y: 80},
-            ],
-        },
-        {
-            type: 'line',
-            name: 'Curve',
-            interpolation: {type: 'monotone'},
-            data: [
-                {x: 0, y: 100},
-                {x: 3, y: 50},
-                {x: 10, y: 100},
-            ],
-        },
-    ];
-    const viewport = {
-        x: {type: 'linear' as const, range: [2, 4] as const},
-        y: {type: 'linear' as const},
-    };
-    expect(getAxisDomainValues(series, 'y', {viewport})).toEqual([20, 50]);
 });

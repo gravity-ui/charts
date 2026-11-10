@@ -1,4 +1,5 @@
 import {i18n} from '~core/i18n';
+import type {DomainAxis} from '~core/series/axis-contract';
 import {getDomainPoints} from '~core/series/domain-points';
 import type {
     PrepareShapeDataArgs,
@@ -20,6 +21,7 @@ import {
     validateSeriesColor,
     validateXYSeries,
 } from '~core/validation/helpers';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaRangeSeries, AreaRangeSeriesData, TooltipDataChunkAreaRange} from '../../types';
@@ -28,31 +30,56 @@ import {getAreaRangeAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
 
-function isYInRange({y0, y1}: AreaRangeSeriesData, [min, max]: readonly [number, number]) {
+function isAreaRangePointDefined(point: AreaRangeSeriesData) {
+    return point.y0 !== null && point.y1 !== null;
+}
+
+function isAreaRangePointInYRange({y0, y1}: AreaRangeSeriesData, {range}: DomainAxis) {
+    const [min, max] = range as readonly [number, number];
     return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
 }
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
     type: 'area-range',
+    axes: {
+        y: {
+            getData: ({series, viewport}) => ({
+                domainValues: series.flatMap((item) =>
+                    getDomainPoints(item.data, viewport, {
+                        isYInRange: isAreaRangePointInYRange,
+                    }).flatMap((point) =>
+                        point.y0 === null || point.y1 === null ? [] : [point.y0, point.y1],
+                    ),
+                ),
+            }),
+        },
+    },
     getAxisPadding: getAreaRangeAxisPadding,
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
-        preserveAdjacentPoints: true,
-        isYInRange,
+        filterData: ({series, viewport}) =>
+            filterPoints(
+                series.nullMode === 'connect'
+                    ? series.data.filter(isAreaRangePointDefined)
+                    : series.data,
+                viewport,
+                {
+                    mode: 'path',
+                    isDefined: isAreaRangePointDefined,
+                    isYInRange: isAreaRangePointInYRange,
+                    overlapsYRange: (from, to, {range}) => {
+                        const [min, max] = range as readonly [number, number];
+                        return (
+                            Math.min(from.y0 ?? NaN, to.y0 ?? NaN) <= max &&
+                            Math.max(from.y1 ?? NaN, to.y1 ?? NaN) >= min
+                        );
+                    },
+                },
+            ),
     },
     prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
     prepareSeries: prepareAreaRangeSeries,
-    getAxisDomainValues: ({series, axis, viewport}) => {
-        if (axis === 'x') {
-            return undefined;
-        }
-        return series.flatMap((item) =>
-            getDomainPoints(item.data, viewport, {isYInRange}).flatMap((point) =>
-                point.y0 === null || point.y1 === null ? [] : [point.y0, point.y1],
-            ),
-        );
-    },
     getColorValue: getAreaRangeWidth,
     validate: ({series, xAxis, yAxis}) => {
         validateAxisPlotValues({

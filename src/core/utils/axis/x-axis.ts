@@ -1,6 +1,8 @@
 import type {ChartScale, PreparedAxis, PreparedSeries} from '../../../hooks';
+import type {AxisDomainValue} from '../../series/axis-contract';
+import {getAxisCoordinateValues} from '../../series/axis-domain';
+import {getSeriesAxisTicks} from '../../series/axis-policies';
 import {getMinSpaceBetween} from '../array';
-import {isSeriesWithNumericalXValues} from '../series-type-guards';
 import {getScaleTicks} from '../ticks';
 
 import {
@@ -13,37 +15,6 @@ import {
 const DEFAULT_TICKS_COUNT = 10;
 
 type TickValue = {x: number; value: number | string | Date};
-
-function getTicksCount(args: {axis: PreparedAxis; axisWidth: number; series?: PreparedSeries[]}) {
-    const {axis, axisWidth, series} = args;
-    const result = getTicksCountByPixelInterval({axis, axisWidth});
-
-    if (typeof result === 'number') {
-        return result;
-    }
-
-    if (series) {
-        const xDataSet = new Set<number | string>();
-        series?.forEach((item) => {
-            if (item.type === 'x-range') {
-                item.data.forEach((d) => {
-                    if (d.x0 !== null && d.x1 !== null) {
-                        xDataSet.add(d.x0);
-                        xDataSet.add(d.x1);
-                    }
-                });
-            } else if (isSeriesWithNumericalXValues(item)) {
-                item.data.forEach((data) => {
-                    xDataSet.add(data.x);
-                });
-            }
-        });
-
-        return xDataSet.size < DEFAULT_TICKS_COUNT ? xDataSet.size : DEFAULT_TICKS_COUNT;
-    }
-
-    return DEFAULT_TICKS_COUNT;
-}
 
 export function getAutomaticXAxisTickValues({
     axis,
@@ -63,14 +34,32 @@ export function getAutomaticXAxisTickValues({
             return [];
         }
 
-        const scaleTicksCount = getTicksCount({axis, axisWidth, series});
+        let coordinates: AxisDomainValue[] | undefined;
+        const getCoordinates = () => {
+            coordinates ??= series ? getAxisCoordinateValues(series, 'x') : [];
+            return coordinates;
+        };
+        const count = getTicksCountByPixelInterval({axis, axisWidth});
+        const scaleTicksCount =
+            count ??
+            (series
+                ? Math.min(new Set(getCoordinates()).size, DEFAULT_TICKS_COUNT)
+                : DEFAULT_TICKS_COUNT);
+        const request = series
+            ? getSeriesAxisTicks(series, 'x', {
+                  getValues: getCoordinates,
+                  count,
+              })
+            : undefined;
         const dateTimeLabelFormats =
             axis.type === 'datetime' ? axis.labels.dateTimeLabelFormats : undefined;
-        const scaleTicks = getScaleTicks({
-            scale,
-            ticksCount: scaleTicksCount,
-            dateTimeLabelFormats,
-        });
+        const scaleTicks =
+            request?.values ??
+            getScaleTicks({
+                scale,
+                ticksCount: request?.count ?? scaleTicksCount,
+                dateTimeLabelFormats,
+            });
 
         const originalTickValues = scaleTicks.map((t) => ({
             x: scale(t as number | Date),

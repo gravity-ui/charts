@@ -15,10 +15,9 @@ import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
 import {prepareAreaRangeData} from '~core/shapes/area-range/prepare-data';
 import {renderAreaRange} from '~core/shapes/area-range/renderer';
 import {getRangeBBox} from '~core/shapes/area-range/utils';
-import {getDomainDataXBySeries} from '~core/utils/common';
+import {getDomainDataXBySeries, getDomainDataYBySeries} from '~core/utils/common';
 
 import type {AreaRangeSeries, AreaRangeSeriesData, ChartSeriesOptions} from '../../../types';
-import {areaRangePlugin} from '../index';
 import {prepareAreaRangeSeries} from '../prepare-area-range-series';
 
 function createSeries(
@@ -235,9 +234,7 @@ describe('area-range plugin', () => {
                 {x: 2, y0: 5, y1: 10},
             ],
         };
-        expect(areaRangePlugin.getAxisDomainValues?.({series: [series], axis: 'y'})).toEqual([
-            5, 10,
-        ]);
+        expect(getDomainDataYBySeries([series])).toEqual([5, 10]);
     });
 
     test('orders points by their effective category positions', async () => {

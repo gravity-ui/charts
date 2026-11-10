@@ -5,10 +5,10 @@ import get from 'es-toolkit/compat/get';
 
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis} from '../axes/types';
-import {SERIES_TYPE} from '../constants';
 import type {PreparedSeries} from '../series';
+import type {AxisDomainValue} from '../series/axis-contract';
 import {hasAxisBaseline} from '../series/axis-domain';
-import type {AxisDomainValue} from '../series/plugin';
+import {getSeriesAxisRequirements} from '../series/axis-policies';
 import {getDomainDataYBySeries, shouldSyncAxisWithPrimary} from '../utils';
 import {getBandSize} from '../utils/band-size';
 import {sumDecimals} from '../utils/math';
@@ -19,7 +19,6 @@ import {
     checkIsPointDomain,
     filterCategoriesByVisibleSeries,
     getMinMaxPropsOrState,
-    hasOnlyMarkerSeries,
     validateArrayData,
 } from './utils';
 
@@ -46,11 +45,6 @@ function getYScaleRange(args: {axis: PreparedAxis; boundsHeight: number}): [numb
             return [boundsHeight, 0];
         }
     }
-}
-
-function isSeriesWithYAxisOffset(series: PreparedSeries[]) {
-    const types = [SERIES_TYPE.BarY, SERIES_TYPE.Heatmap] as string[];
-    return series.some((s) => types.includes(s.type));
 }
 
 export function getDomainSyncedToPrimaryTicks(args: {
@@ -261,6 +255,7 @@ export function createYScale(args: {
     zoomStateY?: [number, number];
 }) {
     const {axis, boundsHeight, series, primaryAxis, primaryTicksCount, zoomStateY} = args;
+    const requirements = getSeriesAxisRequirements(series, 'y', axis.type);
     const [yMinPropsOrState, yMaxPropsOrState] = getMinMaxPropsOrState({
         axis,
         maxValues: [zoomStateY?.[1]],
@@ -281,12 +276,11 @@ export function createYScale(args: {
                 return undefined;
             }
 
-            if (
-                series.some(
-                    (s) => (s.type === 'bar-x' || s.type === 'area') && s.stacking === 'percent',
-                )
-            ) {
-                return scaleLinear().domain([0, 100]).range(range);
+            if (requirements.fixedDomain) {
+                const {min, max, type = axis.type} = requirements.fixedDomain;
+                return (type === 'logarithmic' ? scaleLog() : scaleLinear())
+                    .domain([min, max])
+                    .range(range);
             }
 
             if (hasNumberAndNullValues) {
@@ -349,15 +343,15 @@ export function createYScale(args: {
                 const domainPadding = getDomainPadding(axis, Boolean(zoomStateY));
                 let offsetMin = 0;
                 let offsetMax = 0;
-                if (isSeriesWithYAxisOffset(series)) {
+                if (requirements.bandPadding > 0) {
                     if (domain.length > 1) {
                         const bandWidth = getBandSize({
                             scale: scale as AxisScale<AxisDomain>,
                             domain: domain as AxisDomain[],
                         });
 
-                        offsetMin += bandWidth / 2;
-                        offsetMax += bandWidth / 2;
+                        offsetMin += bandWidth * requirements.bandPadding;
+                        offsetMax += bandWidth * requirements.bandPadding;
                     }
                 }
 
@@ -442,7 +436,7 @@ export function createYScale(args: {
         case 'datetime': {
             if (yTimestamps) {
                 const [yMinTimestamp, yMaxTimestamp] = extent(yTimestamps) as [number, number];
-                const isPointDomain = hasOnlyMarkerSeries(series)
+                const isPointDomain = requirements.centerSingleValue
                     ? checkIsPointDomain([yMinTimestamp, yMaxTimestamp])
                     : false;
                 const yMin =
@@ -490,11 +484,14 @@ export function createYScale(args: {
                 }
 
                 if (hasNumberAndNullValues) {
-                    const [yMinTimestamp, yMaxTimestamp] = extent(domain as [number, number]) as [
+                    const [dataMin, dataMax] = extent(domain as [number, number]) as [
                         number,
                         number,
                     ];
-                    const isPointDomain = hasOnlyMarkerSeries(series)
+                    // Interpolated bounds may contain fractional milliseconds, which Dates truncate.
+                    const yMinTimestamp = Math.floor(dataMin);
+                    const yMaxTimestamp = Math.ceil(dataMax);
+                    const isPointDomain = requirements.centerSingleValue
                         ? checkIsPointDomain([yMinTimestamp, yMaxTimestamp])
                         : false;
                     const yMin =
@@ -514,15 +511,15 @@ export function createYScale(args: {
                     const domainPadding = getDomainPadding(axis, Boolean(zoomStateY));
                     let offsetMin = 0;
                     let offsetMax = 0;
-                    if (isSeriesWithYAxisOffset(series)) {
+                    if (requirements.bandPadding > 0) {
                         if (Object.keys(domain).length > 1) {
                             const bandWidth = getBandSize({
                                 scale: scale as AxisScale<AxisDomain>,
                                 domain: domain as AxisDomain[],
                             });
 
-                            offsetMin += bandWidth / 2;
-                            offsetMax += bandWidth / 2;
+                            offsetMin += bandWidth * requirements.bandPadding;
+                            offsetMax += bandWidth * requirements.bandPadding;
                         }
                     }
 

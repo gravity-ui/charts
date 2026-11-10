@@ -80,7 +80,7 @@ A separate zero total is hidden when the same stack has negative values. This ru
 
 Participants with the same type, `stackId` and value axis must have matching effective `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
 
-**Segment labels take priority over totals in the same plugin layer**, even for a small top segment: the overlapping total is hidden. Set `stackLabels.allowOverlap: true` to keep both labels. See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
+**Stack totals take priority over segment labels of the same series type.** An overlapping segment label is hidden unless its `dataLabels.allowOverlap` is `true`. Overlap between stack totals is controlled by `stackLabels.allowOverlap` (default: `false`). See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
 
 <div data-chart-example="data-labels/stack-labels"></div>
 

@@ -4,7 +4,8 @@ import {scaleLinear} from 'd3-scale';
 import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
-import type {AxisDomainValue} from '../series/plugin';
+import type {AxisDomainValue} from '../series/axis-contract';
+import {getSeriesAxisRequirements} from '../series/axis-policies';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '../series/types';
 import type {ChartMargin} from '../types';
@@ -268,9 +269,7 @@ export function applyAxisPadding(
         return visible.length ? visible : items;
     });
     const isFixed = (items: PreparedSeries[], direction: 'x' | 'y') =>
-        items.some((s) =>
-            getSeriesPlugin(s.type).isAxisDomainFixed?.({series: s, axis: direction}),
-        );
+        Boolean(getSeriesAxisRequirements(items, direction).fixedDomain);
     const fixedY = ySeries.map((items, index) => args.fixedY?.[index] || isFixed(items, 'y'));
     const padX = !args.fixedX && !isFixed(xSeries, 'x') && hasPadding(xAxis);
     const padY = yAxis.map((axis, index) => !fixedY[index] && hasPadding(axis));
