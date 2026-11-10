@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    branches: [release/v1]
 
 jobs:
   release:
@@ -13,3 +13,6 @@ jobs:
           github-token: ${{ secrets.GRAVITY_UI_BOT_GITHUB_TOKEN }}
           npm-token: ${{ secrets.GRAVITY_UI_BOT_NPM_TOKEN }}
           node-version-file: '.nvmrc'
+          # Open the release PR against this branch and keep the `latest` dist-tag on 2.x.
+          default-branch: release/v1
+          npm-dist-tag: untagged
