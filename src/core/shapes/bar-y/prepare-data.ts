@@ -1,13 +1,13 @@
-import {ascending, descending, sort} from 'd3-array';
+import {ascending, descending, group, sort} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'lodash/get';
 
-import type {HtmlItem, LabelData} from '../../../types';
+import type {LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedBarYSeries, PreparedSeriesOptions} from '../../series/types';
 import {
-    filterOverlappingLabels,
+    filterLayerLabels,
     getHtmlLabelConstraintedPosition,
     getSvgLabelConstraintedPosition,
     isPointDataLabelEnabled,
@@ -17,24 +17,31 @@ import {getPositiveShare} from '../../utils/percentage';
 import {hasOutsideOnlyPlacement, placeRectLabel} from '../../utils/rect-label-placement';
 import {createLabelMeasurer} from '../../utils/text';
 import {getBarWidthBySeries} from '../bar-width';
+import type {ShapeLabels} from '../types';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 import {getBarYRect} from './utils';
 
-export async function prepareBarYData(args: {
-    boundsHeight: number;
-    boundsWidth: number;
+interface PrepareBarYDataArgs {
     series: PreparedBarYSeries[];
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
     yScale: (ChartScale | undefined)[];
-}): Promise<BarYShapesArgs> {
+}
+
+interface BarYPreparationItem {
+    shape: PreparedBarYData;
+    /** Allows outside labels at the end of each left- or right-extending stack branch. */
+    isStackEnd: boolean;
+    /** Screen direction from the segment's base toward its value along the value axis. */
+    valueAxisDirection: 'left' | 'right';
+}
+
+function prepareBarYGeometry(args: PrepareBarYDataArgs): BarYPreparationItem[] {
     const {
-        boundsHeight,
-        boundsWidth,
         series,
         seriesOptions,
         xAxis,
@@ -49,14 +56,7 @@ export async function prepareBarYData(args: {
     const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
 
     if (!yLinearScale) {
-        return {
-            shapes: [],
-            labels: [],
-            htmlLabels: [],
-            markers: [],
-            getHoverMarkers: () => [],
-            annotations: [],
-        };
+        return [];
     }
 
     const sortingOptions = get(seriesOptions, 'bar-y.dataSorting');
@@ -92,14 +92,6 @@ export async function prepareBarYData(args: {
 
     const categoryDomain =
         yAxis[0].type === 'category' ? new Set((yScale as ScaleBand<string>).domain()) : undefined;
-    interface BarYPreparationItem {
-        shape: PreparedBarYData;
-        /** Allows outside labels at the end of each left- or right-extending stack branch. */
-        isStackEnd: boolean;
-        /** Screen direction from the segment's base toward its value along the value axis. */
-        valueAxisDirection: 'left' | 'right';
-    }
-
     const result: BarYPreparationItem[] = [];
     Object.entries(groupedData).forEach(([yValue, val]) => {
         let center;
@@ -267,8 +259,16 @@ export async function prepareBarYData(args: {
         );
     }
 
-    let labels: LabelData[] = [];
-    let htmlLabels: HtmlItem[] = [];
+    return result;
+}
+
+export async function prepareBarYData(
+    args: PrepareBarYDataArgs & {boundsWidth: number; boundsHeight: number},
+): Promise<BarYShapesArgs> {
+    const {boundsWidth, boundsHeight} = args;
+    const result = prepareBarYGeometry(args);
+    const svgLabels: LabelData[] = [];
+    const htmlLabels: BarYShapesArgs['htmlLabels'] = [];
 
     const measureLabel = createLabelMeasurer();
     for (let i = 0; i < result.length; i++) {
@@ -339,16 +339,18 @@ export async function prepareBarYData(args: {
                           hangingOffset,
                       });
             }
+
             if (dataLabels.html) {
                 htmlLabels.push({
+                    series: prepared.series,
                     content,
                     size: {width, height},
                     style: dataLabels.style,
                     ...position,
                 });
             } else {
-                labels.push({
-                    size: dataLabels.placement ? {width, height, hangingOffset} : {width, height},
+                svgLabels.push({
+                    size: {width, height, hangingOffset},
                     series: prepared.series,
                     style: dataLabels.style,
                     text: content,
@@ -359,20 +361,40 @@ export async function prepareBarYData(args: {
         }
     }
 
-    const allowOverlap = result[0]?.shape.series.dataLabels.allowOverlap;
-
-    if (labels.length && !allowOverlap) {
-        labels = filterOverlappingLabels(labels);
-    } else if (htmlLabels.length && !allowOverlap) {
-        htmlLabels = filterOverlappingLabels(htmlLabels);
-    }
-
     return {
         shapes: result.map((item) => item.shape),
-        labels,
+        svgLabels,
         htmlLabels,
         markers: [],
         getHoverMarkers: () => [],
         annotations: [],
+    };
+}
+
+export function filterBarYDataLabels(
+    data: BarYShapesArgs,
+    otherLayers: ShapeLabels[],
+): BarYShapesArgs {
+    if (!data.svgLabels.length && !data.htmlLabels.length) {
+        return data;
+    }
+
+    const series = [...new Set(data.shapes.map((shape) => shape.series))];
+    const svgLabelsBySeries = group(data.svgLabels, (label) => label.series);
+    const htmlLabelsBySeries = group(data.htmlLabels, (label) => label.series);
+
+    const filtered = filterLayerLabels(
+        series.map((item) => ({
+            series: item,
+            svgLabels: svgLabelsBySeries.get(item) ?? [],
+            htmlLabels: htmlLabelsBySeries.get(item) ?? [],
+        })),
+        otherLayers,
+    );
+
+    return {
+        ...data,
+        svgLabels: filtered.flatMap((item) => item.svgLabels),
+        htmlLabels: filtered.flatMap((item) => item.htmlLabels),
     };
 }

@@ -115,16 +115,18 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             const rawBefore = JSON.stringify(raw);
             const series = await prepareBarYSeries({...common, series: raw});
             domainValues = getDomainDataXBySeries(series);
-            const {shapes} = await prepareBarYData({
+            const prepared = await prepareBarYData({
+                boundsWidth: valueSize,
+                boundsHeight: size,
                 series: series.filter((s) => s.visible),
                 seriesOptions,
                 xAxis: {type: 'linear'} as PreparedXAxis,
                 xScale: valueScale,
                 yAxis: [{type: 'category', categories}] as PreparedYAxis[],
                 yScale: [categoryScale],
-                boundsHeight: size,
-                boundsWidth: 400,
             });
+            const {shapes} = prepared;
+
             geometry = shapes.map((d) => ({
                 center: d.y + d.height / 2,
                 thickness: d.height,

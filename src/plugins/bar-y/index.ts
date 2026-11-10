@@ -6,7 +6,7 @@ import type {
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedBarYSeries} from '~core/series/types';
-import {prepareBarYData} from '~core/shapes/bar-y/prepare-data';
+import {filterBarYDataLabels, prepareBarYData} from '~core/shapes/bar-y/prepare-data';
 import {renderBarY} from '~core/shapes/bar-y/renderer';
 import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
@@ -40,10 +40,10 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareBarYData({
-        boundsHeight,
-        boundsWidth,
         series: series as PreparedBarYSeries[],
         seriesOptions,
+        boundsWidth,
+        boundsHeight,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
@@ -54,13 +54,20 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         ...args,
         anchors: args.isRangeSlider
             ? []
-            : getBarYStackLabelAnchors(data.shapes, {xScale, boundsWidth, seriesOptions, yAxis}),
-        otherLayers: [
-            ...(args.otherLayers ?? []),
-            {svgLabels: data.labels, htmlLabels: data.htmlLabels},
-        ],
+            : getBarYStackLabelAnchors(data.shapes, {
+                  xScale,
+                  boundsWidth,
+                  seriesOptions,
+                  yAxis,
+              }),
     });
-    return {renderData: [data], tooltipItems: data.shapes, labels};
+
+    const filteredData = filterBarYDataLabels(data, [
+        ...(args.otherLayers ?? []),
+        {svgLabels: labels, htmlLabels: []},
+    ]);
+
+    return {renderData: [filteredData], tooltipItems: data.shapes, labels};
 }
 
 function renderShapes({
