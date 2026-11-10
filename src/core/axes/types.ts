@@ -15,6 +15,7 @@ import type {
     PlotLayerPlacement,
 } from '../../types';
 import type {DashStyle} from '../constants';
+import type {AxisDomainValue} from '../series/axis-contract';
 
 type PreparedAxisLabels = Omit<ChartAxisLabels, 'enabled' | 'padding' | 'style' | 'autoRotation'> &
     Required<Pick<ChartAxisLabels, 'enabled' | 'padding' | 'margin' | 'rotation' | 'html'>> & {
@@ -80,6 +81,8 @@ type PreparedBaseAxis = Omit<
     ChartAxis,
     'type' | 'labels' | 'plotLines' | 'plotBands' | 'plotShapes'
 > & {
+    /** Per-render plugin contributions shared by layout, ticks and rendering. */
+    domainValues?: AxisDomainValue[];
     type: ChartAxisType;
     labels: PreparedAxisLabels;
     title: {

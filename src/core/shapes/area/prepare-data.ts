@@ -1,6 +1,5 @@
 import {group, min, sort} from 'd3-array';
 import type {ScaleLogarithmic} from 'd3-scale';
-import isEqual from 'es-toolkit/compat/isEqual';
 import round from 'es-toolkit/compat/round';
 
 import type {AreaSeriesData} from '../../../types';
@@ -20,6 +19,7 @@ import {getGradientBBox, setGradientPointFills} from '../../utils/gradient';
 import {applyCapturedPointColors, prepareGradientCoords} from '../../utils/gradient-reference';
 import {getPositiveShare} from '../../utils/percentage';
 
+import {createAreaStackAccumulator, getAreaNeighborPoint, getAreaStackContext} from './stack';
 import type {PointData, PreparedAreaData} from './types';
 import {getAreaBBox} from './utils';
 
@@ -88,86 +88,6 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: 
     return sort(Array.from(xValues), (d) => d[1]);
 }
 
-function getNeighborPoint(data: Map<string, AreaSeriesData> | undefined, key: string | undefined) {
-    return key === undefined ? undefined : data?.get(key);
-}
-
-interface StackContext {
-    dataArrays: AreaSeriesData[][];
-    reversed: boolean;
-    axisType: PreparedXAxis['type'];
-    categories: PreparedXAxis['categories'];
-    dataMaps: Map<string, AreaSeriesData>[];
-    neighbors: Map<string, {prev?: string; next?: string}>;
-}
-
-const stackContexts = new WeakMap<AreaSeriesData[], StackContext>();
-
-function getStackContext(
-    series: PreparedAreaSeries[],
-    xAxis: PreparedXAxis,
-    xScale: ChartScale,
-): StackContext {
-    const dataArrays = series.map((item) => item.fullData ?? item.data);
-    const range = xScale.range();
-    const reversed = xAxis.type !== 'category' && range[1] < range[0];
-    const cached = stackContexts.get(dataArrays[0]);
-    if (
-        cached &&
-        cached.reversed === reversed &&
-        cached.axisType === xAxis.type &&
-        isEqual(cached.categories, xAxis.categories) &&
-        cached.dataArrays.length === dataArrays.length &&
-        cached.dataArrays.every((data, index) => data === dataArrays[index])
-    ) {
-        return cached;
-    }
-
-    const categories = xAxis.categories ?? [];
-    const keys = new Set<string>();
-    const dataMaps = dataArrays.map((data) => {
-        const map = new Map<string, AreaSeriesData>();
-        for (const point of data) {
-            if (
-                xAxis.type !== 'category' &&
-                (point.x === null || !Number.isFinite(Number(point.x)))
-            ) {
-                continue;
-            }
-            const key = String(
-                xAxis.type === 'category'
-                    ? getDataCategoryValue({axisDirection: 'x', categories, data: point})
-                    : point.x,
-            );
-            keys.add(key);
-            map.set(key, point);
-        }
-        return map;
-    });
-    const orderedKeys =
-        xAxis.type === 'category'
-            ? categories.filter((category) => keys.has(category))
-            : Array.from(keys).sort((a, b) =>
-                  reversed ? Number(b) - Number(a) : Number(a) - Number(b),
-              );
-    const neighbors = new Map(
-        orderedKeys.map((key, index) => [
-            key,
-            {prev: orderedKeys[index - 1], next: orderedKeys[index + 1]},
-        ]),
-    );
-    const context = {
-        dataArrays,
-        dataMaps,
-        neighbors,
-        reversed,
-        axisType: xAxis.type,
-        categories: xAxis.categories,
-    };
-    stackContexts.set(dataArrays[0], context);
-    return context;
-}
-
 export const projectAreaData = (args: {
     series: PreparedAreaSeries[];
     seriesOptions?: PreparedSeriesOptions;
@@ -225,7 +145,11 @@ export const projectAreaData = (args: {
             );
             const hasFilteredData = seriesStack.some((s) => s.fullData && s.fullData !== s.data);
             const stackContext = hasFilteredData
-                ? getStackContext(seriesStack, xAxis, xScale)
+                ? getAreaStackContext(
+                      seriesStack,
+                      xAxis,
+                      xAxis.type !== 'category' && xScale.range()[1] < xScale.range()[0],
+                  )
                 : undefined;
             const neighbors =
                 stackContext?.neighbors ??
@@ -261,8 +185,8 @@ export const projectAreaData = (args: {
                         // An isolated point between explicit nulls contributes no
                         // height to either section. Missing points are synthetic zeros.
                         const context = contextMaps.get(s);
-                        const prev = getNeighborPoint(context, neighbors.get(x)?.prev);
-                        const next = getNeighborPoint(context, neighbors.get(x)?.next);
+                        const prev = getAreaNeighborPoint(context, neighbors.get(x)?.prev);
+                        const next = getAreaNeighborPoint(context, neighbors.get(x)?.next);
                         if (s.nullMode === 'zero' || prev?.y !== null || next?.y !== null) {
                             stackTotal += value;
                         }
@@ -272,12 +196,7 @@ export const projectAreaData = (args: {
                 });
             }
 
-            const positiveStackValues = new Map<string, {prev: number; next: number}>();
-            const negativeStackValues = new Map<string, {prev: number; next: number}>();
-            xValues.forEach(([key]) => {
-                positiveStackValues.set(key, {prev: 0, next: 0});
-                negativeStackValues.set(key, {prev: 0, next: 0});
-            });
+            const getStackOffsets = createAreaStackAccumulator();
 
             const seriesStackData: PreparedAreaData[] = [];
             // Process series in reverse order so that the first series in input
@@ -356,127 +275,7 @@ export const projectAreaData = (args: {
                         yScale: seriesYScale,
                     });
 
-                    if (typeof yDataValue === 'number' && yValue !== null) {
-                        const context = contextMaps.get(s);
-                        const prevPoint = getNeighborPoint(context, neighbors.get(x)?.prev);
-                        const nextPoint = getNeighborPoint(context, neighbors.get(x)?.next);
-                        const currentPointStackHeight = Math.abs(yDataValue);
-
-                        if (yDataValue >= 0) {
-                            const positiveStackHeights = positiveStackValues.get(x);
-                            let prevSectionStackHeight = positiveStackHeights?.prev ?? 0;
-                            let nextSectionStackHeight = positiveStackHeights?.next ?? 0;
-
-                            const point = {
-                                y0: roundCoordinate(getStackY(null, prevSectionStackHeight)),
-                                x: xValue,
-                                y: roundCoordinate(getStackY(yDataValue, prevSectionStackHeight)),
-                                color: d.marker?.color ?? d.color,
-                                data: d,
-                                percentage,
-                                series: s,
-                            };
-
-                            points.push(point);
-
-                            // Sections are compared at the precision the coordinates are
-                            // rounded to: a thinner step collapses into the same point
-                            // anyway, and a second one would only duplicate the point
-                            // together with its marker and its data label.
-                            if (
-                                roundCoordinate(getStackY(null, prevSectionStackHeight)) !==
-                                roundCoordinate(getStackY(null, nextSectionStackHeight))
-                            ) {
-                                const point2 = {
-                                    y0: roundCoordinate(getStackY(null, nextSectionStackHeight)),
-                                    x: xValue,
-                                    y: roundCoordinate(
-                                        getStackY(yDataValue, nextSectionStackHeight),
-                                    ),
-                                    color: d.marker?.color ?? d.color,
-                                    data: d,
-                                    percentage,
-                                    series: s,
-                                };
-                                points.push(point2);
-
-                                if (isPercentStacking) {
-                                    const newYValue = roundCoordinate(
-                                        getStackY(
-                                            yDataValue,
-                                            Math.max(
-                                                prevSectionStackHeight,
-                                                nextSectionStackHeight,
-                                            ),
-                                        ),
-                                    );
-                                    point.y = newYValue;
-                                    point2.y = newYValue;
-                                }
-                            }
-
-                            if (prevPoint?.y !== null || s.nullMode === 'zero') {
-                                prevSectionStackHeight =
-                                    prevSectionStackHeight + currentPointStackHeight;
-                            }
-
-                            if (nextPoint?.y !== null || s.nullMode === 'zero') {
-                                nextSectionStackHeight =
-                                    nextSectionStackHeight + currentPointStackHeight;
-                            }
-
-                            positiveStackValues.set(x, {
-                                prev: prevSectionStackHeight,
-                                next: nextSectionStackHeight,
-                            });
-                        } else {
-                            const negativeStackHeights = negativeStackValues.get(x);
-                            let prevSectionStackHeight = negativeStackHeights?.prev ?? 0;
-                            let nextSectionStackHeight = negativeStackHeights?.next ?? 0;
-
-                            points.push({
-                                y0: roundCoordinate(getStackY(null, -prevSectionStackHeight)),
-                                x: xValue,
-                                y: roundCoordinate(getStackY(yDataValue, -prevSectionStackHeight)),
-                                color: d.marker?.color ?? d.color,
-                                data: d,
-                                percentage,
-                                series: s,
-                            });
-
-                            if (
-                                roundCoordinate(getStackY(null, -prevSectionStackHeight)) !==
-                                roundCoordinate(getStackY(null, -nextSectionStackHeight))
-                            ) {
-                                points.push({
-                                    y0: roundCoordinate(getStackY(null, -nextSectionStackHeight)),
-                                    x: xValue,
-                                    y: roundCoordinate(
-                                        getStackY(yDataValue, -nextSectionStackHeight),
-                                    ),
-                                    color: d.marker?.color ?? d.color,
-                                    data: d,
-                                    percentage,
-                                    series: s,
-                                });
-                            }
-
-                            if (prevPoint?.y !== null) {
-                                prevSectionStackHeight =
-                                    prevSectionStackHeight + currentPointStackHeight;
-                            }
-
-                            if (nextPoint?.y !== null) {
-                                nextSectionStackHeight =
-                                    nextSectionStackHeight + currentPointStackHeight;
-                            }
-
-                            negativeStackValues.set(x, {
-                                prev: prevSectionStackHeight,
-                                next: nextSectionStackHeight,
-                            });
-                        }
-                    } else {
+                    if (typeof yDataValue !== 'number' || yValue === null) {
                         points.push({
                             y0: roundCoordinate(yAxisTop + yMin),
                             x: xValue,
@@ -485,6 +284,42 @@ export const projectAreaData = (args: {
                             data: d,
                             percentage,
                             series: s,
+                        });
+                        continue;
+                    }
+                    const context = contextMaps.get(s);
+                    const offsets = getStackOffsets({
+                        key: x,
+                        value: yDataValue,
+                        prev: getAreaNeighborPoint(context, neighbors.get(x)?.prev),
+                        next: getAreaNeighborPoint(context, neighbors.get(x)?.next),
+                        nullMode: s.nullMode,
+                    });
+                    // Collapse section steps that project to the same rounded coordinate.
+                    const hasStep =
+                        roundCoordinate(getStackY(null, offsets.prev)) !==
+                        roundCoordinate(getStackY(null, offsets.next));
+                    const equalizeTop = hasStep && isPercentStacking && yDataValue >= 0;
+                    const topOffset = equalizeTop
+                        ? Math.max(offsets.prev, offsets.next)
+                        : offsets.prev;
+                    const point = {
+                        y0: roundCoordinate(getStackY(null, offsets.prev)),
+                        x: xValue,
+                        y: roundCoordinate(getStackY(yDataValue, topOffset)),
+                        color: d.marker?.color ?? d.color,
+                        data: d,
+                        percentage,
+                        series: s,
+                    };
+                    points.push(point);
+                    if (hasStep) {
+                        points.push({
+                            ...point,
+                            y0: roundCoordinate(getStackY(null, offsets.next)),
+                            y: equalizeTop
+                                ? point.y
+                                : roundCoordinate(getStackY(yDataValue, offsets.next)),
                         });
                     }
                 }

@@ -1,4 +1,6 @@
-import {createIsOutsideBounds} from '../utils';
+import {scaleLinear} from 'd3-scale';
+
+import {createIsOutsideBounds, markHiddenPointsOutOfYRange} from '../utils';
 
 describe('createIsOutsideBounds', () => {
     const isOutsideBounds = createIsOutsideBounds({boundsWidth: 590, boundsHeight: 200});
@@ -22,5 +24,21 @@ describe('createIsOutsideBounds', () => {
         expect(isOutsideBounds(295, 200.51)).toBe(true);
         expect(isOutsideBounds(-0.51, 100)).toBe(true);
         expect(isOutsideBounds(590.51, 100)).toBe(true);
+    });
+});
+
+describe('markHiddenPointsOutOfYRange', () => {
+    test.each([
+        {values: [-10, 110], drawn: [true, true]},
+        {values: [110, 120], drawn: [false, false]},
+        {values: [-10, null, 110], drawn: [false, false, false]},
+    ])('keeps crossing segments but preserves gaps: $values', ({values, drawn}) => {
+        const points: {y: number | null; hiddenInLine?: boolean}[] = values.map((y) => ({y}));
+        markHiddenPointsOutOfYRange({
+            points,
+            yScale: scaleLinear().domain([0, 100]).range([100, 0]),
+            yAxisTop: 0,
+        });
+        expect(points.map((point) => !point.hiddenInLine)).toEqual(drawn);
     });
 });

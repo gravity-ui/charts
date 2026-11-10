@@ -1,3 +1,4 @@
+import {isValueInAxisRange} from '~core/series/domain-points';
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -11,6 +12,7 @@ import {renderXRange} from '~core/shapes/x-range/renderer';
 import type {PreparedXRangeData} from '~core/shapes/x-range/types';
 import {getTooltipColorSymbol, getTooltipYValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
 
@@ -58,12 +60,30 @@ function getXRangeWidth(data: XRangeSeriesData) {
 
 export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = {
     type: 'x-range',
-    zoom: {types: ['x'], defaultType: 'x'},
+    axes: {
+        x: {
+            getData: ({series}) => ({
+                values: series.flatMap((item) =>
+                    item.data.flatMap((point) =>
+                        point.x0 !== null && point.x1 !== null ? [point.x0, point.x1] : [],
+                    ),
+                ),
+                domainValues: series.flatMap((item) =>
+                    item.data.flatMap((point) => [point.x0, point.x1]),
+                ),
+            }),
+        },
+    },
+    zoom: {
+        types: ['x'],
+        defaultType: 'x',
+        filterData: ({series, viewport}) =>
+            filterPoints(series.data, viewport, {
+                isXInRange: (point, axis) =>
+                    isValueInAxisRange(point.x0, axis) || isValueInAxisRange(point.x1, axis),
+            }),
+    },
     prepareSeries: prepareXRangeSeries,
-    getAxisDomainValues: ({series, axis}) =>
-        axis === 'x'
-            ? series.flatMap((item) => item.data.flatMap((point) => [point.x0, point.x1]))
-            : undefined,
     // Use bar duration (x1 - x0) as the color value so that longer bars can be
     // visually distinguished by color intensity.
     getColorValue: getXRangeWidth,

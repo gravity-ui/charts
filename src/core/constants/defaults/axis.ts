@@ -49,6 +49,9 @@ export const axisTickMarksDefaults = {
     length: 6,
 };
 
+export const DEFAULT_X_AXIS_MAX_PADDING = '1%';
+export const DEFAULT_Y_AXIS_MAX_PADDING = '5%';
+
 export const DEFAULT_AXIS_TYPE: ChartAxisType = 'linear';
 
 export const PLOT_LINE_HOVER_THRESHOLD = 4;

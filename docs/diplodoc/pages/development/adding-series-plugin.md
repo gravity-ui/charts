@@ -1,96 +1,116 @@
 # Adding a series plugin
 
-This checklist is for contributors adding a built-in series plugin to Charts.
+This guide covers built-in plugins in `src/plugins/<type>/`. Public external registration is still being migrated; the axis and viewport contracts already accept a plugin's own data types.
 
-## 1. Decide capabilities
+## 1. Define behavior and types
 
-Compare existing plugins and their actual behavior. For each capability, document **Supported**, **Limited (with constraints)**, or **Unsupported** in the series guide. Specify subfeatures separately and test every support claim.
+Compare existing plugins and document each capability as **Supported**, **Limited**, or **Unsupported**, including relevant subfeatures:
 
-| Capability               | Specify support for                                                                        |
-| ------------------------ | ------------------------------------------------------------------------------------------ |
-| Axis types               | Axes or no axes; `linear`, `logarithmic`, `datetime` for X and Y separately.               |
-| Category axes            | X/Y; category names and indices; category sorting.                                         |
-| Axis bounds and order    | Explicit `min`/`max` and reversed axes.                                                    |
-| Multiple Y axes          | Series assignment to independent Y axes.                                                   |
-| Split plots              | Series displayed in separate plots.                                                        |
-| Mixed series             | Compatible types and shared tooltips.                                                      |
-| Zoom                     | `x`, `y`, `xy`, default direction, and reset.                                              |
-| Range slider             | Preview, filtering, visibility/style overrides, and combined use with zoom.                |
-| Missing data             | `null`/`undefined` and `skip`/`connect`/`zero` modes.                                      |
-| Colors                   | Palette, series/point overrides, gradients, and continuous color scales.                   |
-| Legend                   | Discrete/continuous, symbols, grouping, and hide/show.                                     |
-| Data labels              | SVG/HTML, explicit labels, formatters/renderers, point overrides, placement, and overlap.  |
-| Tooltip                  | Headers, custom rows/renderers/formatters, sorting/totals, and point visibility overrides. |
-| Markers and states       | Normal/hover markers, point overrides, hover/inactive styles, and halos.                   |
-| Events                   | Click, pointermove, and cursor.                                                            |
-| Annotations and overlays | Point annotations; axis plot lines, bands, and shapes.                                     |
-| Crosshair                | X/Y, pointer following, and snapping to data.                                              |
+- Coordinates: axis types, categories and sorting, bounds, reversed axes, multiple Y axes, split plots, and mixed series.
+- Viewport: X/Y/XY zoom, reset, range-slider previews, and missing-value modes.
+- Appearance: series/point colors, gradients, continuous scales, legend, SVG/HTML labels, markers, and hover/inactive states.
+- Interaction: tooltip headers/rows/formatters, sorting/totals, events, crosshair, annotations, and overlays.
 
-## 2. Define the API
+Match established config names, units, defaults, and precedence. Keep specialized fields out of `Base*`. Define series, point, prepared-data, and tooltip types; update the built-in unions and public exports where needed. Keep registry boundaries typed.
 
-- Match established names, units, defaults, and option precedence.
-- Define documented series, point, prepared-data, and tooltip types. Extend `SERIES_TYPE`, `ChartSeries`, `ChartSeriesData`, `ChartSeriesOptions`, `PreparedSeries`, `TooltipDataChunk`, and [public exports](https://github.com/gravity-ui/charts/blob/main/src/core/types/index.ts) as needed.
-- Keep plugin-only fields out of `Base*`. Do not widen the registry to `any`.
+## 2. Prepare data and geometry
 
-## 3. Implement the pipeline
+Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts): `prepareSeries`, `prepareShapeData`, `renderShapes`, and tooltip lookup/rows. Add validation and optional capabilities as needed. Series-specific geometry currently lives in `core/shapes/<type>/`.
 
-- Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts) in `src/plugins/<type>/`: validation, series/shape preparation, rendering, interaction lookup, and tooltip rows. Geometry currently lives in `src/core/shapes/<type>/`.
-- Reuse shared helpers; preserve raw data and callback payloads, cache measurements, and clean up subscriptions.
-- Implement domain/baseline rules, clipping, plot offsets, and layer/category order; define fill/stroke behavior where applicable.
-- Optional `getXAxisPadding(series)` requests label space in pixels at the max end of an autoscaled X domain. Core uses the largest request across series; an explicit `xAxis.max` disables that reserve. Keep label measurement and placement policy in the plugin.
-- For intervals, handle incomplete points and zoom overlap. For paths, preserve boundary neighbors. Keep null/visibility rules consistent across shapes, domains, gradients, and hit testing.
+Keep raw config, points, and callback payloads intact. Store derived values separately, hoist reusable calculations and measurements, and clean up subscriptions. Register derived point copies with `withSourcePoint`; use `getSourcePoint` for nested interaction payloads.
 
-### Axis domains
+### Axes
 
-Implement `getAxisDomainValues({series, axis})` when scalar point coordinates do not describe the series domain. It receives an ordered group of this plugin's raw or prepared series and the axis direction. Return an array of unformatted values for core to merge and deduplicate across plugins. Returning `[]` excludes the group; omitting the callback or returning `undefined` uses scalar `x`/`y` coordinates of axis-related series.
+Set `axes: true` for scalar X/Y coordinates; omit it for a series without Cartesian axes. An object enables both axes with optional per-axis policies.
 
-For independent points, flatten their values or interval endpoints. Calculate stacks and cumulative values for the whole group. The `core/series/stacked-domain.ts` helper accepts coordinate roles and a point selector, grouping stacks and summing each sign separately.
+Use one `getData` adapter for custom coordinates or domains. This interval plugin exposes X endpoints while retaining scalar Y:
 
-The caller selects visibility, zoom filtering, and axis membership. Preserve that selection, including the all-hidden fallback; do not filter hidden series again or mutate input points or their order.
+```typescript
+axes: {
+    x: {
+        getData: ({series}) => ({
+            values: series.flatMap((item) =>
+                item.data.flatMap((point) => [point.start, point.end]),
+            ),
+        }),
+    },
+},
+```
 
-Declare separate `axisBaseline: 'x'` or `'y'` metadata when the value axis needs a baseline. Core includes zero in free linear bounds if any plugin requests it, considering all contributions on the axis. Explicit bounds and zoom take precedence. Logarithmic Y retains positive headroom; logarithmic X and percent domains follow their scale policies.
+Return original coordinates in `values` and geometry extents, stack sums, or cumulative values in `domainValues`. An omitted domain uses the coordinates; omitted coordinates use scalar extraction. Empty arrays exclude contributions. Core supplies the plugin's ordered series for the current axis and selects visibility, including the all-hidden fallback.
 
-## 4. Define layers and clipping
+Declare baselines, band reserves, grid, and padding defaults through [SeriesAxis](https://github.com/gravity-ui/charts/blob/main/src/core/series/axis-contract.ts). Use optional `getFixedDomain` for bounds imposed by configuration and `getTicks` for exceptional ticks. Core combines requests, builds scales, and handles label collisions.
 
-- Optional `getLayerKey({series, seriesKey})` selects a layer for one raw or prepared series occurrence. By default, core uses `series.type`, so all series of a plugin share one layer. Equal returned keys share a layer; use stable, chart-unique keys. Core throws `ChartError` if different series types return the same key. `seriesKey` identifies this occurrence: core supplies a type/index key for raw input and the series ID for prepared input. The line plugin returns `seriesKey` for independent layers, including when the same raw object occurs twice.
-- Core retains series references and member order, orders layers by their first occurrence, prepares shapes in reverse order to reserve label space through `otherLayers`, and renders in forward order. Bars retain one layer per type; see the TODO on `SeriesPlugin.getLayerKey` for future layer splitting.
-- `renderShapes(args)` draws geometry into `plot` and SVG labels into `labelsPlot`. Core places `labelsPlot` above the layer's shapes and normal/hover markers, with the same clipping as `plot`.
-- Register asynchronous DOM work with `args.registerCompletion` during this call so `reflow()` waits for its insertion. Check `args.signal` before inserting delayed nodes; it is aborted when the preparation is superseded or unmounted. Keep main geometry synchronous and contain failures of optional nodes inside the renderer.
-- Optional `getClipPath({isRangeSlider, yAxis, zoomState})` returns `'bounds'` (default), `'horizontal'` (X bounds with an expanded vertical region), or `false`. Core owns SVG IDs and geometry. Clipping affects the shape group and its SVG labels; separate marker, annotation, and HTML-label layers are unaffected.
-- Line previews use `'bounds'` in the range slider. Main-plot lines use `'horizontal'` unless explicit Y limits or zoom require `'bounds'`.
+Optional `getXAxisPadding` reserves label space in pixels at the maximum end of an autoscaled X domain. Core takes the largest request; explicit `xAxis.max` wins.
 
-## 5. Define tooltip values
+### Zoom and preprocessing
 
-- `tooltip.prepareData` returns hovered chunks or, for X-aligned series, `xLookupPoints`. Mark at most one own chunk `closest: true`. In mixed charts (`measureDistance: true`), the `closest` chunk and every lookup point must set `distance`: the pixel distance from the pointer to the drawn shape of its series, `0` when the pointer is inside it. Core keeps `closest` only on the chunk with the smallest distance (on ties, the series drawn in the upper layer wins; an unmeasured distance loses to any measured one), so the tooltip, click events and crosshair snapping agree on a single active chunk. `xLookupPoints` of all series compete as one group: in the nearest X column the series with the smallest distance wins, then the Y rule applies. Core strips `distance` before chunks reach public callbacks. With a single series type nothing competes, so core passes `measureDistance: false` and the plugin must skip measuring. Exceptions: plugins that report a constant `0` because the pointer hits the shape, and plugins that need the measurement to pick their own candidate (scatter measures marker contours so that a large marker containing the pointer beats a nearer center).
-- Measure the rendered geometry, not the data points: account for interpolation curves, stroke widths, line caps, rounded corners and marker sizes. Reuse the helpers of `src/core/utils/geometry.ts` (segments, stroked segments and polylines, rectangles, rounded rectangles, polygons) and `getDistanceToSymbol` from `src/core/utils/symbol.ts` for marker symbols; `getDistanceToMarkers` from `src/core/shapes/marker.ts` covers line and area markers. Joins are treated as round and dash gaps are ignored. Plugins that return a chunk only when the pointer hits a shape use `0`. Build reusable geometry lazily and cache it per prepared item (as line caches its drawn segments in `getSegments()` and area caches its band columns) instead of rebuilding it on every pointer move.
-- The active chunk and shared hover highlighting are separate: core selects the single active chunk, while each renderer decides how to highlight its hovered chunks. Line and area highlight every hovered chunk of their type, scatter highlights only the `closest` one.
-- Implement `tooltip.getValue({item, xAxis, yAxis})` hook for built-in sorting and totals. Shared code delegates each hovered chunk to its plugin, including in mixed charts. The hook is optional for compatibility; omitting it falls back to the point's scalar `value`, or its Y value.
-- Return an unformatted value and preserve `null`/`undefined`. Use `getTooltipAxisValue` from `src/core/tooltip/utils.ts` for axis values: it resolves category indices to names and preserves numeric/date values. Non-axis plugins extract their scalar value; interval plugins can return a width (as `area-range` does).
-- Declare `tooltip.header.getValue` for series with a header; omit `header` for series without one. Reuse `getTooltipXValue` / `getTooltipYValue` and `getTooltipScalarValue` for common extraction. In mixed tooltips, the highest header priority wins (ties use the first hovered chunk): X headers use the default `0`, horizontal series use `1`, and radar categories use `2`. Values are resolved and formatted once.
-- Set `header.axis` to the axis supplying the header value and category context. It also selects automatic number/date formatting; date precision uses enabled points from visible series contributing headers to that axis, with each Y axis kept separate. Omit `axis` for non-axis headers; set `requiresFormat: true` when the header should appear only with an explicit `tooltip.headerFormat` (as radar does).
-- A missing header value differs from an omitted `header`: a custom formatter can replace missing continuous or non-axis values with a placeholder, but unresolved categories and headerless plugins omit the header. Explicit `headerFormat` overrides automatic formatting and is passed to custom renderers together with the original chunks.
-- Keep tooltip row values, custom formatter context, and renderer payloads independent of the sorting/totals value. Shared code sorts the plugin values and sums only numeric values.
-- Use `source: 'color'` for swatches; format labels/endpoints once. Preserve renderer precedence and keep plugin formatting hooks internal.
+Omit `zoom.filterData` for scalar point filtering. Otherwise return `{data, shapeData?}`: selected samples and optional original anchors needed to draw crossing geometry.
 
-### Interaction lookup
+Reuse `filterPoints` for coordinate readers, interval predicates, path mode, and filtering by dimension. Supply `isDefined` for path gaps and remove connected missing points before filtering. Stacked plugins filter their category dimension.
 
-Implement `interaction.prepareNearestData` for unfiltered `{position, item}` candidates and `interaction.getTargetElements` for painted SVG elements. Reuse prepared geometry; shared utilities handle distance comparison, hit testing, clipping, and ordering. Keep tooltip selection in `tooltip.prepareData`; use `interaction.getClosestItem` only when its result needs conversion (for example, a Sankey link).
+Filtering and axis data share `viewport`: axis types, categories, and selected ranges. An absent range is unfiltered; `excluded` marks a plot outside the active brush. Derive domains from visible geometry, accounting for retained anchors outside the viewport. `plugins/path-domain.ts` clips straight curve segments from the renderer's factory; smooth curves retain sample-based domains through `getDomainPoints`. Core reuses Y contributions for layout and rendering.
 
-Keep adapters in the plugin's `interaction.ts` and concrete payload types in its `interaction-types.ts`. Shared code and the public interaction API use generic contracts from `core/types/chart/interaction.ts`, without a union or mapping of built-in series. Do not import plugin payload types into shared code or public type barrels, including via type-only imports. Include permanent markers, exclude hover-only decorations, and preserve point identity when several SVG parts represent one item.
+{% note info %}
 
-When preparing a copy of a source point, register it with `withSourcePoint` from `core/utils/source-point`. Public interaction results then resolve the original object without changing the data used by rendering or legacy callbacks. Resolve nested source points in composite payloads with `getSourcePoint`.
+Line additionally checks the rendered path when an XY selection contains no samples, including segments entering adjacent rectangle edges. Area and area-range retain neighbors and full-axis crossings; they do not perform this complete geometry check. Area-range Y filtering tests each sample's interval, so a band crossing only between samples may be rejected.
 
-## 6. Integrate
+{% endnote %}
 
-- Register in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts); add applicable [defaults](https://github.com/gravity-ui/charts/blob/main/src/core/constants/defaults/series-options.ts).
-- Check shared axis, scale, header, grouping, and zoom assumptions. Extend the plugin contract where needed; never add shared series-name branches or lists.
+Keep sorting and missing-value handling in the plugin and consistent with rendering. Area sorts X after category normalization.
 
-## 7. Test
+## 3. Render layers and labels
 
-- Cover declared capabilities, limitations, feature combinations, and affected existing plugins. Always check empty prepared data, zero-size plots, and resize/data/visibility updates.
-- Run `npm run typecheck`, focused unit tests, Docker visual tests, and `npm run test:chart-config`. Inspect snapshots, declarations, and JSON Schema; preserve unrelated baselines.
+Default grouping puts a plugin's series in one layer. Optional `getLayerKey({series, seriesKey})` selects a layer per occurrence; equal keys share a layer, and returning `seriesKey` creates an independent layer. Keys must be stable and chart-unique; collisions across plugin types throw `ChartError`.
 
-## 8. Document
+Core retains member order, orders layers by first occurrence, prepares them in reverse order for label reservations, and renders forward. Preserve shared stack/group geometry when partitioning layers.
 
-- Add a Storybook example, series guide, API-doc export, runnable docs example, and navigation/registry entries.
-- Explain defaults, constraints, and tooltip value semantics.
+Render geometry into `plot` and SVG labels into `labelsPlot`. Labels sit above shapes and markers. Optional `getClipPath` selects `'bounds'` (default), `'horizontal'`, or `false`.
+
+{% note info %}
+
+Clipping applies to shapes and SVG labels. Marker, annotation, and HTML-label layers are separate. Line previews use bounds clipping.
+
+{% endnote %}
+
+Keep main geometry synchronous. Register delayed DOM work with `registerCompletion` during rendering so `reflow()` waits for it. Check `signal` before inserting delayed nodes and return cleanup when needed.
+
+## 4. Add interaction lookup
+
+Implement `interaction.prepareNearestData` for unfiltered `{position, item}` candidates and `interaction.getTargetElements` for painted SVG elements. Include permanent markers, exclude labels/hover decorations/connectors, and preserve item identity across multiple SVG parts. Use `getClosestItem` when a composite selection needs conversion.
+
+Keep adapters and payload types in the plugin's `interaction.ts` and `interaction-types.ts`. Shared interaction APIs stay generic; avoid importing plugin payload types into shared code or public barrels.
+
+`tooltip.prepareData` selects hovered chunks or X-aligned `xLookupPoints`. Mark at most one own chunk `closest`. When `measureDistance` is true, that chunk and every lookup point must report pixel distance to the drawn geometry; hits report zero. Core chooses the nearest active chunk, preferring the upper layer on ties, and strips distance from public callbacks. X lookups compete in the nearest column before the Y rule applies.
+
+Measure strokes, interpolation, rounded corners, and marker contours using shared geometry/symbol helpers. Cache reusable geometry per prepared item. Skip distance work when `measureDistance` is false unless needed for the plugin's own selection. Active selection and hover highlighting are independent.
+
+## 5. Define tooltip content
+
+- Return raw values from `tooltip.getValue` for sorting/totals. Preserve missing values and resolve category indices with `getTooltipAxisValue`. The default reads scalar `value` or Y; totals sum numeric values.
+- Supply default `rows` as an array or per-chunk function. Explicit `tooltip.rows` replaces them. Keep row values and custom-formatter context separate from sorting values; use `source: 'color'` for swatches and format values once.
+- Omit `header` for headerless series. Otherwise provide `header.getValue`, with `axis` for category/date formatting. Reuse the X/Y/scalar tooltip helpers.
+
+In mixed tooltips the highest header priority wins; ties keep the first chunk. Existing X, horizontal-series, and radar headers use priorities 0, 1, and 2. Set `requiresFormat` for headers that need an explicit `headerFormat`.
+
+{% note info %}
+
+A missing header value can be replaced by a custom formatter. An omitted header or unresolved category suppresses it. Explicit `headerFormat` overrides automatic formatting and reaches custom renderers with the original chunks.
+
+{% endnote %}
+
+## 6. Register and integrate
+
+Register the plugin in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts) and add applicable [defaults](https://github.com/gravity-ui/charts/blob/main/src/core/constants/defaults/series-options.ts).
+
+Trace shared axes, scales, layers, zoom, and tooltip consumers. Extend the plugin contract when necessary; keep series-name branches and implementation imports out of shared runtime code.
+
+## 7. Verify behavior
+
+Test declared capabilities and affected existing plugins, including mixed charts, visibility/data updates, resize, zoom, and slider previews. Check empty data, zero-sized plots, oversized requests, and negative computed space where relevant.
+
+Run `npm run typecheck`, focused unit tests, Docker visual tests, and `npm run test:chart-config`. Inspect changed snapshots, the standalone declaration, and JSON Schema; preserve unrelated baselines. Test registration separately from Jest's global built-in setup.
+
+## 8. Document usage
+
+Add a Storybook story, a series guide with a runnable `docs/examples` example, API-doc exports, and navigation/registry entries. Explain common configuration and supported limitations; keep edge-case combinations in stories and tests.

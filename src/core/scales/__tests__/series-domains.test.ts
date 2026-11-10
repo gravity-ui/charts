@@ -25,6 +25,52 @@ function prepare(seriesData: ChartSeries[]) {
     });
 }
 
+test.each([
+    {values: [1000.2, 1000.4], expected: [1000, 1001]},
+    {values: [1000.2, 1001.8], expected: [1000, 1002]},
+])('datetime Y rounds interpolated bounds outward: $values', async ({values, expected}) => {
+    const series = await prepare([
+        {
+            type: 'line',
+            name: 'Times',
+            data: [
+                {x: 0, y: 1000},
+                {x: 10, y: 1002},
+            ],
+        },
+    ]);
+    const scale = createYScale({
+        axis: {...axis, type: 'datetime'},
+        boundsHeight: 300,
+        series,
+        domainValues: values,
+    });
+    expect(scale?.domain().map(Number)).toEqual(expected);
+});
+
+test('datetime Y keeps explicit bounds when interpolated values are fractional', async () => {
+    const series = await prepare([
+        {
+            type: 'line',
+            name: 'Times',
+            data: [
+                {x: 0, y: 1000},
+                {x: 10, y: 1003},
+            ],
+        },
+    ]);
+    expect(
+        createYScale({
+            axis: {...axis, type: 'datetime', min: 1001, max: 1002},
+            boundsHeight: 300,
+            series,
+            domainValues: [1000.2, 1002.8],
+        })
+            ?.domain()
+            .map(Number),
+    ).toEqual([1001, 1002]);
+});
+
 test.each(['bar-x', 'bar-y', 'area'] as const)(
     '%s preserves positive/negative baselines, explicit limits and zoom',
     async (type) => {
