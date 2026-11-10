@@ -2,19 +2,17 @@ name: Release
 
 on:
   push:
-    branches: [main, release/v1]
+    branches: [release/v1]
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Release from ${{ github.ref_name }}
-        uses: gravity-ui/release-action@v2
+      - uses: gravity-ui/release-action@v2
         with:
           github-token: ${{ secrets.GRAVITY_UI_BOT_GITHUB_TOKEN }}
           npm-token: ${{ secrets.GRAVITY_UI_BOT_NPM_TOKEN }}
           node-version-file: '.nvmrc'
-          # Maintenance branches open the release PR against themselves
-          # and must not move the `latest` dist-tag.
-          default-branch: ${{ github.ref_name != 'main' && github.ref_name || null }}
-          npm-dist-tag: ${{ github.ref_name != 'main' && 'untagged' || 'latest' }}
+          # Open the release PR against this branch and keep the `latest` dist-tag on 2.x.
+          default-branch: release/v1
+          npm-dist-tag: untagged
