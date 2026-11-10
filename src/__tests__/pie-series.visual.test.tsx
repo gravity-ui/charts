@@ -452,6 +452,7 @@ test.describe('Pie series', () => {
                 <ChartTestStory data={pieDenseMultilineHtmlLabelsData} styles={styles} />,
             );
             const labels = component.locator(htmlLabels);
+            await expect(labels.first()).toBeVisible();
             const renderedCount = await labels.count();
 
             // Some labels must be skipped due to overlap on a small pie...

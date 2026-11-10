@@ -429,25 +429,87 @@ describe('getClosestPoints with mixed series types', () => {
 });
 
 describe('getClosestPoints geometry', () => {
-    test('respects the line cap', async () => {
-        const scatter = await prepareScatter([{x: 205, y: 300, radius: 1}]);
+    test('measures stepped lines and returns an original point', async () => {
+        const line = await prepareLine(
+            [
+                [100, 100],
+                [200, 300],
+            ],
+            {interpolation: {type: 'step', position: 'after'}},
+        );
+        const scatter = await prepareScatter([{x: 150, y: 210, radius: 1}]);
+        const data = [...line, ...scatter];
+
+        // The horizontal step wins where the straight chord would be far away.
+        const active = getActive(data, [180, 100]);
+        expect(getId(active)).toBe(line[0].series.id);
+        expect(active.data).toBe(line[0].points[1].data);
+        // The vertical step also wins, but the space at the former chord is empty.
+        expect(getId(getActive(data, [200, 250]))).toBe(line[0].series.id);
+        expect(getId(getActive(data, [150, 200]))).toBe(scatter[0].point.series.id);
+    });
+
+    test.each<LineSeries['interpolation']>([
+        undefined,
+        {type: 'step', position: 'before'},
+        {type: 'step', position: 'after'},
+    ])('respects the line cap with interpolation %j', async (interpolation) => {
+        const scatter = await prepareScatter([
+            {x: 95, y: 300, radius: 1},
+            {x: 205, y: 300, radius: 1},
+        ]);
         const scatterId = scatter[0].point.series.id;
         const points: PixelPoint[] = [
             [100, 300],
+            [100, 300],
+            [200, 300],
             [200, 300],
         ];
-        const butt = await prepareLine(points, {lineWidth: 20, linecap: 'butt'});
-        expect(getId(getActive([...butt, ...scatter], [205, 300]))).toBe(scatterId);
-        const round = await prepareLine(points, {lineWidth: 20, linecap: 'round'});
-        expect(
-            getId(
-                getActive(
-                    [...round, ...scatter],
-                    [205, 300],
-                    getLayers(scatterId, round[0].series.id),
+        const butt = await prepareLine(points, {lineWidth: 20, linecap: 'butt', interpolation});
+        const round = await prepareLine(points, {lineWidth: 20, linecap: 'round', interpolation});
+        for (const x of [95, 205]) {
+            expect(
+                getId(
+                    getActive(
+                        [...butt, ...scatter],
+                        [x, 300],
+                        getLayers(scatterId, butt[0].series.id),
+                    ),
                 ),
-            ),
-        ).toBe(round[0].series.id);
+            ).toBe(scatterId);
+            expect(
+                getId(
+                    getActive(
+                        [...round, ...scatter],
+                        [x, 300],
+                        getLayers(scatterId, round[0].series.id),
+                    ),
+                ),
+            ).toBe(round[0].series.id);
+        }
+    });
+
+    test('preserves the cap of a stepped run made of coincident points', async () => {
+        const scatter = await prepareScatter([{x: 108, y: 308, radius: 0.1}]);
+        const scatterId = scatter[0].point.series.id;
+        for (const linecap of ['butt', 'round', 'square'] as const) {
+            const line = await prepareLine(
+                [
+                    [100, 300],
+                    [100, 300],
+                ],
+                {lineWidth: 20, linecap, interpolation: {type: 'step', position: 'after'}},
+            );
+            expect(
+                getId(
+                    getActive(
+                        [...line, ...scatter],
+                        [108, 308],
+                        getLayers(scatterId, line[0].series.id),
+                    ),
+                ),
+            ).toBe(linecap === 'square' ? line[0].series.id : scatterId);
+        }
     });
 
     test('measures the size of line markers as they are drawn', async () => {

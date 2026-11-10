@@ -2,8 +2,87 @@ import type {DomainViewport} from '~core/series/axis-contract';
 import {getLineSegments, segmentIntersectsRect} from '~core/shapes/line/auto-placement';
 
 import type {LineSeries} from '../../../types';
-import {getCurveFactory} from '../interpolation';
+import * as interpolation from '../interpolation';
 import {filterLineData} from '../zoom';
+
+afterEach(() => jest.restoreAllMocks());
+
+test.each(['before', 'middle', 'after'] as const)(
+    'step %s retains original anchors when the viewport contains no samples',
+    (position) => {
+        const createCurveContext = jest.fn(interpolation.getCurveFactory({type: 'step', position}));
+        jest.spyOn(interpolation, 'getCurveFactory').mockReturnValue(createCurveContext);
+        const data = Array.from({length: 10_000}, (_, x) => ({x, y: x}));
+        const series: LineSeries = {
+            type: 'line',
+            name: 'Steps',
+            data,
+            interpolation: {type: 'step', position},
+        };
+        const viewports: DomainViewport[] = [
+            {x: {type: 'linear', range: [24.2, 24.8]}, y: {type: 'linear'}},
+            {
+                x: {type: 'linear', range: [23.8, 25.2]},
+                y: {type: 'linear', range: [24.2, 24.8]},
+            },
+        ];
+        for (const viewport of viewports) {
+            createCurveContext.mockClear();
+            const selection = filterLineData({series, viewport});
+            expect(selection.data).toEqual([]);
+            expect(selection.shapeData).toEqual(data.slice(24, 26));
+            expect(selection.shapeData?.[0]).toBe(data[24]);
+            expect(createCurveContext.mock.calls.length).toBeLessThanOrEqual(1);
+        }
+    },
+);
+
+test.each([undefined, 'before', 'middle', 'after'] as const)(
+    'step %s clips the drawn geometry and preserves gaps and repeated anchors',
+    (position) => {
+        const data = [
+            {x: -10, y: -10},
+            {x: 0, y: 0},
+            {x: 0, y: 0},
+            {x: 10, y: 10},
+            {x: 20, y: 20},
+            {x: 30, y: null},
+            {x: 0, y: 10},
+            {x: 10, y: 0},
+            {x: 10, y: 0},
+            {x: 20, y: -10},
+        ];
+        const first = data.slice(2, 4);
+        const second = data.slice(6, 8);
+        const both = [...first, data[5], ...second];
+        const before = position === 'before';
+        const middle = position === 'middle';
+        const lower = before ? second : first;
+        const upper = before ? first : second;
+        const cases = [
+            {range: [-1, 1], expected: middle ? both : lower},
+            {range: [4, 6], expected: middle ? both : []},
+            {range: [9, 11], expected: middle ? both : upper},
+        ] as const;
+        for (const {range, expected} of cases) {
+            const selection = filterLineData({
+                series: {
+                    type: 'line',
+                    name: 'Steps',
+                    data,
+                    interpolation: {type: 'step', position},
+                },
+                viewport: {
+                    x: {type: 'linear', range: [4, 6]},
+                    y: {type: 'linear', range},
+                },
+            });
+            expect(selection.data).toEqual([]);
+            expect(selection.shapeData).toEqual(expected);
+            selection.shapeData?.forEach((point) => expect(data).toContain(point));
+        }
+    },
+);
 
 test.each(['linear', 'cardinal', 'monotone'] as const)(
     '%s retains a bounded set of original anchors in a large series',
@@ -23,6 +102,26 @@ test.each(['linear', 'cardinal', 'monotone'] as const)(
 );
 
 test.each(['cardinal', 'monotone'] as const)(
+    '%s preserves repeated anchors around a crossing',
+    (type) => {
+        const data = [
+            {x: 0, y: 0},
+            {x: 0, y: 0},
+            {x: 10, y: 10},
+        ];
+        const selection = filterLineData({
+            series: {type: 'line', name: 'Curve', data, interpolation: {type}},
+            viewport: {
+                x: {type: 'linear', range: [4, 6]},
+                y: {type: 'linear', range: [4, 6]},
+            },
+        });
+        expect(selection.data).toEqual([]);
+        expect(selection.shapeData).toEqual(data);
+    },
+);
+
+test.each(['cardinal', 'monotone'] as const)(
     '%s preserves the crossing curve and its tangents after pruning',
     (type) => {
         const data = [20, 90, 10, 80, 30, 75, 10].map((y, index) => ({x: index * 10, y}));
@@ -35,8 +134,10 @@ test.each(['cardinal', 'monotone'] as const)(
         expect(selection.data).toEqual([]);
         expect(selection.shapeData).toEqual(data.slice(1, 5));
         const crossingSegments = (points: typeof data) =>
-            getLineSegments([{points, curveFactory: getCurveFactory({type}), lineWidth: 0}]).filter(
-                (segment) => segmentIntersectsRect(segment, {x: 24, y: 40, width: 2, height: 20}),
+            getLineSegments([
+                {points, curveFactory: interpolation.getCurveFactory({type}), lineWidth: 0},
+            ]).filter((segment) =>
+                segmentIntersectsRect(segment, {x: 24, y: 40, width: 2, height: 20}),
             );
         const original = crossingSegments(data);
         expect(original.length).toBeGreaterThan(0);
