@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.73.1](https://github.com/gravity-ui/charts/compare/v1.73.0...v1.73.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* prioritize stack totals over segment labels ([#839](https://github.com/gravity-ui/charts/issues/839)) ([5f745a2](https://github.com/gravity-ui/charts/commit/5f745a2dffe967769b09d5cfeeee5c574c34d6eb))
+
 ## [1.73.0](https://github.com/gravity-ui/charts/compare/v1.72.0...v1.73.0) (2026-11-03)
 
 
