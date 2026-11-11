@@ -1,13 +1,16 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
-import type {PreparedAreaRangeSeries} from '~core/series/types';
-import {projectAreaRangeData} from '~core/shapes/area-range/prepare-data';
 
 import {collectMarkerPadding} from '../marker-axis-padding';
 
-export function getAreaRangeAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+import {projectAreaRangeData} from './prepare-data';
+import type {PreparedAreaRangeSeries} from './prepared-series';
+
+export function getAreaRangeAxisPadding(
+    args: PrepareAxisPaddingArgs<PreparedAreaRangeSeries>,
+): AxisPaddingPoint[] {
     const projected = projectAreaRangeData({
         ...args,
-        series: args.series as PreparedAreaRangeSeries[],
+        series: args.series,
         isOutsideBounds: () => false,
     });
     return collectMarkerPadding(

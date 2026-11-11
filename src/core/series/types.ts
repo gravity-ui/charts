@@ -1,68 +1,51 @@
+import type {PreparedAreaSeries} from '../../plugins/area/prepared-series';
+import type {PreparedAreaRangeSeries} from '../../plugins/area-range/prepared-series';
+import type {PreparedBarXSeries} from '../../plugins/bar-x/prepared-series';
+import type {PreparedBarYSeries} from '../../plugins/bar-y/prepared-series';
+import type {PreparedFunnelSeries} from '../../plugins/funnel/prepared-series';
+import type {PreparedHeatmapSeries} from '../../plugins/heatmap/prepared-series';
+import type {PreparedLineSeries} from '../../plugins/line/prepared-series';
+import type {PreparedPieSeries} from '../../plugins/pie/prepared-series';
+import type {PreparedRadarSeries} from '../../plugins/radar/prepared-series';
+import type {PreparedSankeySeries} from '../../plugins/sankey/prepared-series';
+import type {PreparedScatterSeries} from '../../plugins/scatter/prepared-series';
+import type {PreparedTreemapSeries} from '../../plugins/treemap/prepared-series';
+import type {PreparedWaterfallSeries} from '../../plugins/waterfall/prepared-series';
+import type {PreparedXRangeSeries} from '../../plugins/x-range/prepared-series';
 import type {
-    AreaRangeSeries,
-    AreaRangeSeriesData,
     AreaSeries,
-    AreaSeriesData,
-    AreaValueFormat,
-    BarSeriesDataLabelPlacementFallback,
-    BarSeriesDataLabelPlacementPosition,
     BarXSeries,
-    BarXSeriesData,
-    BarXValueFormat,
     BarYSeries,
-    BarYSeriesData,
-    BarYValueFormat,
     BaseSeries,
     BaseSeriesLegend,
     BaseTextStyle,
     ChartLegend,
     ChartSeriesRangeSliderOptions,
-    ConnectorCurve,
-    ConnectorShape,
-    FunnelSeries,
-    FunnelSeriesData,
-    HeatmapSeries,
-    HeatmapSeriesData,
-    LineSeries,
-    LineSeriesData,
-    LineSeriesDataLabelPlacementFallback,
-    LineSeriesDataLabelPlacementPosition,
-    LineSeriesDataLabels,
-    LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
-    LinearGradient,
     MeaningfulAny,
     PathLegendSymbolOptions,
-    PieSeries,
-    PieSeriesData,
-    PieValueFormat,
-    RadarSeries,
-    RadarSeriesCategory,
-    RadarSeriesData,
     RectLegendSymbolOptions,
-    SankeySeries,
-    SankeySeriesData,
-    ScatterSeries,
-    ScatterSeriesData,
     SymbolLegendSymbolOptions,
-    TreemapSeries,
-    TreemapSeriesData,
-    ValueFormat,
-    WaterfallSeries,
-    WaterfallSeriesData,
-    XRangeSeries,
-    XRangeSeriesData,
 } from '../../types';
-import type {
-    DashStyle,
-    LayoutAlgorithm,
-    LineCap,
-    LineJoin,
-    SeriesOptionsDefaults,
-    SymbolType,
-} from '../constants';
-import type {PointMarkerOptions} from '../types/chart/marker';
-import type {SeriesGradientState} from '../utils/gradient-reference';
+import type {DashStyle, SeriesOptionsDefaults, SymbolType} from '../constants';
+
+export type {PreparedAreaRangeSeries} from '../../plugins/area-range/prepared-series';
+export type {PreparedAreaSeries} from '../../plugins/area/prepared-series';
+export type {PreparedBarXSeries} from '../../plugins/bar-x/prepared-series';
+export type {PreparedBarYSeries} from '../../plugins/bar-y/prepared-series';
+export type {PreparedFunnelSeries} from '../../plugins/funnel/prepared-series';
+export type {PreparedHeatmapSeries} from '../../plugins/heatmap/prepared-series';
+export type {PreparedLineSeries} from '../../plugins/line/prepared-series';
+export type {PreparedPieSeries} from '../../plugins/pie/prepared-series';
+export type {PreparedRadarSeries} from '../../plugins/radar/prepared-series';
+export type {PreparedSankeySeries} from '../../plugins/sankey/prepared-series';
+export type {PreparedScatterSeries} from '../../plugins/scatter/prepared-series';
+export type {PreparedTreemapSeries} from '../../plugins/treemap/prepared-series';
+export type {
+    PreparedWaterfallSeries,
+    PreparedWaterfallSeriesData,
+} from '../../plugins/waterfall/prepared-series';
+export type {PreparedXRangeSeries} from '../../plugins/x-range/prepared-series';
 
 export type PreparedAnnotation = {
     label: {
@@ -190,7 +173,7 @@ export type PreparedHaloOptions = {
     size: number;
 };
 
-type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
+export type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
     color: string;
     name: string;
     id: string;
@@ -209,412 +192,9 @@ type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
     custom: MeaningfulAny;
 };
 
-type BasePreparedAxisRelatedSeries = {
+export type BasePreparedAxisRelatedSeries = {
     rangeSlider: Required<ChartSeriesRangeSliderOptions> & Partial<LineSeriesLineBaseStyle>;
 };
-
-export type PreparedScatterSeries = {
-    type: ScatterSeries['type'];
-    data: ScatterSeriesData[];
-    cluster: {
-        enabled: boolean;
-        layoutAlgorithm: {type: 'grid'; gridSize: number | string};
-        overlapMode: 'allow' | 'shift';
-        minimumClusterSize: number;
-        marker: Required<Omit<PointMarkerOptions, 'color'>> & Pick<PointMarkerOptions, 'color'>;
-        dataLabels: {
-            enabled: boolean;
-            allowOverlap: boolean;
-            format?: ValueFormat;
-            style: BaseTextStyle;
-        };
-    };
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        padding: number;
-        allowOverlap: boolean;
-        html: boolean;
-        format?: ValueFormat;
-    };
-    marker: {
-        states: {
-            normal: {
-                symbol: `${SymbolType}`;
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-            };
-            hover: {
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-                halo: PreparedHaloOptions;
-            };
-        };
-    };
-    yAxis: number;
-} & BasePreparedSeries &
-    BasePreparedAxisRelatedSeries;
-
-interface PreparedBarLabelPlacement {
-    /** Candidate positions resolved by the plugin. */
-    placement?: BarSeriesDataLabelPlacementPosition[];
-    placementFallback: BarSeriesDataLabelPlacementFallback;
-}
-
-export type PreparedBarXSeries = {
-    opacity: number;
-    type: BarXSeries['type'];
-    data: BarXSeriesData[];
-    stackId: string;
-    /** Independent layout/domain key for non-stacked overlays. */
-    resolvedStackId?: string;
-    stacking: BarXSeries['stacking'];
-    grouping: boolean;
-    barPadding: number;
-    /** Largest resolved padding in the stack, including hidden series. */
-    stackBarPadding: number;
-    barMaxWidth: number;
-    /** Smallest resolved width limit in the stack, including hidden series. */
-    stackBarMaxWidth: number;
-    stackLabels?: BarXSeries['stackLabels'];
-    valueAxis: 'y';
-    dataLabels: PreparedBarLabelPlacement & {
-        enabled: boolean;
-        inside: boolean;
-        style: BaseTextStyle;
-        allowOverlap: boolean;
-        padding: number;
-        html: boolean;
-        format?: BarXValueFormat;
-    };
-    borderRadius: number;
-    borderWidth: number;
-    borderColor: string;
-    yAxis: number;
-} & BasePreparedSeries<BarXSeries['tooltip']> &
-    BasePreparedAxisRelatedSeries;
-
-export type PreparedBarYSeries = {
-    opacity: number;
-    type: BarYSeries['type'];
-    data: BarYSeriesData[];
-    stackId: string;
-    /** Independent layout/domain key for non-stacked overlays. */
-    resolvedStackId?: string;
-    stacking: BarYSeries['stacking'];
-    grouping: boolean;
-    barPadding: number;
-    /** Largest resolved padding in the stack, including hidden series. */
-    stackBarPadding: number;
-    barMaxWidth: number;
-    /** Smallest resolved width limit in the stack, including hidden series. */
-    stackBarMaxWidth: number;
-    stackLabels?: BarYSeries['stackLabels'];
-    valueAxis: 'x';
-    dataLabels: PreparedBarLabelPlacement & {
-        padding: number;
-        enabled: boolean;
-        inside: boolean;
-        style: BaseTextStyle;
-        maxHeight: number;
-        maxWidth: number;
-        html: boolean;
-        format?: BarYValueFormat;
-        allowOverlap: boolean;
-    };
-    borderRadius: number;
-    borderWidth: number;
-    borderColor: string;
-} & BasePreparedSeries<BarYSeries['tooltip']>;
-
-export type PreparedHeatmapSeries = {
-    type: HeatmapSeries['type'];
-    data: HeatmapSeriesData[];
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        html: boolean;
-        format?: ValueFormat;
-    };
-    borderWidth: number;
-    borderColor: string;
-} & BasePreparedSeries;
-
-export type PreparedPieSeries = {
-    type: PieSeries['type'];
-    data: PieSeriesData;
-    value: PieSeriesData['value'];
-    borderColor: string;
-    borderWidth: number;
-    borderRadius: number;
-    center?: [string | number | null, string | number | null];
-    radius?: string | number;
-    innerRadius?: string | number;
-    minRadius?: string | number;
-    stackId: string;
-    label?: PieSeriesData['label'];
-    dataLabels: {
-        enabled: boolean;
-        padding: number;
-        style: BaseTextStyle;
-        allowOverlap: boolean;
-        connectorPadding: number;
-        connectorShape: ConnectorShape;
-        distance: number;
-        connectorCurve: ConnectorCurve;
-        html: boolean;
-        format?: PieValueFormat;
-    };
-    states: {
-        hover: {
-            halo: PreparedHaloOptions;
-        };
-    };
-    renderCustomShape?: PieSeries['renderCustomShape'];
-    opacity: number | null;
-} & BasePreparedSeries<PieSeries['tooltip']>;
-
-export type PreparedLineSeries = {
-    type: LineSeries['type'];
-    /** Full-series paint references, shared across filtered copies. */
-    gradientState?: SeriesGradientState;
-    data: LineSeriesData[];
-    lineWidth: number;
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        padding: number;
-        allowOverlap: boolean;
-        html: boolean;
-        format?: ValueFormat;
-        placement: 'auto' | LineSeriesDataLabelPlacementPosition[];
-        placementFallback: LineSeriesDataLabelPlacementFallback;
-        anchor: NonNullable<LineSeriesDataLabels['anchor']>;
-    };
-    marker: {
-        states: {
-            normal: {
-                symbol: `${SymbolType}`;
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-            };
-            hover: {
-                enabled: boolean;
-                /** Whether permanent markers can use hover styles. Defaults to true. */
-                enabledForNormal?: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-                halo: PreparedHaloOptions;
-            };
-        };
-    };
-    dashStyle: DashStyle;
-    linecap: LineCap;
-    linejoin: LineJoin;
-    interpolation?: LineSeriesInterpolation;
-    opacity: number | null;
-    gradient?: LinearGradient;
-    yAxis: number;
-} & BasePreparedSeries &
-    BasePreparedAxisRelatedSeries;
-
-export type PreparedAreaSeries = {
-    type: AreaSeries['type'];
-    /** Full-series paint references, shared across filtered copies. */
-    gradientState?: SeriesGradientState;
-    /** Complete data for stack sections neighboring the visible range. */
-    fullData?: AreaSeriesData[];
-    data: AreaSeriesData[];
-    stacking: AreaSeries['stacking'];
-    stackLabels?: AreaSeries['stackLabels'];
-    stackId: string;
-    valueAxis: 'y';
-    lineWidth: number;
-    opacity: number;
-    nullMode: AreaSeries['nullMode'];
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        padding: number;
-        allowOverlap: boolean;
-        html: boolean;
-        format?: AreaValueFormat;
-    };
-    marker: {
-        states: {
-            normal: {
-                symbol: `${SymbolType}`;
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-            };
-            hover: {
-                enabled: boolean;
-                /** Whether permanent markers can use hover styles. Defaults to true. */
-                enabledForNormal?: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-                halo: PreparedHaloOptions;
-            };
-        };
-    };
-    gradient?: LinearGradient;
-    fillColor: string;
-    fillGradient?: LinearGradient;
-    yAxis: number;
-} & BasePreparedSeries<AreaSeries['tooltip']> &
-    BasePreparedAxisRelatedSeries;
-
-export type PreparedAreaRangeSeries = {
-    type: AreaRangeSeries['type'];
-    /** Full-series paint references, shared across filtered copies. */
-    gradientState?: SeriesGradientState;
-    data: AreaRangeSeriesData[];
-    lineWidth: number;
-    opacity: number;
-    nullMode: AreaRangeSeries['nullMode'];
-    marker: PreparedAreaSeries['marker'];
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        padding: number;
-        allowOverlap: boolean;
-        html: boolean;
-        format?: ValueFormat;
-    };
-    gradient?: LinearGradient;
-    fillColor: string;
-    fillGradient?: LinearGradient;
-    yAxis: number;
-} & BasePreparedSeries &
-    BasePreparedAxisRelatedSeries;
-
-export type PreparedTreemapSeries = {
-    type: TreemapSeries['type'];
-    data: TreemapSeriesData[];
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        padding: number;
-        allowOverlap: boolean;
-        html: boolean;
-        align: Required<Required<TreemapSeries>['dataLabels']>['align'];
-        format?: ValueFormat;
-    };
-    layoutAlgorithm: `${LayoutAlgorithm}`;
-    sorting: Required<TreemapSeries['sorting']>;
-} & BasePreparedSeries &
-    Required<Omit<TreemapSeries, keyof BasePreparedSeries>>;
-
-export type PreparedWaterfallSeriesData = WaterfallSeriesData & {index: number};
-
-export type PreparedWaterfallSeries = {
-    type: WaterfallSeries['type'];
-    connectors: {
-        enabled: boolean;
-    };
-    data: PreparedWaterfallSeriesData[];
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        allowOverlap: boolean;
-        padding: number;
-        html: boolean;
-        format?: ValueFormat;
-    };
-} & BasePreparedSeries;
-
-export type PreparedSankeySeries = {
-    type: SankeySeries['type'];
-    data: SankeySeriesData[];
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        format?: ValueFormat;
-    };
-} & BasePreparedSeries &
-    Omit<SankeySeries, keyof BasePreparedSeries>;
-
-export type PreparedRadarSeries = {
-    type: RadarSeries['type'];
-    data: RadarSeriesData[];
-    categories: RadarSeriesCategory[];
-    borderColor: string;
-    borderWidth: number;
-    fillOpacity: number;
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        padding: number;
-        allowOverlap: boolean;
-        html: boolean;
-        format?: ValueFormat;
-    };
-    marker: {
-        states: {
-            normal: {
-                symbol: `${SymbolType}`;
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-            };
-            hover: {
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-                halo: PreparedHaloOptions;
-            };
-        };
-    };
-} & BasePreparedSeries;
-
-export type PreparedFunnelSeries = {
-    type: FunnelSeries['type'];
-    data: FunnelSeriesData;
-    shape: Required<FunnelSeries>['shape'];
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        html: boolean;
-        format?: ValueFormat;
-        align: Required<Required<FunnelSeries>['dataLabels']>['align'];
-        inside: boolean;
-        reserveSpace: boolean;
-        padding: number;
-        anchor: Required<Required<FunnelSeries>['dataLabels']>['anchor'];
-        preserveLineBreaks: boolean;
-    };
-    connectors: Required<FunnelSeries['connectors']>;
-    opacity: number | null;
-} & BasePreparedSeries;
-
-export type PreparedXRangeSeries = {
-    type: XRangeSeries['type'];
-    data: XRangeSeriesData[];
-    borderRadius: number;
-    borderWidth: number;
-    borderColor: string;
-    borderDashStyle: DashStyle;
-    opacity: number | null;
-    dataLabels: {
-        enabled: boolean;
-        style: BaseTextStyle;
-        html: boolean;
-        padding: number;
-        format?: ValueFormat;
-    };
-} & BasePreparedSeries;
 
 export type PreparedSeries =
     | PreparedScatterSeries

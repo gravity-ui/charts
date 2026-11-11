@@ -1,13 +1,14 @@
 import {group} from 'd3-array';
 
 import type {PrepareShapeDataArgs} from '~core/series/plugin';
-import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getDataCategoryValue} from '~core/utils';
 import {sumDecimals} from '~core/utils/math';
 
-import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
+import {getStackLabelValue} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
+
+import type {PreparedBarXData} from './types';
 
 export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: PrepareShapeDataArgs) {
     const anchors: StackLabelAnchor[] = [];

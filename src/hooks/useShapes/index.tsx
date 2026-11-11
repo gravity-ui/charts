@@ -6,7 +6,7 @@ import type {Dispatch} from 'd3-dispatch';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {getSeriesLayers} from '~core/series/layers';
-import type {SeriesPlugin} from '~core/series/plugin';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
@@ -21,8 +21,6 @@ import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 
 import {SeriesShapes} from './SeriesShapes';
 import type {GradientLayoutReference} from './types';
-
-import './styles.scss';
 
 export type {TooltipItemData};
 
@@ -120,7 +118,7 @@ function IS_OUTSIDE_BOUNDS() {
 }
 
 function resolveClipPathId(args: {
-    plugin: SeriesPlugin;
+    plugin: RegisteredSeriesPlugin;
     clipPathId: string;
     isRangeSlider?: boolean;
     yAxis: PreparedYAxis[];

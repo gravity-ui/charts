@@ -1,15 +1,15 @@
-import type {HeatmapItem, PreparedHeatmapData} from '~core/shapes/heatmap/types';
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {HeatmapInteractionItem} from './interaction-types';
+import type {HeatmapItem, PreparedHeatmapData} from './types';
 
 export function getTargetElements({
     plot,
     preparedData,
-}: InteractionElementsArgs): InteractionElement<HeatmapInteractionItem>[] {
-    const shape = preparedData[0] as PreparedHeatmapData | undefined;
+}: InteractionElementsArgs<PreparedHeatmapData>): InteractionElement<HeatmapInteractionItem>[] {
+    const shape = preparedData[0];
     if (!shape) return [];
     const {series} = shape;
     return getInteractionElements<HeatmapItem, HeatmapInteractionItem>(plot, 'rect', (datum) => ({

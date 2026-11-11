@@ -8,7 +8,6 @@ import {
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedAreaSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
@@ -17,6 +16,8 @@ import {merge} from '~core/utils/merge';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {AreaSeries, AreaSeriesData, ChartSeriesOptions} from '../../types';
+
+import type {PreparedAreaSeries} from './prepared-series';
 
 export const DEFAULT_LINE_WIDTH = 1;
 

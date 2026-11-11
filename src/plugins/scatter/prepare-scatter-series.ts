@@ -7,7 +7,6 @@ import {
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedScatterSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
@@ -16,6 +15,8 @@ import {merge} from '~core/utils/merge';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, ScatterSeries, ScatterSeriesData} from '../../types';
+
+import type {PreparedScatterSeries} from './prepared-series';
 
 const DEFAULT_CLUSTER_MINIMUM_SIZE = 2;
 const DEFAULT_CLUSTER_RADIUS = 8;

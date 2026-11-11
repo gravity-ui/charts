@@ -24,11 +24,11 @@ export function getTooltipAxisValue(
     return value;
 }
 
-export function getTooltipXValue({item, xAxis}: GetTooltipValueArgs) {
+export function getTooltipXValue({item, xAxis}: GetTooltipValueArgs<{data: ChartSeriesData}>) {
     return getTooltipAxisValue(item.data, 'x', xAxis);
 }
 
-export function getTooltipYValue({item, yAxis}: GetTooltipValueArgs) {
+export function getTooltipYValue({item, yAxis}: GetTooltipValueArgs<{data: ChartSeriesData}>) {
     return getTooltipAxisValue(item.data, 'y', yAxis);
 }
 

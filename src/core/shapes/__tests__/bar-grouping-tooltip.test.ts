@@ -1,3 +1,7 @@
+import type {PreparedAreaData} from '../../../plugins/area/types';
+import type {PreparedBarXData} from '../../../plugins/bar-x/types';
+import type {PreparedBarYData} from '../../../plugins/bar-y/types';
+import type {PreparedLineData} from '../../../plugins/line/types';
 import type {
     PreparedAreaSeries,
     PreparedBarXSeries,
@@ -5,10 +9,6 @@ import type {
     PreparedLineSeries,
 } from '../../series/types';
 import {getClosestPoints} from '../../utils/get-closest-data';
-import type {PreparedAreaData} from '../area/types';
-import type {PreparedBarXData} from '../bar-x/types';
-import type {PreparedBarYData} from '../bar-y/types';
-import type {PreparedLineData} from '../line/types';
 
 describe.each(['bar-x', 'bar-y'] as const)('%s overlay tooltip', (type) => {
     test.each([

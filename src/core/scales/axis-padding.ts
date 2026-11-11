@@ -29,10 +29,13 @@ export interface AxisPaddingPoint extends ChartMargin {
     yAxis: number;
 }
 
-export interface PrepareAxisPaddingArgs {
+export interface PrepareAxisPaddingArgs<
+    TSeries = PreparedSeries,
+    TOptions = PreparedSeriesOptions,
+> {
     split: PreparedSplit;
-    series: PreparedSeries[];
-    seriesOptions?: PreparedSeriesOptions;
+    series: TSeries[];
+    seriesOptions?: TOptions;
     xAxis: PreparedXAxis;
     yAxis: PreparedYAxis[];
     xScale: ChartScale;
@@ -286,7 +289,10 @@ export function applyAxisPadding(
             (s) => autoX || autoY['yAxis' in s ? s.yAxis : 0],
         );
         for (const [type, items] of group(measuredSeries, (s) => s.type)) {
-            const contribution = getSeriesPlugin(type).getAxisPadding?.({...args, series: items});
+            const contribution = getSeriesPlugin(type).axisPadding?.getPaintExtents?.({
+                ...args,
+                series: items,
+            });
             if (contribution) {
                 for (const point of contribution) points.push(point);
             }

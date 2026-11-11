@@ -3,11 +3,13 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE, LayoutAlgorithm} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedLegendOptions, PreparedTreemapSeries} from '~core/series/types';
+import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
 import type {ChartSeriesOptions, TreemapSeries} from '../../types';
+
+import type {PreparedTreemapSeries} from './prepared-series';
 
 type PrepareTreemapSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;

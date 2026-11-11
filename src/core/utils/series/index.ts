@@ -1,3 +1,2 @@
-export * from './line';
+export * from './line-style';
 export * from './sorting';
-export * from './waterfall';

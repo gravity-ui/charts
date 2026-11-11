@@ -4,19 +4,21 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSankeySeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/sankey/get-tooltip-data';
-import {prepareSankeyData} from '~core/shapes/sankey/prepare-data';
-import {renderSankey} from '~core/shapes/sankey/renderer';
-import type {PreparedSankeyData} from '~core/shapes/sankey/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import type {CustomFormatContext, TooltipDataChunkSankey} from '~core/types';
 import {getSourcePoint} from '~core/utils/source-point';
 
-import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
+import type {SankeySeries} from '../../types';
+import type {BuiltinPluginData} from '../plugin-data';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import type {SankeyInteractionItem} from './interaction-types';
+import {prepareSankeyData} from './prepare-data';
 import {prepareSankeySeries} from './prepare-sankey-series';
+import type {PreparedSankeySeries} from './prepared-series';
+import {renderSankey} from './renderer';
+import type {PreparedSankeyData} from './types';
 
 function getLinkValue({target, data: source, value}: TooltipDataChunkSankey) {
     return value ?? source.links.find((link) => link.name === target?.name)?.value;
@@ -26,9 +28,12 @@ function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs): PrepareShapeDataResult {
+}: PrepareShapeDataArgs<PreparedSankeySeries>): PrepareShapeDataResult<
+    PreparedSankeyData,
+    PreparedSankeyData
+> {
     const data = prepareSankeyData({
-        series: series[0] as PreparedSankeySeries,
+        series: series[0],
         width: boundsWidth,
         height: boundsHeight,
     });
@@ -41,16 +46,16 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderSankey(
-        {plot, labelsPlot},
-        preparedData[0] as PreparedSankeyData,
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderShapesArgs<PreparedSankeyData>) {
+    return renderSankey({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
-export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = {
+export const sankeyPlugin: SeriesPlugin<
+    SankeySeries,
+    TooltipDataChunkSankey,
+    CustomFormatContext,
+    BuiltinPluginData<PreparedSankeySeries, PreparedSankeyData, SankeyInteractionItem>
+> = {
     type: 'sankey',
     getClipPath: () => false,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
@@ -97,14 +102,14 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = 
                     {
                         id: 'name',
                         source: ({item}) => {
-                            const {target, data: source} = item as TooltipDataChunkSankey;
+                            const {target, data: source} = item;
                             return `${source.name} → ${target?.name}`;
                         },
                         align: 'start',
                     },
                     {
                         id: 'value',
-                        source: ({item}) => getLinkValue(item as TooltipDataChunkSankey),
+                        source: ({item}) => getLinkValue(item),
                         align: 'end',
                     },
                 ],

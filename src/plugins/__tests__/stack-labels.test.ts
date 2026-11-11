@@ -4,25 +4,27 @@ import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
-import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
+import type {PrepareShapeDataArgs} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
+import {getSeriesPlugin} from '~core/series/seriesRegistry';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedLegend} from '~core/series/types';
-import type {PreparedAreaData} from '~core/shapes/area/types';
-import type {PreparedBarXData} from '~core/shapes/bar-x/types';
-import type {BarYShapesArgs, PreparedBarYData} from '~core/shapes/bar-y/types';
 import type {SvgLabel} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
 
 import type {ChartSeries, StackLabelsAggregationArgs, StackLabelsOptions} from '../../types';
-import {areaPlugin} from '../area';
 import {getAreaStackLabelAnchors} from '../area/stack-labels';
-import {barXPlugin} from '../bar-x';
+import type {PreparedAreaData} from '../area/types';
 import {getBarXStackLabelAnchors} from '../bar-x/stack-labels';
-import {barYPlugin} from '../bar-y';
+import type {PreparedBarXData} from '../bar-x/types';
 import {getBarYStackLabelAnchors} from '../bar-y/stack-labels';
-import {prepareStackLabels} from '../stack-labels';
+import type {BarYShapesArgs, PreparedBarYData} from '../bar-y/types';
 import type {StackLabelAnchor} from '../stack-labels';
+import {prepareStackLabels} from '../stack-labels';
 
+const areaPlugin = getSeriesPlugin('area');
+const barXPlugin = getSeriesPlugin('bar-x');
+const barYPlugin = getSeriesPlugin('bar-y');
 const plugins = [barXPlugin, barYPlugin, areaPlugin];
 
 beforeEach(() => {
@@ -36,7 +38,7 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 async function prepare(
-    plugin: SeriesPlugin,
+    plugin: RegisteredSeriesPlugin,
     values: (number | null)[][],
     stacking: 'normal' | 'percent' = 'normal',
     options: StackLabelsOptions = {enabled: true},

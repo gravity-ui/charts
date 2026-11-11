@@ -1,0 +1,7 @@
+.gcharts-bar-y {
+    &__label {
+        user-select: none;
+        pointer-events: none;
+        dominant-baseline: hanging;
+    }
+}

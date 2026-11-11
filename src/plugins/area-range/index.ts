@@ -7,13 +7,8 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedAreaRangeSeries} from '~core/series/types';
-import {formatAreaRange, getAreaRangeWidth} from '~core/shapes/area-range/format';
-import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
-import {prepareAreaRangeData, projectAreaRangeData} from '~core/shapes/area-range/prepare-data';
-import {renderAreaRange} from '~core/shapes/area-range/renderer';
-import type {PreparedAreaRangeData} from '~core/shapes/area-range/types';
 import {getTooltipColorSymbol, getTooltipXValue} from '~core/tooltip/utils';
+import type {CustomFormatContext} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -24,11 +19,20 @@ import {
 import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaRangeSeries, AreaRangeSeriesData, TooltipDataChunkAreaRange} from '../../types';
+import type {AreaRangeSeries, AreaRangeSeriesData} from '../../types';
+import type {BuiltinPluginData} from '../plugin-data';
 
 import {getAreaRangeAxisPadding} from './axis-padding';
+import {areaRangeDefaults} from './defaults';
+import {formatAreaRange, getAreaRangeWidth} from './format';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {AreaRangeInteractionItem} from './interaction-types';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
+import {prepareAreaRangeData, projectAreaRangeData} from './prepare-data';
+import type {PreparedAreaRangeSeries} from './prepared-series';
+import {renderAreaRange} from './renderer';
+import type {AreaRangeTooltipChunk, PreparedAreaRangeData} from './types';
 
 function isAreaRangePointDefined(point: AreaRangeSeriesData) {
     return point.y0 !== null && point.y1 !== null;
@@ -39,8 +43,14 @@ function isAreaRangePointInYRange({y0, y1}: AreaRangeSeriesData, {range}: Domain
     return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
 }
 
-export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
+export const areaRangePlugin: SeriesPlugin<
+    AreaRangeSeries,
+    AreaRangeTooltipChunk,
+    CustomFormatContext,
+    BuiltinPluginData<PreparedAreaRangeSeries, PreparedAreaRangeData, AreaRangeInteractionItem>
+> = {
     type: 'area-range',
+    defaults: areaRangeDefaults,
     axes: {
         y: {
             getData: ({series, viewport}) => ({
@@ -54,7 +64,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
             }),
         },
     },
-    getAxisPadding: getAreaRangeAxisPadding,
+    axisPadding: {getPaintExtents: getAreaRangeAxisPadding},
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
@@ -113,7 +123,9 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
             });
         }
     },
-    prepareShapeData: async (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> => {
+    prepareShapeData: async (
+        args: PrepareShapeDataArgs<PreparedAreaRangeSeries>,
+    ): Promise<PrepareShapeDataResult<PreparedAreaRangeData, PreparedAreaRangeData>> => {
         const {
             series,
             xAxis,
@@ -131,7 +143,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
         }
 
         const data = await prepareAreaRangeData({
-            series: series as PreparedAreaRangeSeries[],
+            series: series,
             xAxis,
             xScale,
             yAxis: yAxis ?? [],
@@ -153,8 +165,8 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
         preparedData,
         seriesOptions,
         dispatcher,
-    }: RenderShapesArgs) => {
-        const data = preparedData as PreparedAreaRangeData[];
+    }: RenderShapesArgs<PreparedAreaRangeData>) => {
+        const data = preparedData;
         const allowOverlap = data.some((item) => item.series.dataLabels.allowOverlap);
         return renderAreaRange({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);
     },
@@ -182,10 +194,9 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
                     {id: 'name', source: 'series.name', align: 'start'},
                     {
                         id: 'value',
-                        source: ({item}) =>
-                            getAreaRangeWidth((item as TooltipDataChunkAreaRange).data),
+                        source: ({item}) => getAreaRangeWidth(item.data),
                         formatValue: ({item, format}) => {
-                            const {y0, y1} = (item as TooltipDataChunkAreaRange).data;
+                            const {y0, y1} = item.data;
 
                             return y0 === null || y1 === null
                                 ? ''

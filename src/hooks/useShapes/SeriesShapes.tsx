@@ -2,7 +2,7 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 
-import type {SeriesPlugin} from '~core/series/plugin';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import type {SeriesShapeData, SvgLabel} from '~core/shapes/types';
 import {registerInteractionLayer} from '~core/utils/chart-interaction';
@@ -20,7 +20,7 @@ interface Props {
     dispatcher?: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     namespace: string;
-    plugin: SeriesPlugin;
+    plugin: RegisteredSeriesPlugin;
     preparedData: SeriesShapeData[];
     labels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;

@@ -1,15 +1,45 @@
 import {ChartError} from '../../libs';
-import type {ChartSeries} from '../../types';
+import type {
+    ChartInteractionItem,
+    ChartSeries,
+    ChartSeriesOptions,
+    CustomFormatContext,
+    MeaningfulAny,
+    TooltipDataChunk,
+} from '../../types';
 
-import type {SeriesPlugin} from './plugin';
+import type {SeriesPlugin, SeriesPluginData} from './plugin';
+import type {PreparedSeries, PreparedSeriesOptions} from './types';
 
-const registry = new Map<string, SeriesPlugin>();
+// A heterogeneous registry erases associations only at lookup; plugin declarations and
+// registration retain their complete contracts. The chart's public input is still built-in.
+type RuntimeSeriesPlugin = SeriesPlugin<MeaningfulAny, MeaningfulAny, MeaningfulAny, MeaningfulAny>;
 
-export function registerSeriesPlugin<T extends ChartSeries>(plugin: SeriesPlugin<T>) {
+interface RegisteredPluginData extends SeriesPluginData {
+    prepared: PreparedSeries;
+    shape: MeaningfulAny;
+    tooltipItem: MeaningfulAny;
+    interaction: ChartInteractionItem;
+    options: ChartSeriesOptions;
+    preparedOptions: PreparedSeriesOptions;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}
+
+export type RegisteredSeriesPlugin = SeriesPlugin<
+    ChartSeries,
+    TooltipDataChunk,
+    CustomFormatContext,
+    RegisteredPluginData
+>;
+
+const registry = new Map<string, RuntimeSeriesPlugin>();
+
+export function registerSeriesPlugin<T extends RuntimeSeriesPlugin>(plugin: T) {
     registry.set(plugin.type, plugin);
 }
 
-export function getSeriesPlugin(type: string): SeriesPlugin {
+export function getSeriesPlugin(type: string): RegisteredSeriesPlugin {
     const plugin = registry.get(type);
     if (!plugin) {
         throw new ChartError({message: `Unknown series type: "${type}"`});

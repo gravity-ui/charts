@@ -1,22 +1,23 @@
 /** @jest-environment jsdom */
+
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 
+import type {PreparedAreaData} from '../../../plugins/area/types';
+import type {PreparedAreaRangeData} from '../../../plugins/area-range/types';
+import type {PreparedBarXData} from '../../../plugins/bar-x/types';
+import type {PreparedBarYData} from '../../../plugins/bar-y/types';
 import {getCurveFactory} from '../../../plugins/line/interpolation';
+import {prepareLineData} from '../../../plugins/line/prepare-data';
 import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';
+import type {PreparedPieData} from '../../../plugins/pie/types';
+import {prepareScatterData} from '../../../plugins/scatter/prepare-data';
 import {prepareScatterSeries} from '../../../plugins/scatter/prepare-scatter-series';
 import type {LineSeries, ScatterClusterData, ScatterSeries} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import {getSeriesPlugin} from '../../series/seriesRegistry';
 import type {PreparedLegend} from '../../series/types';
-import type {PreparedAreaData} from '../../shapes/area/types';
-import type {PreparedAreaRangeData} from '../../shapes/area-range/types';
-import type {PreparedBarXData} from '../../shapes/bar-x/types';
-import type {PreparedBarYData} from '../../shapes/bar-y/types';
-import {prepareLineData} from '../../shapes/line/prepare-data';
-import type {PreparedPieData} from '../../shapes/pie/types';
-import {prepareScatterData} from '../../shapes/scatter/prepare-data';
 import type {TooltipItemData} from '../../shapes/types';
 import {getClosestPoints} from '../get-closest-data';
 

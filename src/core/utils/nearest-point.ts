@@ -1,4 +1,4 @@
-import type {ChartInteractionItem, PointPosition} from '~core/types';
+import type {ChartInteractionItem, ChartInteractionSeries, PointPosition} from '~core/types';
 
 import type {ShapePoint} from './tooltip-helpers';
 
@@ -16,7 +16,9 @@ export interface NearestCandidate<TItem extends ChartInteractionItem = ChartInte
 }
 
 /** Reuse unfiltered axis-point preparation without its X-first tooltip selection. */
-export function getPointCandidates(points: ShapePoint[]): NearestCandidate[] {
+export function getPointCandidates<TPoint extends object, TSeries extends ChartInteractionSeries>(
+    points: ShapePoint<TPoint, TSeries>[],
+): NearestCandidate<ChartInteractionItem<TPoint, TSeries['type']>>[] {
     return points.map((point) => ({
         position: [point.sourceX ?? point.x, (point.y0 + point.y1) / 2],
         item: {point: point.data, series: point.series},

@@ -4,12 +4,8 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedLineSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
-import {prepareLineData, projectLineData} from '~core/shapes/line/prepare-data';
-import {renderLine} from '~core/shapes/line/renderer';
-import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {CustomFormatContext} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -18,16 +14,28 @@ import {
     validateXYSeries,
 } from '~core/validation/helpers';
 
-import type {LineSeries, TooltipDataChunkLine} from '../../types';
+import type {LineSeries} from '../../types';
+import type {BuiltinPluginData} from '../plugin-data';
 
 import {getLineAxisPadding} from './axis-padding';
+import {lineDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {LineInteractionItem} from './interaction-types';
 import {getCurveFactory} from './interpolation';
+import {prepareLineData, projectLineData} from './prepare-data';
 import {prepareLineSeries} from './prepare-line-series';
+import type {PreparedLineSeries} from './prepared-series';
+import {renderLine} from './renderer';
+import type {LineTooltipChunk, PreparedLineData} from './types';
 import {validateInterpolation, validateLabelAnchor} from './validation';
 import {filterLineData, getLineAxisData} from './zoom';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareShapeData(
+    args: PrepareShapeDataArgs<PreparedLineSeries>,
+): Promise<PrepareShapeDataResult<PreparedLineData, PreparedLineData>> {
     const {
         series,
         seriesOptions,
@@ -47,7 +55,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareLineData({
-        series: series as PreparedLineSeries[],
+        series: series,
         seriesOptions,
         xAxis,
         xScale,
@@ -75,22 +83,23 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderLine(
-        {plot, labelsPlot, getCurveFactory},
-        preparedData as PreparedLineData[],
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderShapesArgs<PreparedLineData>) {
+    return renderLine({plot, labelsPlot, getCurveFactory}, preparedData, seriesOptions, dispatcher);
 }
 
-export const linePlugin: SeriesPlugin<LineSeries> = {
+export const linePlugin: SeriesPlugin<
+    LineSeries,
+    LineTooltipChunk,
+    CustomFormatContext,
+    BuiltinPluginData<PreparedLineSeries, PreparedLineData, LineInteractionItem>
+> = {
     type: 'line',
+    defaults: lineDefaults,
     axes: {
         x: {singleValueDomain: 'center'},
         y: {singleValueDomain: 'center', getData: getLineAxisData},
     },
-    getAxisPadding: getLineAxisPadding,
+    axisPadding: {getPaintExtents: getLineAxisPadding},
     getLayerKey: ({seriesKey}) => seriesKey,
     getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
         if (isRangeSlider) return 'bounds';
@@ -129,7 +138,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
         // reach on its own — so the rows are built per chunk and close over them. `source` stays
         // a plain value lookup, which is what a custom `rowRenderer` receives as `color`.
         rows: (chunk) => {
-            const s = (chunk as TooltipDataChunkLine).series as PreparedLineSeries;
+            const s = chunk.series;
 
             return [
                 {

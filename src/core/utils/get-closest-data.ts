@@ -8,8 +8,8 @@ import type {TooltipItemData} from '../shapes/types';
 import {groupBy} from './array';
 import {toPublicInteractionItem} from './chart-interaction';
 import {getNearestItem} from './nearest-point';
-import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';
 import type {LayerIndexes, ShapePoint, TooltipCandidate} from './tooltip-helpers';
+import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';
 
 interface GetClosestPointsArgs {
     position: [number, number];
@@ -83,7 +83,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
     const result: TooltipCandidate[] = [];
     const contenders: Contender[] = [];
-    const xLookupPoints: ShapePoint[] = [];
+    const xLookupPoints: ShapePoint<TooltipDataChunk['data'], TooltipDataChunk['series']>[] = [];
     const groups = groupBy(shapesData, getSeriesType);
     // With a single series type there is nothing to arbitrate between.
     const measureDistance = Object.keys(groups).length > 1;

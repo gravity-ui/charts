@@ -2,6 +2,7 @@ import {i18n} from '~core/i18n';
 
 import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {
+    BarSeriesDataLabelPlacementFallback,
     BarSeriesDataLabelPlacementOptions,
     BarSeriesDataLabelPlacementPosition,
 } from '../types';
@@ -40,4 +41,10 @@ export function validateBarLabelPlacement(options?: BarSeriesDataLabelPlacementO
             }),
         });
     }
+}
+
+export interface PreparedBarLabelPlacement {
+    /** Candidate positions resolved by the plugin. */
+    placement?: BarSeriesDataLabelPlacementPosition[];
+    placementFallback: BarSeriesDataLabelPlacementFallback;
 }

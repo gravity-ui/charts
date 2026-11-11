@@ -6,21 +6,29 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedWaterfallSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/waterfall/get-tooltip-data';
-import {prepareWaterfallData} from '~core/shapes/waterfall/prepare-data';
-import {renderWaterfall} from '~core/shapes/waterfall/renderer';
-import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {CustomFormatContext} from '~core/types';
 import {filterOverlappingLabels} from '~core/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
+import type {WaterfallSeries} from '../../types';
+import type {BuiltinPluginData} from '../plugin-data';
 
+import {waterfallDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {WaterfallInteractionItem} from './interaction-types';
+import {prepareWaterfallData} from './prepare-data';
 import {prepareWaterfallSeries} from './prepare-waterfall-series';
+import type {PreparedWaterfallSeries} from './prepared-series';
+import {renderWaterfall} from './renderer';
+import type {PreparedWaterfallData, WaterfallTooltipChunk} from './types';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareShapeData(
+    args: PrepareShapeDataArgs<PreparedWaterfallSeries>,
+): Promise<PrepareShapeDataResult<PreparedWaterfallData, PreparedWaterfallData>> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
@@ -28,7 +36,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareWaterfallData({
-        series: series as PreparedWaterfallSeries[],
+        series: series,
         seriesOptions,
         xAxis,
         xScale,
@@ -52,8 +60,14 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     return {renderData: data, tooltipItems: data};
 }
 
-export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
+export const waterfallPlugin: SeriesPlugin<
+    WaterfallSeries,
+    WaterfallTooltipChunk,
+    CustomFormatContext,
+    BuiltinPluginData<PreparedWaterfallSeries, PreparedWaterfallData, WaterfallInteractionItem>
+> = {
     type: 'waterfall',
+    defaults: waterfallDefaults,
     axes: {
         y: {
             baseline: 0,
@@ -105,8 +119,8 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
         preparedData,
         seriesOptions,
         dispatcher,
-    }: RenderShapesArgs) {
-        const data = preparedData as PreparedWaterfallData[];
+    }: RenderShapesArgs<PreparedWaterfallData>) {
+        const data = preparedData;
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
         return renderWaterfall({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);
     },
@@ -119,7 +133,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
         getValue: getTooltipYValue,
         header: {getValue: getTooltipXValue, axis: 'x'},
         rows: (chunk) => {
-            const c = chunk as TooltipDataChunkWaterfall;
+            const c = chunk;
             if (c.data.total) {
                 return [
                     {

@@ -6,11 +6,11 @@ import {dispatch} from 'd3-dispatch';
 import {DAY} from '~core/constants';
 import {EventType} from '~core/utils';
 
-import type {PreparedAreaData} from '../../../core/shapes/area/types';
-import type {PreparedBarXData} from '../../../core/shapes/bar-x/types';
-import type {PreparedBarYData} from '../../../core/shapes/bar-y/types';
 import * as shapes from '../../../hooks/useShapes';
 import * as zoom from '../../../hooks/useZoom';
+import type {PreparedAreaData} from '../../../plugins/area/types';
+import type {PreparedBarXData} from '../../../plugins/bar-x/types';
+import type {PreparedBarYData} from '../../../plugins/bar-y/types';
 import type {ChartData} from '../../../types';
 import * as gradientReference from '../prepareGradientReference';
 import {useChartInnerProps} from '../useChartInnerProps';

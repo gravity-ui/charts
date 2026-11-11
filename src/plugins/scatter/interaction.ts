@@ -1,13 +1,13 @@
-import type {MarkerData} from '~core/shapes/scatter/types';
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {ScatterInteractionItem} from './interaction-types';
+import type {MarkerData, PreparedScatterShapeData} from './types';
 
 export function getTargetElements({
     plot,
-}: InteractionElementsArgs): InteractionElement<ScatterInteractionItem>[] {
+}: InteractionElementsArgs<PreparedScatterShapeData>): InteractionElement<ScatterInteractionItem>[] {
     return getInteractionElements<MarkerData, ScatterInteractionItem>(
         plot,
         '.gcharts-marker__symbol',

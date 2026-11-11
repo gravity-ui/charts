@@ -1,5 +1,6 @@
 import get from 'es-toolkit/compat/get';
 
+import type {DashStyle} from '~core/constants';
 import {
     DASH_STYLE,
     DEFAULT_DATALABELS_STYLE,
@@ -7,7 +8,6 @@ import {
     LineJoin,
     seriesRangeSliderOptionsDefaults,
 } from '~core/constants';
-import type {DashStyle} from '~core/constants';
 import {
     DEFAULT_DATALABELS_PADDING,
     DEFAULT_HALO_OPTIONS,
@@ -15,7 +15,7 @@ import {
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedLegendSymbol, PreparedLineSeries} from '~core/series/types';
+import type {PreparedLegendSymbol} from '~core/series/types';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
 import {merge} from '~core/utils/merge';
@@ -28,6 +28,8 @@ import type {
     LineSeriesDataLabels,
     RectLegendSymbolOptions,
 } from '../../types';
+
+import type {PreparedLineSeries} from './prepared-series';
 
 export const DEFAULT_LEGEND_SYMBOL_SIZE = 16;
 export const DEFAULT_LINE_WIDTH = 1;

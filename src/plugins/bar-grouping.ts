@@ -1,9 +1,10 @@
 import {i18n} from '~core/i18n';
 import {getSeriesStackId} from '~core/series/utils';
-import {getBarXStackKey} from '~core/shapes/bar-x/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {BarXSeries, BarYSeries, ChartSeries} from '../types';
+
+import {getBarXStackKey} from './bar-x/utils';
 
 export function validateBarGrouping(args: {
     series: BarXSeries | BarYSeries;

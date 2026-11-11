@@ -8,7 +8,6 @@ import type {
     ChartXAxis,
     ChartYAxis,
     CustomFormatContext,
-    MeaningfulAny,
     TooltipDataChunk,
     TooltipRowCellItem,
     ValueFormat,
@@ -46,9 +45,19 @@ export interface GetClipPathArgs {
 
 export type SeriesClipPath = 'bounds' | 'horizontal' | false;
 
-export interface PrepareSeriesArgs<T = ChartSeries> {
+export interface PluginSeries {
+    type: string;
+    data: unknown[];
+}
+
+export interface PluginTooltipChunk {
+    data: unknown;
+    series: {type: string};
+}
+
+export interface PrepareSeriesArgs<T = ChartSeries, TOptions = ChartSeriesOptions> {
     series: T[];
-    seriesOptions?: ChartSeriesOptions;
+    seriesOptions?: TOptions;
     legend: PreparedLegendOptions;
     colorScale: ScaleOrdinal<string, string>;
     colors: string[];
@@ -56,11 +65,15 @@ export interface PrepareSeriesArgs<T = ChartSeries> {
     yAxis?: ChartYAxis[];
 }
 
-export interface PrepareShapeDataArgs {
-    series: PreparedSeries[];
+export interface PrepareShapeDataArgs<
+    TSeries = PreparedSeries,
+    TOptions = PreparedSeriesOptions,
+    TAllSeries = PreparedSeries,
+> {
+    series: TSeries[];
     boundsWidth: number;
     boundsHeight: number;
-    seriesOptions: PreparedSeriesOptions;
+    seriesOptions: TOptions;
     xAxis?: PreparedXAxis | null;
     yAxis?: PreparedYAxis[];
     xScale?: ChartScale;
@@ -73,42 +86,42 @@ export interface PrepareShapeDataArgs {
      * All visible series of the chart in config order, including the ones from other layers.
      * Every layer receives the same list, so a plugin can account for series outside its own layer.
      */
-    allSeries?: PreparedSeries[];
+    allSeries?: TAllSeries[];
 }
 
-export interface PrepareShapeDataResult {
-    renderData: SeriesShapeData[];
-    tooltipItems: TooltipItemData[];
+export interface PrepareShapeDataResult<TShape = SeriesShapeData, TTooltipItem = TooltipItemData> {
+    renderData: TShape[];
+    tooltipItems: TTooltipItem[];
     /** Reuse projected paint geometry as the full-series reference when the view is unfiltered. */
     gradientGeometry?: GradientGeometry[];
     /** Labels belonging to the whole plugin layer, independent of any one series. */
     labels?: SvgLabel[];
 }
 
-export interface GetTooltipValueArgs<TTooltipChunk extends TooltipDataChunk = TooltipDataChunk> {
+export interface GetTooltipValueArgs<TTooltipChunk = TooltipDataChunk> {
     item: TTooltipChunk;
     xAxis?: ChartXAxis | null;
     /** Y axis assigned to this item's series (defaults to axis 0). */
     yAxis?: ChartYAxis;
 }
 
-export interface SeriesPluginZoomOptions<TSeries = ChartSeries> {
+export interface SeriesPluginZoomOptions<TSeries = ChartSeries, TPoint = unknown> {
     /** Supported brush directions. */
     types: ZoomType[];
     /** Preferred direction when chart.zoom.type is omitted. */
     defaultType?: ZoomType;
     /** Omit for scalar point filtering; return original points separately from retained shape anchors. */
-    filterData?(args: FilterSeriesDataArgs<TSeries>): SeriesDataSelection;
+    filterData?(args: FilterSeriesDataArgs<TSeries>): SeriesDataSelection<TPoint>;
 }
 
-export interface RenderShapesArgs {
+export interface RenderShapesArgs<TShape = SeriesShapeData, TOptions = PreparedSeriesOptions> {
     /** SVG container for series geometry, such as lines, areas, bars, and sectors. */
     plot: SVGGElement;
     /** SVG container for labels above the layer's shapes and markers, clipped like `plot`. */
     labelsPlot: SVGGElement;
-    preparedData: SeriesShapeData[];
+    preparedData: TShape[];
     labels?: SvgLabel[];
-    seriesOptions: PreparedSeriesOptions;
+    seriesOptions: TOptions;
     boundsWidth: number;
     boundsHeight: number;
     dispatcher?: Dispatch<object>;
@@ -118,27 +131,47 @@ export interface RenderShapesArgs {
     signal?: AbortSignal;
 }
 
-export interface ValidateSeriesArgs<T = ChartSeries> {
+export interface ValidateSeriesArgs<
+    T = ChartSeries,
+    TOptions = ChartSeriesOptions,
+    TAllSeries = ChartSeries,
+> {
     /** The series being validated. */
     series: T;
     /** All series in the chart. Needed only by collection-level checks (e.g. treemap uniqueness); other types ignore it. */
-    allSeries: ChartSeries[];
-    seriesOptions?: ChartSeriesOptions;
+    allSeries: TAllSeries[];
+    seriesOptions?: TOptions;
     xAxis?: ChartXAxis;
     yAxis?: ChartYAxis[];
 }
 
+/** Associated pipeline types. Override these together to keep every plugin hook typed. */
+export interface SeriesPluginData<TType extends string = string> {
+    prepared: {type: TType};
+    shape: SeriesShapeData;
+    tooltipItem: TooltipItemData;
+    interaction: ChartInteractionItem;
+    options: object;
+    preparedOptions: object;
+    /** Mixed chart context is opaque unless the plugin knows the other registered types. */
+    allRaw: PluginSeries;
+    allPrepared: {type: string};
+}
+
 export interface SeriesPlugin<
-    T extends ChartSeries = ChartSeries,
-    TTooltipChunk extends TooltipDataChunk = TooltipDataChunk,
+    T extends PluginSeries = PluginSeries,
+    TTooltipChunk extends PluginTooltipChunk = PluginTooltipChunk,
     TFormatContext extends CustomFormatContext = CustomFormatContext,
+    TData extends SeriesPluginData<T['type']> = SeriesPluginData<T['type']>,
 > {
     // --- Metadata ---
 
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
+    /** Defaults for this plugin's namespace in series.options; user options are merged over them. */
+    defaults?: TData['options'][Extract<T['type'], keyof TData['options']>];
     /** true enables Cartesian axes with scalar defaults. Omit or use false for series without axes. */
-    axes?: boolean | SeriesAxes<T | Extract<PreparedSeries, {type: T['type']}>>;
+    axes?: boolean | SeriesAxes<T | TData['prepared']>;
     /**
      * Selects the layer for one raw/prepared series occurrence. Equal keys share a layer.
      * Omit to use series.type: all series of this plugin share one layer by default.
@@ -149,14 +182,14 @@ export interface SeriesPlugin<
      * geometry from render-layer partitioning, retaining source order, and defining placement
      * for groups whose members straddle other layers. Built-in bars still use one layer per type.
      */
-    getLayerKey?(args: GetLayerKeyArgs<T | Extract<PreparedSeries, {type: T['type']}>>): string;
+    getLayerKey?(args: GetLayerKeyArgs<T | TData['prepared']>): string;
     /**
      * Shape-group clipping: plot bounds by default, an expanded vertical region, or no clipping.
      * Does not control the separate marker, annotation, and HTML-label layers.
      */
     getClipPath?(args: GetClipPathArgs): SeriesClipPath;
     /** Supported zoom directions and point-filtering behavior. Omit to disable zoom. */
-    zoom?: SeriesPluginZoomOptions<T | Extract<PreparedSeries, {type: T['type']}>>;
+    zoom?: SeriesPluginZoomOptions<T | TData['prepared'], T['data'][number]>;
 
     // --- Validation ---
 
@@ -164,14 +197,16 @@ export interface SeriesPlugin<
      * Validates type-specific series config. Called once per series by `validateData`.
      * Should throw a `ChartError` on invalid input. Omit for types that need no validation.
      */
-    validate?(args: ValidateSeriesArgs<T>): void;
+    validate?(args: ValidateSeriesArgs<T, TData['options'], TData['allRaw']>): void;
 
     // --- Data preparation ---
 
     /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
-    prepareSeries(args: PrepareSeriesArgs): PreparedSeries[] | Promise<PreparedSeries[]>;
-    /** Cached paint extents used to fit markers within free continuous axis domains. */
-    getAxisPadding?(args: PrepareAxisPaddingArgs): AxisPaddingPoint[];
+    prepareSeries(
+        args: PrepareSeriesArgs<T, TData['options']>,
+    ): TData['prepared'][] | Promise<TData['prepared'][]>;
+    /** Two ordered axis-padding phases: initial label reserve, then projected paint extents. */
+    axisPadding?: SeriesAxisPadding<TData['prepared'], TData['preparedOptions']>;
     /**
      * Returns the value of a data point that places it on a continuous color scale.
      * `getDomainForContinuousColorScale` coerces the result to a number and builds the `[min, max]`
@@ -179,35 +214,46 @@ export interface SeriesPlugin<
      * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
      */
     getColorValue?(data: T['data'][number]): number | string | null | undefined;
-    /**
-     * Extra space in pixels reserved at the max end of an autoscaled X domain.
-     * The largest padding requested across series is used.
-     */
-    getXAxisPadding?(series: Extract<PreparedSeries, {type: T['type']}>): number;
     /** Computes shape data (geometry, labels, markers) once per render. */
     prepareShapeData(
-        args: PrepareShapeDataArgs,
-    ): PrepareShapeDataResult | Promise<PrepareShapeDataResult>;
+        args: PrepareShapeDataArgs<
+            TData['prepared'],
+            TData['preparedOptions'],
+            TData['allPrepared']
+        >,
+    ):
+        | PrepareShapeDataResult<TData['shape'], TData['tooltipItem']>
+        | Promise<PrepareShapeDataResult<TData['shape'], TData['tooltipItem']>>;
 
     /** Full-series geometry for paints anchored before visible-range filtering. Omit for solid paints. */
     prepareGradientGeometry?(
-        args: PrepareShapeDataArgs,
+        args: PrepareShapeDataArgs<
+            TData['prepared'],
+            TData['preparedOptions'],
+            TData['allPrepared']
+        >,
     ): GradientGeometry[] | Promise<GradientGeometry[]>;
 
     // --- Rendering ---
 
     /** Renders shapes into `plot` and labels into `labelsPlot`. May return a cleanup function. */
-    renderShapes(args: RenderShapesArgs): (() => void) | void;
+    renderShapes(
+        args: RenderShapesArgs<TData['shape'], TData['preparedOptions']>,
+    ): (() => void) | void;
 
     // --- Interaction ---
 
     interaction?: {
         /** All eligible reference positions, without tooltip filtering or per-plugin selection. */
-        prepareNearestData(args: PrepareNearestDataArgs<MeaningfulAny>): NearestCandidate[];
+        prepareNearestData(
+            args: PrepareNearestDataArgs<TData['tooltipItem']>,
+        ): NearestCandidate<TData['interaction']>[];
         /** Enumerates series geometry and data, excluding labels, halos and connectors. */
-        getTargetElements(args: InteractionElementsArgs): InteractionElement[];
+        getTargetElements(
+            args: InteractionElementsArgs<TData['shape']>,
+        ): InteractionElement<TData['interaction']>[];
         /** Converts a selection containing multiple data parts into its public item. */
-        getClosestItem?(item: TTooltipChunk): ChartInteractionItem;
+        getClosestItem?(item: TTooltipChunk): TData['interaction'];
     };
 
     // --- Tooltip ---
@@ -222,7 +268,7 @@ export interface SeriesPlugin<
          * is not compared: skip measuring it unless the plugin needs the measurement to pick its
          * own candidate (scatter does); a constant `0` of hit-test plugins is fine.
          */
-        prepareData: GetTooltipDataFn;
+        prepareData: GetTooltipDataFn<TData['tooltipItem'], TTooltipChunk>;
         /**
          * Unformatted value used by built-in sorting and totals. Resolve category indices to names.
          * Omit to use the point's scalar value, or its Y value for axis-based points.
@@ -254,18 +300,40 @@ export interface SeriesPlugin<
          * Each entry maps to one rendered `<tr>`. Explicit `tooltip.rows` replaces this list.
          */
         rows:
-            | ReadonlyArray<TooltipRowDef>
-            | ((chunk: TooltipDataChunk) => ReadonlyArray<TooltipRowDef>);
+            | ReadonlyArray<TooltipRowDef<TTooltipChunk>>
+            | ((chunk: TTooltipChunk) => ReadonlyArray<TooltipRowDef<TTooltipChunk>>);
     };
 }
 
-export interface PluginTooltipRowCell extends TooltipRowCellItem {
+export interface PluginTooltipRowCell<TTooltipChunk = TooltipDataChunk> extends Omit<
+    TooltipRowCellItem,
+    'source'
+> {
+    source: string | ((args: {item: TTooltipChunk}) => unknown);
     /** Formats a plugin cell once using the resolved value format; not part of public tooltip.rows. */
-    formatValue?(args: {item: TooltipDataChunk; value: unknown; format?: ValueFormat}): string;
+    formatValue?(args: {item: TTooltipChunk; value: unknown; format?: ValueFormat}): string;
 }
 
-export interface TooltipRowDef {
+export interface TooltipRowDef<TTooltipChunk = TooltipDataChunk> {
     /** Unique identifier within one chunk's row list. Used as part of the React key. */
     id: string;
-    cells: ReadonlyArray<PluginTooltipRowCell>;
+    cells: ReadonlyArray<PluginTooltipRowCell<TTooltipChunk>>;
+}
+
+/** Padding is measured in plot-local pixels; both phases precede shape preparation. */
+export interface SeriesAxisPadding<TSeries, TOptions> {
+    /**
+     * Label-space reserve at the maximum X domain end, before tick rounding and paint fitting.
+     * Core takes the maximum nonnegative request across its visibility-selected prepared series.
+     * Configured max bounds suppress it outside zoom; fixed plugin domains always suppress it.
+     * Zoom and slider scale building retain this reserve.
+     */
+    getXDomainReserve?(series: TSeries): number;
+    /**
+     * Paint centers and extents projected once on the initial scales, after domain reserves.
+     * Called only for visible series when an unconstrained continuous edge uses padding: 'auto'.
+     * All plugins measure against the same scales; core then fits each free edge independently.
+     * Explicit bounds, zoom/slider bounds and fixed domains remain authoritative.
+     */
+    getPaintExtents?(args: PrepareAxisPaddingArgs<TSeries, TOptions>): AxisPaddingPoint[];
 }

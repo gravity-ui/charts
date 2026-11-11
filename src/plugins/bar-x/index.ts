@@ -5,12 +5,8 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
-import type {PreparedBarXSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/bar-x/get-tooltip-data';
-import {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
-import {renderBarX} from '~core/shapes/bar-x/renderer';
-import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {BarXFormatContext} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {
     validateAxisPlotValues,
@@ -20,21 +16,33 @@ import {
 } from '~core/validation/helpers';
 import {filterPoints} from '~core/zoom/filter-data';
 
-import type {BarXFormatContext, BarXSeries, TooltipDataChunkBarX} from '../../types';
+import type {BarXSeries} from '../../types';
 import {getBarDomainData} from '../bar-domain';
 import {validateBarGrouping} from '../bar-grouping';
 import {validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
+import type {BuiltinPluginData} from '../plugin-data';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
 
+import {barXDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {BarXInteractionItem} from './interaction-types';
 import {prepareBarXSeries} from './prepare-bar-x-series';
+import {prepareBarXData} from './prepare-data';
+import type {PreparedBarXSeries} from './prepared-series';
+import {renderBarX} from './renderer';
 import {getBarXStackLabelAnchors} from './stack-labels';
+import type {BarXTooltipChunk, PreparedBarXData} from './types';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareShapeData(
+    args: PrepareShapeDataArgs<PreparedBarXSeries>,
+): Promise<PrepareShapeDataResult<PreparedBarXData, PreparedBarXData>> {
     const {
         series,
         seriesOptions,
@@ -54,7 +62,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareBarXData({
-        series: series as PreparedBarXSeries[],
+        series: series,
         seriesOptions,
         xAxis,
         xScale,
@@ -87,8 +95,8 @@ function renderShapes({
     boundsWidth,
     boundsHeight,
     dispatcher,
-}: RenderShapesArgs) {
-    const data = preparedData as PreparedBarXData[];
+}: RenderShapesArgs<PreparedBarXData>) {
+    const data = preparedData;
     const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
     const cleanup = renderBarX(
         {plot, labelsPlot, boundsWidth, boundsHeight},
@@ -101,8 +109,14 @@ function renderShapes({
     return cleanup;
 }
 
-export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXFormatContext> = {
+export const barXPlugin: SeriesPlugin<
+    BarXSeries,
+    BarXTooltipChunk,
+    BarXFormatContext,
+    BuiltinPluginData<PreparedBarXSeries, PreparedBarXData, BarXInteractionItem>
+> = {
     type: 'bar-x',
+    defaults: barXDefaults,
     axes: {
         x: {bandPadding: 0.5},
         y: {
@@ -171,7 +185,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
                         id: 'color',
                         source: 'color',
                         formatValue: ({item, value}) => {
-                            const {data, series} = item as TooltipDataChunkBarX;
+                            const {data, series} = item;
                             return getTooltipColorSymbol({
                                 color: String(value),
                                 opacity: data.opacity ?? series.opacity ?? 1,

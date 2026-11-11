@@ -5,24 +5,32 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedScatterSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/scatter/get-tooltip-data';
-import {prepareScatterData} from '~core/shapes/scatter/prepare-data';
-import {renderScatter} from '~core/shapes/scatter/renderer';
-import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {CustomFormatContext} from '~core/types';
 import {calculateNumericProperty} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
+import type {BuiltinPluginData} from '../plugin-data';
 
 import {getScatterAxisPadding} from './axis-padding';
+import {scatterDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {ScatterInteractionItem} from './interaction-types';
+import {prepareScatterData} from './prepare-data';
 import {prepareScatterSeries} from './prepare-scatter-series';
+import type {PreparedScatterSeries} from './prepared-series';
+import {renderScatter} from './renderer';
+import type {PreparedScatterData, PreparedScatterShapeData, ScatterTooltipChunk} from './types';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareShapeData(
+    args: PrepareShapeDataArgs<PreparedScatterSeries>,
+): Promise<PrepareShapeDataResult<PreparedScatterShapeData, PreparedScatterData>> {
     const {
         series,
         xAxis,
@@ -41,7 +49,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareScatterData({
-        series: series as PreparedScatterSeries[],
+        series: series,
         seriesOptions: args.seriesOptions,
         xAxis,
         xScale,
@@ -63,19 +71,25 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderScatter(
-        {plot, labelsPlot},
-        preparedData[0] as PreparedScatterShapeData,
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderShapesArgs<PreparedScatterShapeData>) {
+    return renderScatter({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
-export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
+export const scatterPlugin: SeriesPlugin<
+    ScatterSeries,
+    ScatterTooltipChunk,
+    CustomFormatContext,
+    BuiltinPluginData<
+        PreparedScatterSeries,
+        PreparedScatterShapeData,
+        ScatterInteractionItem,
+        PreparedScatterData
+    >
+> = {
     type: 'scatter',
+    defaults: scatterDefaults,
     axes: {x: {singleValueDomain: 'center'}, y: {singleValueDomain: 'center'}},
-    getAxisPadding: getScatterAxisPadding,
+    axisPadding: {getPaintExtents: getScatterAxisPadding},
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
     prepareSeries: prepareScatterSeries,

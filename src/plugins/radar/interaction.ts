@@ -1,13 +1,13 @@
-import type {PreparedRadarData, RadarMarkerData, RadarShapeData} from '~core/shapes/radar/types';
-import {getInteractionElements, getShapePoint} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements, getShapePoint} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {RadarInteractionItem} from './interaction-types';
+import type {PreparedRadarData, RadarMarkerData, RadarShapeData} from './types';
 
 export function getTargetElements({
     plot,
-}: InteractionElementsArgs): InteractionElement<RadarInteractionItem>[] {
+}: InteractionElementsArgs<PreparedRadarData>): InteractionElement<RadarInteractionItem>[] {
     return [
         ...getInteractionElements<RadarShapeData, RadarInteractionItem>(
             plot,

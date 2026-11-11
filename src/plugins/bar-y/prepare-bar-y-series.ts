@@ -1,8 +1,7 @@
 import get from 'es-toolkit/compat/get';
 
-import {DEFAULT_DATALABELS_STYLE, seriesOptionsDefaults} from '~core/constants';
+import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedBarYSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getLabelsSize, getUniqId} from '~core/utils';
@@ -13,6 +12,9 @@ import {withSourcePoint} from '~core/utils/source-point';
 import type {BarYSeries, BarYSeriesData} from '../../types';
 import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
+
+import {barYDefaults} from './defaults';
+import type {PreparedBarYSeries} from './prepared-series';
 
 const DEFAULT_LABEL_PADDING = 7;
 
@@ -101,18 +103,10 @@ export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                     grouping: series.grouping ?? true,
                     barPadding:
                         series.barPadding ??
-                        get(
-                            seriesOptions,
-                            'bar-y.barPadding',
-                            seriesOptionsDefaults['bar-y'].barPadding,
-                        ),
+                        get(seriesOptions, 'bar-y.barPadding', barYDefaults.barPadding),
                     barMaxWidth:
                         series.barMaxWidth ??
-                        get(
-                            seriesOptions,
-                            'bar-y.barMaxWidth',
-                            seriesOptionsDefaults['bar-y'].barMaxWidth,
-                        ),
+                        get(seriesOptions, 'bar-y.barMaxWidth', barYDefaults.barMaxWidth),
                     stackLabels: series.stackLabels,
                     // Non-stacked overlays need independent domains even with a stackId.
                     stackId: getSeriesStackId(series),

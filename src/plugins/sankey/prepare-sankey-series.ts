@@ -2,12 +2,14 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
-import type {PreparedLegendOptions, PreparedSankeySeries} from '~core/series/types';
+import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, SankeySeries} from '../../types';
+
+import type {PreparedSankeySeries} from './prepared-series';
 
 type PrepareSankeySeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;

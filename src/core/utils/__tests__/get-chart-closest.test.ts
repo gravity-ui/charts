@@ -1,9 +1,9 @@
 import {linePlugin} from '../../../plugins/line';
+import type {PreparedLineData} from '../../../plugins/line/types';
 import {scatterPlugin} from '../../../plugins/scatter';
+import type {PreparedScatterData} from '../../../plugins/scatter/types';
 import type {ChartInteractionItem} from '../../../types';
 import {registerSeriesPlugin} from '../../series/seriesRegistry';
-import type {PreparedLineData} from '../../shapes/line/types';
-import type {PreparedScatterData} from '../../shapes/scatter/types';
 import {getChartClosest} from '../get-closest-data';
 import {getNearestItem} from '../nearest-point';
 

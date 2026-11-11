@@ -1,15 +1,9 @@
 import get from 'es-toolkit/compat/get';
 
-import {
-    DEFAULT_DATALABELS_STYLE,
-    seriesOptionsDefaults,
-    seriesRangeSliderOptionsDefaults,
-} from '~core/constants';
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
-import {getBarXStackKey} from '~core/shapes/bar-x/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
@@ -17,6 +11,10 @@ import {withSourcePoint} from '~core/utils/source-point';
 import type {BarXSeries, BarXSeriesData} from '../../types';
 import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
+
+import {barXDefaults} from './defaults';
+import type {PreparedBarXSeries} from './prepared-series';
+import {getBarXStackKey} from './utils';
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
@@ -30,7 +28,7 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     }
 }
 
-export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): PreparedSeries[] {
+export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): PreparedBarXSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
     const preparedSeries = seriesList.map<
@@ -61,10 +59,10 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             grouping: series.grouping ?? true,
             barPadding:
                 series.barPadding ??
-                get(seriesOptions, 'bar-x.barPadding', seriesOptionsDefaults['bar-x'].barPadding),
+                get(seriesOptions, 'bar-x.barPadding', barXDefaults.barPadding),
             barMaxWidth:
                 series.barMaxWidth ??
-                get(seriesOptions, 'bar-x.barMaxWidth', seriesOptionsDefaults['bar-x'].barMaxWidth),
+                get(seriesOptions, 'bar-x.barMaxWidth', barXDefaults.barMaxWidth),
             stackLabels: series.stackLabels,
             // Non-stacked overlays need independent domains even with a stackId.
             stackId: getSeriesStackId(series),

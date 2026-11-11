@@ -5,26 +5,34 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedPieSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/pie/get-tooltip-data';
-import {preparePieData} from '~core/shapes/pie/prepare-data';
-import {renderPie} from '~core/shapes/pie/renderer';
-import type {PreparedPieData} from '~core/shapes/pie/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
+import type {PieFormatContext, TooltipDataChunkPie} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {PieFormatContext, PieSeries, TooltipDataChunkPie} from '../../types';
+import type {PieSeries} from '../../types';
+import type {BuiltinPluginData} from '../plugin-data';
 
+import {pieDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {PieInteractionItem} from './interaction-types';
+import {preparePieData} from './prepare-data';
 import {preparePieSeries} from './prepare-pie-series';
+import type {PreparedPieSeries} from './prepared-series';
+import {renderPie} from './renderer';
+import type {PreparedPieData} from './types';
+
+import './styles.scss';
 
 async function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+}: PrepareShapeDataArgs<PreparedPieSeries>): Promise<
+    PrepareShapeDataResult<PreparedPieData, PreparedPieData>
+> {
     const data = await preparePieData({
-        series: series as PreparedPieSeries[],
+        series: series,
         boundsWidth,
         boundsHeight,
     });
@@ -39,10 +47,10 @@ function renderShapes({
     dispatcher,
     registerCompletion,
     signal,
-}: RenderShapesArgs) {
+}: RenderShapesArgs<PreparedPieData>) {
     return renderPie(
         {plot, labelsPlot},
-        preparedData as PreparedPieData[],
+        preparedData,
         seriesOptions,
         dispatcher,
         registerCompletion,
@@ -50,8 +58,14 @@ function renderShapes({
     );
 }
 
-export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatContext> = {
+export const piePlugin: SeriesPlugin<
+    PieSeries,
+    TooltipDataChunkPie,
+    PieFormatContext,
+    BuiltinPluginData<PreparedPieSeries, PreparedPieData, PieInteractionItem>
+> = {
     type: 'pie',
+    defaults: pieDefaults,
     getClipPath: () => false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),

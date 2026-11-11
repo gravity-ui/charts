@@ -1,13 +1,13 @@
-import type {FunnelItemData, PreparedFunnelData} from '~core/shapes/funnel/types';
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {FunnelInteractionItem} from './interaction-types';
+import type {FunnelItemData, PreparedFunnelData} from './types';
 
 export function getTargetElements({
     plot,
-}: InteractionElementsArgs): InteractionElement<FunnelInteractionItem>[] {
+}: InteractionElementsArgs<PreparedFunnelData>): InteractionElement<FunnelInteractionItem>[] {
     return getInteractionElements<FunnelItemData, FunnelInteractionItem>(
         plot,
         'polygon',

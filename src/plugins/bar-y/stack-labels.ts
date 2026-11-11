@@ -3,13 +3,14 @@ import {group} from 'd3-array';
 import type {PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedSeriesOptions} from '~core/series/types';
-import type {PreparedBarYData} from '~core/shapes/bar-y/types';
 import {getDataCategoryValue} from '~core/utils';
 import {sumDecimals} from '~core/utils/math';
 
-import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
+import {getStackLabelValue} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
+
+import type {PreparedBarYData} from './types';
 
 export function getBarYStackLabelAnchors(
     data: PreparedBarYData[],

@@ -1,6 +1,6 @@
 # Adding a series plugin
 
-This guide covers built-in plugins in `src/plugins/<type>/`. Public external registration is still being migrated; the axis and viewport contracts already accept a plugin's own data types.
+This guide covers built-in plugins in `src/plugins/<type>/`. Plugins own their preparation, geometry, rendering, styles, defaults, and interaction adapters. Public external registration and selective imports remain a separate task.
 
 ## 1. Define behavior and types
 
@@ -15,7 +15,37 @@ Match established config names, units, defaults, and precedence. Keep specialize
 
 ## 2. Prepare data and geometry
 
-Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts): `prepareSeries`, `prepareShapeData`, `renderShapes`, and tooltip lookup/rows. Add validation and optional capabilities as needed. Series-specific geometry currently lives in `core/shapes/<type>/`.
+Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts): `prepareSeries`, `prepareShapeData`, `renderShapes`, and tooltip lookup/rows. Add validation and optional capabilities as needed. Keep series-specific code in `plugins/<type>/`, including `prepared-series.ts`, shape `types.ts`, `prepare-data.ts`, `renderer.ts`, `get-tooltip-data.ts`, and `styles.scss`. Import plugin styles from its entry point. Reusable label, marker, measurement, and geometry primitives remain in core.
+
+### Pipeline types
+
+The first three `SeriesPlugin` parameters describe raw series, tooltip chunks, and value-formatter context. The fourth associates the remaining pipeline types through `SeriesPluginData`:
+
+```typescript
+interface IntervalPluginData extends SeriesPluginData<'interval'> {
+  prepared: PreparedIntervalSeries;
+  shape: IntervalShape;
+  tooltipItem: IntervalLookup;
+  interaction: IntervalInteractionItem;
+  options: IntervalOptions;
+  preparedOptions: PreparedIntervalOptions;
+  allRaw: IntervalSeries;
+  allPrepared: PreparedIntervalSeries;
+}
+
+const intervalPlugin: SeriesPlugin<
+  IntervalSeries,
+  IntervalTooltipChunk,
+  IntervalFormatContext,
+  IntervalPluginData
+> = {
+  // Implement the typed hooks here.
+};
+```
+
+`shape` is the render-layer item, while `tooltipItem` is the lookup item; these may differ, as with grouped horizontal bars. Tooltip lookup points and row callbacks retain the declared chunk's data and series types. `allRaw` and `allPrepared` describe mixed-chart context; leave the base opaque types when other registered series are unknown.
+
+Built-ins use `BuiltinPluginData` from `plugins/plugin-data.ts` for their shared chart context. Keep each prepared-series declaration in its plugin; `core/series/types.ts` aggregates built-in types and preserves existing exports. See the [standalone custom-plugin fixture](https://github.com/gravity-ui/charts/blob/main/src/core/series/__tests__/fixtures/custom-plugin.ts) for a complete implementation using its own data and payload types.
 
 Keep raw config, points, and callback payloads intact. Store derived values separately, hoist reusable calculations and measurements, and clean up subscriptions. Register derived point copies with `withSourcePoint`; use `getSourcePoint` for nested interaction payloads.
 
@@ -41,7 +71,12 @@ Return original coordinates in `values` and geometry extents, stack sums, or cum
 
 Declare baselines, band reserves, grid, and padding defaults through [SeriesAxis](https://github.com/gravity-ui/charts/blob/main/src/core/series/axis-contract.ts). Use optional `getFixedDomain` for bounds imposed by configuration and `getTicks` for exceptional ticks. Core combines requests, builds scales, and handles label collisions.
 
-Optional `getXAxisPadding` reserves label space in pixels at the maximum end of an autoscaled X domain. Core takes the largest request; explicit `xAxis.max` wins.
+Use `axisPadding` when the plugin needs space for labels or paint. Both phases run before shape preparation and use plot-local pixels:
+
+- `getXDomainReserve(series)` reserves label space at the maximum X-domain end while building the initial scale. Core takes the largest nonnegative request across its visibility-selected prepared series. A configured maximum suppresses it outside zoom; fixed plugin domains always suppress it. Zoom and slider scale building retain this reserve.
+- `getPaintExtents(args)` projects paint centers and their left/right/top/bottom extents on the initial scales. Core calls it once per plugin for visible series when a free continuous edge uses `padding: 'auto'`. All plugins measure before core expands any scale. Core combines the constraints per edge; explicit bounds, selected zoom/slider bounds, and fixed domains remain authoritative.
+
+The initial scale applies percentage padding and label reserves before tick rounding. Paint fitting follows and preserves the pixel range; numeric or pixel axis padding requests space directly instead of measuring paint.
 
 ### Zoom and preprocessing
 
@@ -101,7 +136,18 @@ A missing header value can be replaced by a custom formatter. An omitted header 
 
 ## 6. Register and integrate
 
-Register the plugin in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts) and add applicable [defaults](https://github.com/gravity-ui/charts/blob/main/src/core/constants/defaults/series-options.ts).
+Register the plugin in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts). Declare its `series.options` namespace defaults in `plugins/<type>/defaults.ts` and expose them through `plugin.defaults`:
+
+```typescript
+const lineDefaults = {
+    states: {hover: {enabled: true, brightness: 0.3}},
+} satisfies NonNullable<ChartSeriesOptions['line']>;
+
+// In the plugin declaration:
+defaults: lineDefaults,
+```
+
+Core deep-merges defaults from registered plugins into a fresh options object, then applies user `series.options`. Individual series and point overrides keep their established precedence in plugin preparation. Direct preparation helpers should use their own plugin defaults for fallbacks. Do not mutate defaults, user configuration, or raw points.
 
 Trace shared axes, scales, layers, zoom, and tooltip consumers. Extend the plugin contract when necessary; keep series-name branches and implementation imports out of shared runtime code.
 

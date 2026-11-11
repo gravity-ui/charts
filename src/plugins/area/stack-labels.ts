@@ -1,13 +1,14 @@
 import {group} from 'd3-array';
 
 import type {PrepareShapeDataArgs} from '~core/series/plugin';
-import type {PreparedAreaData} from '~core/shapes/area/types';
 import {sumDecimals} from '~core/utils/math';
 
 import type {AreaSeriesData} from '../../types';
-import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
+import {getStackLabelValue} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
+
+import type {PreparedAreaData} from './types';
 
 const DEFAULT_POSITIVE_EXTENDS_UP = true;
 

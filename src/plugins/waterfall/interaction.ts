@@ -1,13 +1,13 @@
-import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {WaterfallInteractionItem} from './interaction-types';
+import type {PreparedWaterfallData} from './types';
 
 export function getTargetElements({
     plot,
-}: InteractionElementsArgs): InteractionElement<WaterfallInteractionItem>[] {
+}: InteractionElementsArgs<PreparedWaterfallData>): InteractionElement<WaterfallInteractionItem>[] {
     return getInteractionElements<PreparedWaterfallData, WaterfallInteractionItem>(
         plot,
         '.gcharts-waterfall__segment',
