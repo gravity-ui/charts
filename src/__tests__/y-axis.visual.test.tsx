@@ -1166,6 +1166,51 @@ test.describe('Y-axis', () => {
             chart: {margin: CHART_MARGIN},
         };
 
+        test('grid dash style', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].grid.dashStyle', 'Dash');
+            const component = await mount(<ChartTestStory data={data} />);
+            const gridLine = component
+                .locator('.gcharts-y-axis__tick > path:not(.gcharts-y-axis__mark)')
+                .first();
+            const marks = component.locator('.gcharts-y-axis__mark');
+
+            await expect(gridLine).toHaveCSS('stroke-dasharray', '4px, 3px');
+            await expect(marks.first()).toBeAttached();
+
+            for (const mark of await marks.all()) {
+                await expect(mark).toHaveCSS('stroke-dasharray', 'none');
+            }
+
+            await expect(component.locator('.gcharts-y-axis__domain')).toHaveCSS(
+                'stroke-dasharray',
+                'none',
+            );
+
+            await component.update(<ChartTestStory data={baseTickMarksData} />);
+            await expect(gridLine).toHaveCSS('stroke-dasharray', 'none');
+        });
+
+        test('grid dash style does not enable a disabled grid', async ({mount}) => {
+            const data = cloneDeep(baseTickMarksData);
+            set(data, 'yAxis[0].grid', {enabled: false, dashStyle: 'Dash'});
+            const component = await mount(<ChartTestStory data={data} />);
+            const gridLines = component.locator(
+                '.gcharts-y-axis__tick > path:not(.gcharts-y-axis__mark)',
+            );
+
+            await expect(component.locator('.gcharts-y-axis__mark').first()).toBeAttached();
+            await expect(gridLines).toHaveCount(0);
+
+            const enabledData = cloneDeep(data);
+            set(enabledData, 'yAxis[0].grid.enabled', true);
+            await component.update(<ChartTestStory data={enabledData} />);
+            await expect(gridLines.first()).toHaveCSS('stroke-dasharray', '4px, 3px');
+
+            await component.update(<ChartTestStory data={data} />);
+            await expect(gridLines).toHaveCount(0);
+        });
+
         test('enabled (default settings)', async ({mount}) => {
             const component = await mount(<ChartTestStory data={baseTickMarksData} />);
             await expect(component.locator('svg')).toHaveScreenshot();

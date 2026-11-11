@@ -488,6 +488,7 @@ export async function prepareYAxisData({
     return {
         id: getUniqId(),
         gridEnabled: axis.grid.enabled,
+        gridDashStyle: axis.grid.dashStyle,
         title,
         ticks,
         domain,

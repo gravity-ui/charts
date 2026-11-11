@@ -273,6 +273,7 @@ export const getPreparedXAxis = async ({
         },
         grid: {
             enabled: shouldHideGrid ? false : get(xAxis, 'grid.enabled', true),
+            dashStyle: get(xAxis, 'grid.dashStyle', DASH_STYLE.Solid),
         },
         ticks: {
             pixelInterval: xAxis?.ticks?.interval

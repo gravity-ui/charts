@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+const {DASH_STYLE} = require('../src/core/constants/line-styles');
 const {migrateChartDataV1} = require('../src/migration/v1');
 
 const {
@@ -39,6 +40,36 @@ describe('chart config artifacts', () => {
         // Guards against accidental inlining of a large dependency. Update if the type surface
         // legitimately grows past this limit.
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
+    });
+
+    test('axis grids accept every DashStyle in declarations and schema', () => {
+        const dashStyles = Object.values(DASH_STYLE);
+        const validate = createSchemaValidator().compile(schema);
+
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'grid-dash-style-usage.ts'),
+                declaration +
+                    `
+                const dashStyles: DashStyle[] = ${JSON.stringify(dashStyles)};
+                dashStyles.forEach((dashStyle) => {
+                    const xAxis: ChartXAxis = {grid: {dashStyle}};
+                    const yAxis: ChartYAxis = {grid: {dashStyle}};
+                    void [xAxis, yAxis];
+                });
+                // @ts-expect-error Unknown grid dash style.
+                const invalid: ChartXAxis = {grid: {dashStyle: 'dashed'}};
+                void invalid;
+            `,
+            ),
+        ).not.toThrow();
+
+        for (const dashStyle of [...dashStyles, undefined, 'dashed', null, 1]) {
+            const valid = dashStyle === undefined || dashStyles.includes(dashStyle);
+
+            expect(validate({series: {data: []}, xAxis: {grid: {dashStyle}}})).toBe(valid);
+            expect(validate({series: {data: []}, yAxis: [{grid: {dashStyle}}]})).toBe(valid);
+        }
     });
 
     test('step interpolation is available only on line series', () => {

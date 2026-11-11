@@ -73,6 +73,25 @@ See [Migrating from v1 to v2](../../migration/v2.md) for automatic conversion an
 
 {% endnote %}
 
+## Grid lines {#grid-lines}
+
+Set `grid.dashStyle` on `xAxis` for vertical grid lines and on each `yAxis` item for horizontal grid lines.
+
+The pattern applies only to grid lines. Axis lines and tick marks (the short marks next to axis labels) remain solid.
+
+<div data-chart-example="layout/grid-dash-style"></div>
+
+```ts
+xAxis: {
+    grid: {dashStyle: 'Dot'},
+},
+yAxis: [{
+    grid: {dashStyle: 'ShortDash'},
+}],
+```
+
+The default is `'Solid'`. All `DashStyle` values are supported: `'Solid'`, `'Dash'`, `'Dot'`, `'DashDot'`, `'LongDash'`, `'LongDashDot'`, `'LongDashDotDot'`, `'ShortDash'`, `'ShortDashDot'`, `'ShortDashDotDot'`, and `'ShortDot'`.
+
 ## Labels
 
 See [Axis labels](./axis-labels.md) for label styling and HTML labels.
