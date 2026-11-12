@@ -12,7 +12,12 @@ const data: ChartData = {
                 marker: {enabled: true, radius: 3},
                 states: {
                     hover: {
-                        marker: {radius: 8, borderColor: '#ffffff', borderWidth: 2},
+                        marker: {
+                            radius: 8,
+                            borderColor: '#ffffff',
+                            borderWidth: 2,
+                            halo: {enabled: true},
+                        },
                     },
                 },
             },
@@ -50,6 +55,6 @@ export default function LineMarkersExample() {
 export const meta = {
     seriesType: 'Line',
     title: 'Point markers',
-    description: 'Show point markers and customize their appearance on hover.',
+    description: 'Show point markers and highlight them with a halo on hover.',
     docsUrl: 'pages/guides/series-types/line.html#markers',
 } satisfies ExampleMeta;

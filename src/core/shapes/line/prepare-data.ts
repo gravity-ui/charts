@@ -193,7 +193,12 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
                 data: point.data,
             });
         }
-        item.getHoverMarkers = buildHoverMarkerGetter(points, s, isOutsideBounds);
+        item.getHoverMarkers = buildHoverMarkerGetter(
+            points,
+            s,
+            isOutsideBounds,
+            s.marker.states.hover.halo,
+        );
         item.getSegments = buildSegmentGetter(s, points, item.lineWidth, getCurveFactory);
     }
 

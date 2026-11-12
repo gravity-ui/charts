@@ -24,6 +24,24 @@ Hover styles apply to both always-visible and hover-only markers. The normal app
 
 <div data-chart-example="series-types/line-markers"></div>
 
+Line marker halos are disabled by default. Set `states.hover.marker.halo.enabled: true` to highlight hovered points in either marker mode:
+
+```javascript
+series: {
+  options: {
+    line: {
+      states: {
+        hover: {
+          marker: {halo: {enabled: true}},
+        },
+      },
+    },
+  },
+}
+```
+
+The halo uses the marker's symbol and fill color, including point overrides. Use `halo.size` to set its extension beyond the marker radius in pixels (default `6`) and `halo.opacity` to set its opacity (default `0.25`). Setting opacity to `0` makes it transparent.
+
 Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
 
 ### Line interpolation

@@ -308,7 +308,12 @@ export interface ChartSeriesOptions<T = MeaningfulAny> {
         states?: {
             hover?: BasicHoverState & {
                 marker?: PointMarkerOptions & {
-                    /** Options for the halo appearing around the hovered point */
+                    /**
+                     * Halo around the hovered marker, using its symbol and fill color.
+                     * Disabled by default for line series. Set `enabled: true` to show it
+                     * for both always-visible and hover-only markers.
+                     * The default size is 6 pixels and the default opacity is 0.25.
+                     */
                     halo?: Halo;
                 };
             };
