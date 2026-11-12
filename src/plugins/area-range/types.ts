@@ -18,7 +18,8 @@ export interface AreaRangePointData {
     y: number | null;
 }
 
-export interface PreparedAreaRangeData extends SeriesShapeData, GradientShapeData {
+export interface PreparedAreaRangeData
+    extends Omit<SeriesShapeData, 'annotations'>, GradientShapeData {
     active: boolean;
     color: string;
     hovered: boolean;

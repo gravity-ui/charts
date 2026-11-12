@@ -7,6 +7,7 @@ import {
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
@@ -69,7 +70,7 @@ function prepareSeriesData(series: ScatterSeries): ScatterSeriesData[] {
 }
 
 export function prepareScatterSeries(
-    args: PrepareSeriesArgs<ScatterSeries>,
+    args: PrepareSeriesArgs<ScatterSeries, ChartSeriesOptions>,
 ): PreparedScatterSeries[] {
     const {colorScale, series, seriesOptions, legend, yAxis} = args;
 
@@ -80,19 +81,15 @@ export function prepareScatterSeries(
         const yAxisIndex = get(s, 'yAxis', 0);
         const marker = prepareMarker(s, seriesOptions, index);
 
-        const prepared: PreparedScatterSeries = {
-            id,
-            type: s.type,
-            name,
+        const metadata = prepareSeriesMetadata({
+            series: {...s, id, name},
             color: get(s, 'color', colorScale(name)),
-            visible: get(s, 'visible', true),
-            legend: {
-                enabled: s.legend?.enabled ?? legend.enabled,
-                symbol: prepareLegendSymbol(s, symbolType),
-                groupId: s.legend?.groupId ?? getUniqId(),
-                source: s.legend,
-                itemText: s.legend?.itemText ?? name,
-            },
+            legend,
+            symbol: prepareLegendSymbol(s, symbolType),
+        });
+        const prepared: PreparedScatterSeries = {
+            ...metadata,
+            type: s.type,
             data: prepareSeriesData(s),
             cluster: {
                 enabled: s.cluster?.enabled ?? false,
@@ -127,7 +124,6 @@ export function prepareScatterSeries(
                 format: s.dataLabels?.format,
             },
             marker,
-            cursor: get(s, 'cursor', null),
             yAxis: yAxisIndex,
             tooltip: {
                 ...s.tooltip,
@@ -135,7 +131,6 @@ export function prepareScatterSeries(
                     s.tooltip?.valueFormat ?? getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
             },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, s.rangeSlider),
-            custom: s.custom,
         };
 
         return prepared;

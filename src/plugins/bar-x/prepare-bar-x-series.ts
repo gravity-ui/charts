@@ -3,8 +3,10 @@ import get from 'es-toolkit/compat/get';
 import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
+import type {ChartSeriesOptions} from '~core/types';
 import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
@@ -28,7 +30,9 @@ function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {
     }
 }
 
-export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): PreparedBarXSeries[] {
+export function prepareBarXSeries(
+    args: PrepareSeriesArgs<BarXSeries, ChartSeriesOptions>,
+): PreparedBarXSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
     const preparedSeries = seriesList.map<
@@ -40,20 +44,16 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
         const dataLabelsInside = series.stacking === 'percent';
         const yAxisIndex = get(series, 'yAxis', 0);
 
-        return {
-            type: series.type,
+        const metadata = prepareSeriesMetadata({
+            series: {...series, id: getUniqId(), name},
             color,
+            legend,
+            symbol: {...prepareLegendSymbol(series), opacity},
+        });
+        return {
+            ...metadata,
+            type: series.type,
             opacity,
-            name,
-            id: getUniqId(),
-            visible: get(series, 'visible', true),
-            legend: {
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: {...prepareLegendSymbol(series), opacity},
-                groupId: series.legend?.groupId ?? getUniqId(),
-                source: series.legend,
-                itemText: series.legend?.itemText ?? name,
-            },
             data: prepareSeriesData(series),
             stacking: series.stacking,
             grouping: series.grouping ?? true,
@@ -80,7 +80,6 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
                 html: get(series, 'dataLabels.html', false),
                 format: series.dataLabels?.format,
             },
-            cursor: get(series, 'cursor', null),
             yAxis: yAxisIndex,
             borderRadius: get(series, 'borderRadius', get(seriesOptions, 'bar-x.borderRadius', 0)),
             borderWidth: series.borderWidth ?? seriesOptions?.['bar-x']?.borderWidth ?? 0,
@@ -95,7 +94,6 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
                     getDefaultValueFormat({axis: yAxis?.[yAxisIndex]}),
             },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
-            custom: series.custom,
         };
     }, []);
 

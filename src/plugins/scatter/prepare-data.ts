@@ -300,8 +300,5 @@ export async function prepareScatterData(args: {
         scatterData,
         svgLabels: allSvgLabels,
         htmlLabels: allHtmlLabels,
-        markers: [],
-        getHoverMarkers: () => [],
-        annotations: [],
     };
 }

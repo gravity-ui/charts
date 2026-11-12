@@ -5,7 +5,7 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {BarXFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
@@ -41,7 +41,7 @@ import type {BarXTooltipChunk, PreparedBarXData} from './types';
 import './styles.scss';
 
 async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedBarXSeries>,
+    args: PrepareShapeDataArgs<PreparedBarXSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareShapeDataResult<PreparedBarXData, PreparedBarXData>> {
     const {
         series,
@@ -102,7 +102,7 @@ function renderShapes({
     boundsWidth,
     boundsHeight,
     dispatcher,
-}: RenderShapesArgs<PreparedBarXData>) {
+}: RenderShapesArgs<PreparedBarXData, PreparedSeriesOptions>) {
     const data = preparedData;
     const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
     const cleanup = renderBarX(

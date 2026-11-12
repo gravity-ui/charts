@@ -7,7 +7,7 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {PrepareShapeDataArgs} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
-import type {PreparedLegend} from '~core/series/types';
+import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {SvgLabel} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
 
@@ -76,7 +76,7 @@ async function prepare(
         .domain([0, 4])
         .range(horizontal ? [200, 0] : [0, 400]);
     if (stacking === 'percent') valueScale.domain([0, 100]);
-    const args: PrepareShapeDataArgs = {
+    const args: PrepareShapeDataArgs<PreparedSeries, PreparedSeriesOptions> = {
         series,
         seriesOptions: getPreparedOptions({[plugin.type]: {stackLabels: options}}),
         xAxis: {type: 'linear'} as PreparedXAxis,

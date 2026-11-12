@@ -5,7 +5,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 import type {
     ChartSeries,
@@ -33,7 +33,7 @@ async function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedPieSeries>): Promise<
+}: PrepareShapeDataArgs<PreparedPieSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
     PrepareShapeDataResult<PreparedPieData, PreparedPieData>
 > {
     const data = await preparePieData({
@@ -57,7 +57,7 @@ function renderShapes({
     dispatcher,
     registerCompletion,
     signal,
-}: RenderShapesArgs<PreparedPieData>) {
+}: RenderShapesArgs<PreparedPieData, PreparedSeriesOptions>) {
     return renderPie(
         {plot, labelsPlot},
         preparedData,
@@ -94,7 +94,7 @@ export const piePlugin = {
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,
-        getValueFormatContext: (item) => {
+        getValueFormatContext: (item: TooltipDataChunkPie) => {
             return {
                 percentage: item.percentage,
                 name: item.data.name,

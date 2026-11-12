@@ -4,7 +4,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
@@ -23,7 +23,7 @@ import type {HeatmapTooltipChunk, PreparedHeatmapData} from './types';
 import './styles.scss';
 
 async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedHeatmapSeries>,
+    args: PrepareShapeDataArgs<PreparedHeatmapSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareShapeDataResult<PreparedHeatmapData, PreparedHeatmapData>> {
     const {series, xAxis, xScale, yAxis, yScale} = args;
 
@@ -53,7 +53,7 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedHeatmapData>) {
+}: RenderShapesArgs<PreparedHeatmapData, PreparedSeriesOptions>) {
     return renderHeatmap({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 

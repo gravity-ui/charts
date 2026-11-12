@@ -4,7 +4,14 @@ import get from 'es-toolkit/compat/get';
 import type {DashStyle} from '../constants';
 import type {GetTooltipValueArgs} from '../series/plugin';
 import {getRectPath} from '../shapes/utils';
-import type {ChartSeriesData, ChartTooltip, ChartXAxis, ChartYAxis, ValueFormat} from '../types';
+import type {
+    ChartSeriesData,
+    ChartTooltip,
+    ChartXAxis,
+    ChartYAxis,
+    TooltipDataChunk,
+    ValueFormat,
+} from '../types';
 import {createLineSymbol, getDefaultDateFormat, tryGetDataCategoryValue} from '../utils';
 
 export function getTooltipAxisValue(
@@ -42,7 +49,7 @@ export function getTooltipScalarValue({item}: ScalarTooltipValueArgs) {
     return item.data.value;
 }
 
-export function getDefaultTooltipValue(args: GetTooltipValueArgs) {
+export function getDefaultTooltipValue(args: GetTooltipValueArgs<TooltipDataChunk>) {
     return 'value' in args.item.data
         ? getTooltipScalarValue({item: {data: args.item.data}})
         : getTooltipYValue(args);

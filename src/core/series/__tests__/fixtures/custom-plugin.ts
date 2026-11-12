@@ -1,10 +1,12 @@
 import {select} from 'd3-selection';
 
+import {CHART_ERROR_CODE, ChartError} from '../../../../libs';
 import type {BaseSeries, BaseSeriesLegend} from '../../../types';
 import {getInteractionElements} from '../../../utils/chart-interaction';
 import type {GetTooltipDataResult} from '../../../utils/tooltip-helpers';
-import type {SeriesPlugin, SeriesPluginData} from '../../plugin';
+import type {PrepareShapeDataArgs, SeriesPlugin, SeriesPluginData} from '../../plugin';
 import {prepareSeriesMetadata} from '../../prepare-series-metadata';
+import {registerSeriesPlugin} from '../../seriesRegistry';
 import type {BasePreparedSeries} from '../../types';
 
 export interface Sample {
@@ -109,7 +111,8 @@ export const sampleShapesPlugin = {
             .join('circle')
             .attr('cx', (lookup) => lookup.x)
             .attr('cy', (lookup) => lookup.y)
-            .attr('r', 1);
+            .attr('r', 1)
+            .attr('fill', (lookup) => lookup.owner.color);
         return () => plot.replaceChildren();
     },
 } satisfies SeriesPlugin<SampleTypes>;
@@ -117,6 +120,18 @@ export const sampleShapesPlugin = {
 export const samplePlugin = {
     ...sampleShapesPlugin,
     getLayerKey: ({seriesKey}) => seriesKey,
+    validate: ({series}) => {
+        if (
+            series.data.some(
+                (sample) => !Number.isFinite(sample.at) || !Number.isFinite(sample.amount),
+            )
+        ) {
+            throw new ChartError({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: 'Sample positions must be finite',
+            });
+        }
+    },
     prepareShapeData: (args) => {
         const result = sampleShapesPlugin.prepareShapeData(args);
         return {...result, tooltipItems: result.renderData.flatMap((shape) => shape.samples)};
@@ -179,6 +194,7 @@ export function checkAssociatedTypes(
     shape: SampleShape,
     lookup: SampleLookup,
     args: Parameters<SeriesPlugin<SamplePluginData>['prepareShapeData']>[0],
+    defaultArgs: PrepareShapeDataArgs<PreparedSampleSeries>,
 ) {
     // @ts-expect-error Lookup items belong to tooltip preparation, not render-layer data.
     const renderData: Parameters<typeof samplePlugin.renderShapes>[0]['preparedData'] = [lookup];
@@ -207,6 +223,36 @@ export function checkAssociatedTypes(
     const unrelatedOptions = args.seriesOptions.line;
     // @ts-expect-error Other plugins' prepared data stays opaque without allPrepared.
     const otherData = args.allSeries?.[0].data;
+    registerSeriesPlugin({
+        ...sampleShapesPlugin,
+        // @ts-expect-error Registration must enforce metadata without a separate satisfies check.
+        prepareSeries: () => [{type: 'sample'}],
+    });
+    registerSeriesPlugin({
+        ...sampleShapesPlugin,
+        // @ts-expect-error Registration must not infer any and accept raw series as prepared output.
+        prepareSeries: ({series}) => series,
+    });
+    const invalidChunk: NonNullable<SeriesPluginData['tooltipChunk']> = {
+        data: lookup.sample,
+        // @ts-expect-error Custom chunks must retain the series identity used by core.
+        series: {type: 'sample'},
+    };
+    // @ts-expect-error Standalone hook arguments do not expose built-in option namespaces by default.
+    const builtinOptions = defaultArgs.seriesOptions.line;
+    const tooltip: NonNullable<
+        SeriesPlugin<
+            SampleTypes & {
+                tooltipChunk: NonNullable<SeriesPluginData['tooltipChunk']>;
+            }
+        >['tooltip']
+    > = {
+        prepareData: () => ({
+            // @ts-expect-error Even a broadly declared chunk must belong to this plugin's raw type.
+            chunks: [{data: lookup.sample, series: {...lookup.owner, type: 'line'}}],
+        }),
+        rows: [],
+    };
     // Optional capabilities retain custom series types without joining built-in unions.
     const capabilities: Pick<
         SeriesPlugin<SamplePluginData>,
@@ -229,5 +275,8 @@ export function checkAssociatedTypes(
         unrelatedOptions,
         otherData,
         capabilities,
+        invalidChunk,
+        builtinOptions,
+        tooltip,
     };
 }

@@ -4,7 +4,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
@@ -27,7 +27,7 @@ async function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedRadarSeries>): Promise<
+}: PrepareShapeDataArgs<PreparedRadarSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
     PrepareShapeDataResult<PreparedRadarData, PreparedRadarData>
 > {
     const data = await prepareRadarData({
@@ -49,7 +49,7 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedRadarData>) {
+}: RenderShapesArgs<PreparedRadarData, PreparedSeriesOptions>) {
     return renderRadar({plot, labelsPlot}, preparedData, seriesOptions, dispatcher);
 }
 

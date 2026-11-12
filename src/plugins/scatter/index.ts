@@ -5,7 +5,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {calculateNumericProperty} from '~core/utils';
@@ -29,7 +29,7 @@ import type {PreparedScatterData, PreparedScatterShapeData, ScatterTooltipChunk}
 import './styles.scss';
 
 async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedScatterSeries>,
+    args: PrepareShapeDataArgs<PreparedScatterSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareShapeDataResult<PreparedScatterShapeData, PreparedScatterData>> {
     const {
         series,
@@ -76,7 +76,7 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedScatterShapeData>) {
+}: RenderShapesArgs<PreparedScatterShapeData, PreparedSeriesOptions>) {
     return renderScatter({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 

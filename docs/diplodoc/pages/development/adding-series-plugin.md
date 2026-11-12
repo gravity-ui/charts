@@ -1,33 +1,83 @@
 # Adding a series plugin
 
-Add a series type in `src/plugins/<type>/`. Its plugin owns data preparation, geometry, rendering, styles, defaults, and interaction. Core combines plugins into a chart.
+A plugin owns its data preparation, geometry, rendering, defaults, and interaction. This example adds circles positioned in plot-relative pixels; axes and other capabilities can be added later.
 
 {% note info %}
 
-This guide covers adding a built-in type to the repository. External registration and selective imports are not yet supported.
+This guide covers adding a type to this repository. External registration and selective imports are not yet supported.
 
 {% endnote %}
 
-## 1. Define the data and plugin
+## 1. Define the configuration
 
-Define the raw series and point types, then decide which features the series supports: axes, mixed charts, labels, tooltip, zoom, and range-slider previews. Follow existing config names and defaults. Put specialized options on the new series type; add fields to `Base*` only when every series implements them.
-
-Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts). Its main flow is:
-
-1. `prepareSeries` resolves raw configuration into prepared series.
-2. `prepareShapeData` produces render geometry and private tooltip/interaction lookup data.
-3. `renderShapes` draws geometry into `plot` and SVG labels into `labelsPlot`.
-
-Keep implementation files and styles in the plugin directory; import styles from its entry point. Reuse core's geometry, label, marker, and measurement helpers.
-
-Use one type map with `SeriesPlugin`. A minimum declaration needs only raw series, prepared series, and geometry types:
+Create `src/core/types/chart/sample.ts`:
 
 ```typescript
-const samplePlugin = {
+import type {BaseSeries, BaseSeriesLegend} from './base';
+
+export interface SampleSeries extends BaseSeries {
+  type: 'sample';
+  name?: string;
+  legend?: BaseSeriesLegend;
+  data: {at: number; amount: number}[];
+}
+```
+
+Keep specialized settings on this type. Add fields to `Base*` only when every series implements them.
+
+## 2. Prepare and render
+
+Create `src/plugins/sample/prepared-series.ts`. Shared chart code requires this metadata even when the legend is disabled:
+
+```typescript
+import type {BasePreparedSeries} from '~core/series/types';
+import type {SampleSeries} from '../../types';
+
+export interface PreparedSampleSeries extends BasePreparedSeries {
+  type: SampleSeries['type'];
+  data: SampleSeries['data'];
+}
+```
+
+Then create `src/plugins/sample/index.ts`:
+
+```typescript
+import {select} from 'd3-selection';
+import type {SeriesPlugin} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
+import type {SampleSeries} from '../../types';
+import type {PreparedSampleSeries} from './prepared-series';
+
+interface SampleShape {
+  x: number;
+  y: number;
+  color: string;
+}
+
+export const samplePlugin = {
   type: 'sample',
-  prepareSeries,
-  prepareShapeData,
-  renderShapes,
+  prepareSeries: ({series, colorScale, legend}) =>
+    series.map((raw) => ({
+      ...prepareSeriesMetadata({series: raw, color: colorScale(raw.name ?? ''), legend}),
+      type: raw.type,
+      data: raw.data,
+    })),
+  prepareShapeData: ({series}) => ({
+    renderData: series.flatMap((s) =>
+      s.data.map((point) => ({x: point.at, y: point.amount, color: s.color})),
+    ),
+  }),
+  renderShapes: ({plot, preparedData}) => {
+    select(plot)
+      .selectAll<SVGCircleElement, SampleShape>('circle')
+      .data(preparedData)
+      .join('circle')
+      .attr('cx', (point) => point.x)
+      .attr('cy', (point) => point.y)
+      .attr('r', 3)
+      .attr('fill', (point) => point.color);
+    return () => plot.replaceChildren();
+  },
 } satisfies SeriesPlugin<{
   raw: SampleSeries;
   prepared: PreparedSampleSeries;
@@ -35,69 +85,47 @@ const samplePlugin = {
 }>;
 ```
 
-Add `options` for the plugin's config namespace. Lookup defaults to geometry; specify `tooltipItem` when they differ. Tooltip chunks default to raw points with prepared series metadata; specify `tooltipChunk`, `formatContext`, or `interaction` for different payloads. Mixed-chart context is opaque unless explicitly described with `allRaw`/`allPrepared`.
+`prepareSeriesMetadata` supplies common defaults and chart-unique IDs, retaining an explicit ID when the raw type provides one. Pass a resolved `symbol` for a custom legend symbol. A stable `legend.groupId` preserves selection across data updates.
 
-Every plugin uses the same contract. See the [custom-plugin fixture](https://github.com/gravity-ui/charts/blob/main/src/core/series/__tests__/fixtures/custom-plugin.ts) for the minimal declaration and optional adapters.
+Keep raw configuration and original points intact. Store derived values separately; use `withSourcePoint` for derived point copies and `getSourcePoint` for nested callback payloads. Hoist reusable calculations and DOM measurements out of point loops.
 
-## 2. Prepare and render the series
+## 3. Connect the type
 
-Prepared series must include `BasePreparedSeries` metadata, even with the legend disabled. Use `prepareSeriesMetadata` from `core/series/prepare-series-metadata.ts` for common defaults, then add the plugin's `type` and prepared data. For example, inside the plugin declaration:
+- Add `SampleSeries` to `ChartSeries` and `SampleSeries['data'][number]` to `ChartSeriesData` in `src/core/types/chart/series.ts`.
+- Export the config type from `src/core/types/index.ts`; add the identifier to `src/core/constants/chart-types.ts`.
+- Import and include `PreparedSampleSeries` in `PreparedSeries` in `src/core/series/types.ts`.
+- Import `samplePlugin` and call `registerSeriesPlugin(samplePlugin)` in `src/plugins/index.ts`. Import any plugin styles from its own entry point.
+
+After these changes, a chart can use:
 
 ```typescript
-prepareSeries: ({series, colorScale, legend}) =>
-    series.map((raw) => ({
-        ...prepareSeriesMetadata({
-            series: raw,
-            color: colorScale(raw.name ?? ''),
-            legend,
-        }),
-        type: raw.type,
-        data: raw.data,
-    })),
+{
+  series: {
+    data: [{type: 'sample', name: 'Orders', data: [{at: 40, amount: 30}, {at: 80, amount: 60}]}],
+  },
+}
 ```
 
-The helper accepts a resolved color and an optional resolved legend symbol. IDs must be chart-unique across preparation calls and layers; the helper generates them and retains an explicit ID when the raw type provides one. Core rejects duplicate IDs. Use `legend.groupId` to preserve legend selection across data updates.
+For namespace options, extend `ChartSeriesOptions`, add `options` to the plugin's type map, and provide `defaults`. Shape preparation and rendering receive defaults merged with user options; `prepareSeries` receives raw options and resolves its own fallbacks. Keep defaults immutable.
 
-`prepareShapeData` returns private `renderData` for rendering. Supply `tooltipItems` when tooltip or interaction needs lookup data; core retains their owner separately, so they need no `type` or `series` field. Both fields can use different structures.
+## 4. Add capabilities as needed
 
-Return `markers`, `annotations`, `htmlLabels`, and `getHoverMarkers` only when needed; core renders these separately from the geometry. Use `layoutData` to reserve label groups for lower layers through their `otherLayers` input. SVG labels stay in render geometry or the layer-wide `labels` field.
+- **Labels and markers:** return `markers`, `annotations`, `htmlLabels`, and `getHoverMarkers` for core rendering. These can accompany empty `renderData`. Reserve label groups through `layoutData`; lower layers receive them as `otherLayers`. Draw SVG labels in `labelsPlot`.
+- **Tooltip:** return explicit `tooltipItems` from `prepareShapeData`. Their payload type defaults to the geometry type; core never copies `renderData` into lookup output. Declare `tooltipItem` when the types differ. Use the plugin’s prepared series in every chunk.
+- **Interaction:** independently implement `prepareNearestData` for chart queries and `getTargetElements` for painted SVG targets. Return original points; use `getClosestItem` for composite selections. Include permanent markers and exclude hover markers and labels.
+- **Axes:** `axes: true` enables scalar X/Y coordinates; [SeriesAxes](https://github.com/gravity-ui/charts/blob/main/src/core/series/axis-contract.ts) supports custom domains and ticks. Guard absent scales, choose the series' Y axis (default `0`), and add the split plot's top once to projected Y. Reuse `getXValue`/`getYValue` from `core/shapes/utils.ts`.
+- **Layout and viewport:** use `axisPadding` for label/paint reserves, `getLayerKey` for independent layers, and `getClipPath` for clipping. Declare zoom directions in `zoom`, reuse `filterPoints` for custom filtering, and provide `prepareGradientGeometry` for full-series paint references.
 
-Preserve raw configuration and original points. Store derived values separately, register derived point copies with `withSourcePoint`, and use `getSourcePoint` for nested callback payloads. Hoist reusable calculations and DOM measurements out of point loops.
+`tooltip.prepareData` returns either selected `{chunks}` or `{xLookupPoints}` for core X-column selection. Preserve formatter fields in every lookup point. Mark at most one chunk `closest`; when `measureDistance` is true, measure distance to drawn geometry for that chunk and every lookup point. Define `rows`, optional `getValue`, `header`, and `getValueFormatContext` for content and formatting.
 
-Preparation can run for several layers and slider previews. Core calls render cleanup before reusing a container or unmounting. Register delayed DOM work during rendering and respect the cancellation signal; see [RenderShapesArgs](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts).
+Preparation may run for several layers and slider previews. Core calls render cleanup before container reuse or unmounting. Register delayed DOM work during rendering and respect `signal`; see [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts). Derive extracted hook arguments from `Parameters<SeriesPlugin<…>['prepareShapeData']>[0]` to reuse the type map.
 
-## 3. Add tooltip and interaction
+The [custom-plugin fixture](https://github.com/gravity-ui/charts/blob/main/src/core/series/__tests__/fixtures/custom-plugin.ts) demonstrates separate render/lookup payloads, validation, tooltip, and interaction.
 
-`tooltip.prepareData` returns one selection strategy:
+## 5. Verify and document
 
-- `{chunks}`: the plugin selects tooltip chunks itself.
-- `{xLookupPoints}`: core selects points in the nearest X column. Each point must carry the chunk's required fields, including formatter context.
+Test supported behavior through `Chart`: mixed series, legend selection, original-point callbacks, data replacement, resize, and cleanup. Reuse existing boundary tests; check any new layout math with empty, zero, oversized, and negative space. Test registration in isolation from Jest's built-in setup.
 
-Do not return both strategies. Multiple chunks and multiple rows per chunk are supported. Mark at most one selected chunk `closest`; when `measureDistance` is true, provide distance to the drawn geometry for that chunk and every X lookup point. Core resolves the active chunk across plugins, preferring the upper layer on equal distance. Reuse core's geometry helpers and cache reusable contours.
+Run type checking, focused tests, Docker visual checks, and `npm run test:chart-config`; inspect changed snapshots, the standalone declaration, and JSON Schema. Add a Storybook story and a guide with a live `docs/examples` example for the supported configuration; see [Local development](../development.md#documentation-examples).
 
-Define `tooltip.rows` for displayed content, `getValue` for sorting/totals, and optional `header` and `getValueFormatContext` for formatting. Return raw values and resolve category indices to names. Reuse helpers from `core/tooltip/utils.ts`.
-
-Tooltip and interaction are independent optional capabilities. For chart queries and clicks, implement `interaction.prepareNearestData` with unfiltered reference positions and `getTargetElements` with painted SVG geometry. Map every target to its original point and series. Include permanent markers; exclude labels and hover markers. Use `getClosestItem` for composite selections.
-
-## 4. Register and verify
-
-- Register the plugin in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts).
-- Extend the raw series/options unions and public type exports. Add the prepared type to `core/series/types.ts`.
-- Expose namespace defaults through `plugin.defaults`. Shape preparation and rendering receive defaults merged with user `series.options`. `prepareSeries` receives raw options and resolves its own fallbacks; apply individual series and point overrides there. Keep defaults and input immutable.
-- Add focused tests for supported features, including mixed charts, visibility/data updates, resize, and relevant zoom/slider behavior. Check empty data and zero-sized plots. Test registration separately from Jest's automatic built-in setup.
-- Run type checking, focused unit tests, Docker visual tests, and `npm run test:chart-config`. Inspect changed snapshots, the standalone declaration, and JSON Schema.
-- Add a Storybook story and a user guide with a live `docs/examples` example. See [Local development](../development.md#documentation-examples).
-
-Keep series-specific behavior in the plugin. Extend the contract when needed; do not add series-name branches or plugin implementation imports to shared runtime.
-
-## Additional capabilities
-
-Use these only when the new series needs them:
-
-- **Axes:** `axes: true` enables scalar X/Y coordinates. For custom coordinates, domains, or ticks, use [SeriesAxes](https://github.com/gravity-ui/charts/blob/main/src/core/series/axis-contract.ts). Core selects visible contributions and combines requests. Guard absent scales, select the series' Y axis (default `0`), and add its split plot's top once to projected Y. Reuse `getXValue`/`getYValue` from `core/shapes/utils.ts` for scalar/category projection.
-- **Padding:** `axisPadding` reserves label space before the initial X scale and measures paint extents before scale fitting. Follow the units and precedence in [SeriesAxisPadding](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts); account for split-plot origins.
-- **Zoom:** declare supported directions in `zoom`. Use `filterData` for custom coordinates or retained path anchors, reusing `filterPoints` from `core/zoom/filter-data.ts`. Keep filtering, domains, sorting, and missing-value handling consistent with rendering.
-- **Layers:** the default is one layer per plugin type. `getLayerKey` selects independent layers or groups; `getClipPath` controls shape/SVG-label clipping. Preserve stack/group geometry when partitioning layers.
-- **Gradients:** provide `prepareGradientGeometry` when paints need a full-series reference across viewport changes.
-
-The [plugin contract](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts) documents capability arguments, results, and defaults.
+Keep series-specific decisions inside plugins. Extend the contract when necessary rather than adding series-name branches to shared runtime.

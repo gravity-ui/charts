@@ -96,8 +96,5 @@ export function prepareSankeyData(args: {
         links: sankeyLinks,
         htmlLabels,
         labels: dataLabels,
-        markers: [],
-        getHoverMarkers: () => [],
-        annotations: [],
     };
 }

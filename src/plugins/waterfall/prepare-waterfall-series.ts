@@ -3,8 +3,10 @@ import get from 'es-toolkit/compat/get';
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
+import type {ChartSeriesOptions} from '~core/types';
 import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
@@ -31,18 +33,21 @@ function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
 }
 
 export function prepareWaterfallSeries(
-    args: PrepareSeriesArgs<WaterfallSeries>,
+    args: PrepareSeriesArgs<WaterfallSeries, ChartSeriesOptions>,
 ): PreparedWaterfallSeries[] {
     const {colorScale, series: seriesList, legend, colors, yAxis} = args;
     const [, negativeColor, positiveColor] = colors;
     const series = seriesList[0];
 
-    const common: PreparedWaterfallSeries = {
-        id: '',
+    const metadata = prepareSeriesMetadata({
+        series: {...series, id: '', legend: undefined},
         color: seriesList[0].color || colorScale(seriesList[0].name),
+        legend: {enabled: series.legend?.enabled ?? legend.enabled},
+        symbol: prepareLegendSymbol(series),
+    });
+    const common: PreparedWaterfallSeries = {
+        ...metadata,
         type: series.type,
-        name: series.name,
-        visible: get(series, 'visible', true),
         connectors: {
             enabled: series.connectors?.enabled ?? true,
         },
@@ -54,19 +59,11 @@ export function prepareWaterfallSeries(
             html: get(series, 'dataLabels.html', false),
             format: series.dataLabels?.format,
         },
-        legend: {
-            enabled: get(series, 'legend.enabled', legend.enabled),
-            symbol: prepareLegendSymbol(series),
-            groupId: '',
-            itemText: '',
-        },
-        cursor: get(series, 'cursor', null),
         data: [],
         tooltip: {
             ...series.tooltip,
             valueFormat: series.tooltip?.valueFormat ?? getDefaultValueFormat({axis: yAxis?.[0]}),
         },
-        custom: series.custom,
     };
 
     const positiveName = series.legend?.itemText?.positive ?? `${series.name} ↑`;

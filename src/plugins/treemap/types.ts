@@ -1,6 +1,6 @@
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
 import type {TooltipDataChunkTreemap} from '~core/types';
 
 import type {TreemapSeriesData} from '../../types';
@@ -18,7 +18,7 @@ export type PreparedTreemapData = {
     labelData: TreemapLabelData[];
     leaves: HierarchyRectangularNode<TreemapSeriesData<any>>[];
     series: PreparedTreemapSeries;
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
 
 export interface TreemapTooltipChunk extends Omit<TooltipDataChunkTreemap, 'series'> {
     series: PreparedTreemapSeries;

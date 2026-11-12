@@ -1,4 +1,3 @@
-import type {SeriesShapeData} from '~core/shapes/types';
 import type {TooltipDataChunkBarY} from '~core/types';
 
 import type {HtmlItem, LabelData} from '../../types';
@@ -19,7 +18,7 @@ export type PreparedBarYData = Omit<TooltipDataChunkBarY, 'series'> & {
     series: PreparedBarYSeries;
 };
 
-export interface BarYShapesArgs extends SeriesShapeData {
+export interface BarYShapesArgs {
     shapes: PreparedBarYData[];
     svgLabels: LabelData[];
     htmlLabels: (HtmlItem & {series: PreparedBarYSeries})[];

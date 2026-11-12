@@ -1,4 +1,4 @@
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
 import type {TooltipDataChunkXRange} from '~core/types';
 
 import type {LabelData} from '../../types';
@@ -13,7 +13,7 @@ export type PreparedXRangeData = Omit<TooltipDataChunkXRange, 'series'> & {
     color: string;
     series: PreparedXRangeSeries;
     svgLabels: LabelData[];
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
 
 export interface XRangeTooltipChunk extends Omit<TooltipDataChunkXRange, 'series'> {
     series: PreparedXRangeSeries;

@@ -43,6 +43,7 @@ export interface HoveredShapeData {
     y1?: number;
 }
 
+/** Core-rendered layer fields, returned separately from a plugin's private geometry. */
 export interface SeriesShapeData {
     htmlLabels: HtmlItem[];
     markers: MarkerItem[];

@@ -19,9 +19,12 @@ const registry = new Map<
     }>
 >();
 
-// The heterogeneous registry erases associations here; concrete plugin declarations
-// retain their own data types. The chart's public input is still built-in.
-export function registerSeriesPlugin<T extends ReturnType<typeof getSeriesPlugin>>(plugin: T) {
+// Check preparation against common metadata before erasing concrete plugin types
+// in storage. The chart's public input is still built-in.
+export function registerSeriesPlugin<
+    T extends Omit<ReturnType<typeof getSeriesPlugin>, 'prepareSeries'> &
+        Pick<SeriesPlugin, 'prepareSeries'>,
+>(plugin: T) {
     registry.set(plugin.type, plugin);
 }
 

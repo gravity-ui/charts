@@ -3,6 +3,7 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
@@ -36,7 +37,23 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
         (dataItem) => {
             const id = getUniqId();
             const color = dataItem.color || colorScale(dataItem.name);
+            const metadata = prepareSeriesMetadata({
+                series: {
+                    ...dataItem,
+                    id,
+                    cursor: series.cursor,
+                    tooltip: series.tooltip,
+                    custom: series.custom,
+                    visible: true,
+                },
+                color,
+                legend: {enabled: series.legend?.enabled ?? legend.enabled},
+                symbol: dataItem.legend?.symbol
+                    ? prepareLegendSymbol(dataItem)
+                    : prepareLegendSymbol(series),
+            });
             const result: PreparedFunnelSeries = {
+                ...metadata,
                 type: 'funnel',
                 shape,
                 data: dataItem,
@@ -52,22 +69,7 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                     padding: series.dataLabels?.padding ?? DEFAULT_DATALABELS_PADDING,
                     preserveLineBreaks: series.dataLabels?.preserveLineBreaks ?? false,
                 },
-                visible: true,
-                name: dataItem.name,
-                id,
-                color,
-                legend: {
-                    enabled: dataItem.legend?.enabled ?? series.legend?.enabled ?? legend.enabled,
-                    symbol: dataItem.legend?.symbol
-                        ? prepareLegendSymbol(dataItem)
-                        : prepareLegendSymbol(series),
-                    groupId: dataItem.legend?.groupId ?? getUniqId(),
-                    source: dataItem.legend,
-                    itemText: dataItem.legend?.itemText ?? dataItem.name,
-                },
-                cursor: get(series, 'cursor', null),
                 opacity: dataItem.opacity ?? null,
-                tooltip: series.tooltip,
                 connectors: {
                     enabled: isConnectorsEnabled,
                     height: isConnectorsEnabled
@@ -80,7 +82,6 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
                     areaOpacity: series.connectors?.areaOpacity ?? (isTrapezoid ? 0 : 0.25),
                     lineWidth: series.connectors?.lineWidth ?? 1,
                 },
-                custom: series.custom,
             };
 
             return result;

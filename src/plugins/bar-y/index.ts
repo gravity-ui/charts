@@ -5,7 +5,7 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {BarYFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
@@ -41,7 +41,7 @@ import type {BarYShapesArgs, BarYTooltipChunk, PreparedBarYData} from './types';
 import './styles.scss';
 
 async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedBarYSeries>,
+    args: PrepareShapeDataArgs<PreparedBarYSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareShapeDataResult<BarYShapesArgs, PreparedBarYData>> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale, boundsHeight, boundsWidth} = args;
 
@@ -93,7 +93,7 @@ function renderShapes({
     seriesOptions,
     dispatcher,
     labels,
-}: RenderShapesArgs<BarYShapesArgs>) {
+}: RenderShapesArgs<BarYShapesArgs, PreparedSeriesOptions>) {
     const cleanup = renderBarY({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
     renderStackLabels(labelsPlot, labels);
     return cleanup;

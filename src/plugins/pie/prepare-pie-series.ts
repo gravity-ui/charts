@@ -3,6 +3,7 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
@@ -43,7 +44,22 @@ export function preparePieSeries(args: PreparePieSeriesArgs): PreparedPieSeries[
 
         return preparedData.map<PreparedPieSeries>((dataItem) => {
             const id = getUniqId();
+            const metadata = prepareSeriesMetadata({
+                series: {
+                    ...dataItem,
+                    id,
+                    cursor: series.cursor,
+                    tooltip: series.tooltip,
+                    custom: series.custom,
+                },
+                color: dataItem.color || colorScale(dataItem.name),
+                legend: {enabled: series.legend?.enabled ?? legend.enabled},
+                symbol: dataItem.legend?.symbol
+                    ? prepareLegendSymbol(dataItem)
+                    : prepareLegendSymbol(series),
+            });
             const result: PreparedPieSeries = {
+                ...metadata,
                 type: 'pie',
                 data: dataItem,
                 dataLabels: {
@@ -60,19 +76,6 @@ export function preparePieSeries(args: PreparePieSeriesArgs): PreparedPieSeries[
                 },
                 label: dataItem.label,
                 value: dataItem.value,
-                visible: typeof dataItem.visible === 'boolean' ? dataItem.visible : true,
-                name: dataItem.name,
-                id,
-                color: dataItem.color || colorScale(dataItem.name),
-                legend: {
-                    enabled: dataItem.legend?.enabled ?? series.legend?.enabled ?? legend.enabled,
-                    symbol: dataItem.legend?.symbol
-                        ? prepareLegendSymbol(dataItem)
-                        : prepareLegendSymbol(series),
-                    groupId: dataItem.legend?.groupId ?? getUniqId(),
-                    source: dataItem.legend,
-                    itemText: dataItem.legend?.itemText ?? dataItem.name,
-                },
                 center: series.center || ['50%', '50%'],
                 borderColor: series.borderColor || '',
                 borderRadius: series.borderRadius ?? 0,
@@ -92,9 +95,6 @@ export function preparePieSeries(args: PreparePieSeriesArgs): PreparedPieSeries[
                 },
                 renderCustomShape: series.renderCustomShape,
                 opacity: get(dataItem, 'opacity', null),
-                cursor: get(series, 'cursor', null),
-                tooltip: series.tooltip,
-                custom: series.custom,
             };
 
             return result;

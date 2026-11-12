@@ -2,6 +2,7 @@ import type {ScaleOrdinal} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
@@ -26,8 +27,14 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
         const name = s.name || '';
         const color = colorScale(name);
 
-        const preparedSeries: PreparedSankeySeries = {
+        const metadata = prepareSeriesMetadata({
+            series: {...s, id, name},
             color,
+            legend,
+            symbol: prepareLegendSymbol(s),
+        });
+        const preparedSeries: PreparedSankeySeries = {
+            ...metadata,
             data: s.data.map((d) =>
                 withSourcePoint(d, {
                     custom: d.custom,
@@ -41,20 +48,7 @@ export function prepareSankeySeries(args: PrepareSankeySeriesArgs) {
                 style: Object.assign({}, DEFAULT_DATALABELS_STYLE, s.dataLabels?.style),
                 format: s.dataLabels?.format,
             },
-            id,
             type: s.type,
-            name,
-            visible: get(s, 'visible', true),
-            legend: {
-                enabled: get(s, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(s),
-                groupId: s.legend?.groupId ?? getUniqId(),
-                source: s.legend,
-                itemText: s.legend?.itemText ?? name,
-            },
-            cursor: get(s, 'cursor', null),
-            tooltip: s.tooltip,
-            custom: s.custom,
         };
 
         return preparedSeries;

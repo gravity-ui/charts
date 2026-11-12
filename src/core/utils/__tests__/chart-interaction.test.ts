@@ -1,10 +1,14 @@
 /** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
+import {scaleOrdinal} from 'd3-scale';
+
 import {getTargetElements as heatmapTargets} from '../../../plugins/heatmap/interaction';
 import {sankeyPlugin} from '../../../plugins/sankey';
 import {getTargetElements as sankeyTargets} from '../../../plugins/sankey/interaction';
+import type {SankeyTooltipChunk} from '../../../plugins/sankey/types';
 import {getTargetElements as treemapTargets} from '../../../plugins/treemap/interaction';
-import type {SankeySeries, TooltipDataChunkSankey} from '../../../types';
+import type {SankeySeries} from '../../../types';
+import type {PreparedLegendOptions} from '../../series/types';
 import {getChartTargets, registerInteractionLayer} from '../chart-interaction';
 
 const svgNamespace = 'http://www.w3.org/2000/svg';
@@ -47,7 +51,13 @@ test('Sankey interaction adapters distinguish nodes from links and retain zero l
     const series: SankeySeries = {type: 'sankey', name: 'Flow', data: [source, target]};
     const getItem = sankeyPlugin.interaction?.getClosestItem;
     if (!getItem) throw new Error('Missing Sankey interaction adapter');
-    const node: TooltipDataChunkSankey = {data: source, series};
+    const [prepared] = sankeyPlugin.prepareSeries({
+        series: [series],
+        colorScale: scaleOrdinal<string, string>().range(['black']),
+        colors: ['black'],
+        legend: {enabled: false} as PreparedLegendOptions,
+    });
+    const node: SankeyTooltipChunk = {data: source, series: prepared};
     expect(getItem(node).point).toBe(source);
     expect(getItem({...node, target}).point).toEqual({kind: 'link', source, target, value: 5});
     expect(getItem({...node, target, value: 0}).point).toEqual({

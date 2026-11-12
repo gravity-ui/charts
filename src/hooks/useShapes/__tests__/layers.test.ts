@@ -114,27 +114,42 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
     });
 });
 
-it('passes explicit layer fields without adding them to private render geometry', async () => {
+it.each([false, true])(
+    'passes explicit layer fields independently of private geometry (empty: %s)',
+    async (empty) => {
+        const series = await prepare([rawSeries[0]]);
+        const renderData = empty ? [] : [Object.freeze({radius: 3})];
+        const {markers, annotations, getHoverMarkers} = createShape();
+        const htmlLabels = [{x: 10, y: 20, content: 'Orders', size: {width: 40, height: 16}}];
+        jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
+            renderData,
+            markers,
+            annotations,
+            htmlLabels,
+            getHoverMarkers,
+        });
+
+        const {shapes, shapesData} = await getShapes(getShapeArgs(series));
+        const {props} = shapes[0];
+        expect(props.preparedData).toBe(renderData);
+        expect(props.markers).toBe(markers);
+        expect(props.annotations).toBe(annotations);
+        expect(props.htmlLabels).toBe(htmlLabels);
+        expect(props.getHoverMarkers).toBe(getHoverMarkers);
+        expect(shapesData).toEqual([]);
+    },
+);
+
+it('retains a layer that only supplies hover markers', async () => {
     const series = await prepare([rawSeries[0]]);
-    const renderData = [Object.freeze({radius: 3})];
-    const {markers, annotations, getHoverMarkers} = createShape();
-    const htmlLabels = [{x: 10, y: 20, content: 'Orders', size: {width: 40, height: 16}}];
+    const {getHoverMarkers} = createShape();
     jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
-        renderData,
-        markers,
-        annotations,
-        htmlLabels,
+        renderData: [],
         getHoverMarkers,
     });
-
-    const {shapes, shapesData} = await getShapes(getShapeArgs(series));
-    const {props} = shapes[0];
-    expect(props.preparedData).toBe(renderData);
-    expect(props.markers).toBe(markers);
-    expect(props.annotations).toBe(annotations);
-    expect(props.htmlLabels).toBe(htmlLabels);
-    expect(props.getHoverMarkers).toBe(getHoverMarkers);
-    expect(shapesData).toEqual([]);
+    const {shapes} = await getShapes(getShapeArgs(series));
+    expect(shapes).toHaveLength(1);
+    expect(shapes[0].props.getHoverMarkers).toBe(getHoverMarkers);
 });
 
 interface ClipCase {

@@ -5,7 +5,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {AreaFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
@@ -104,7 +104,7 @@ export const areaPlugin = {
     },
     getColorValue: (d) => d.y,
     prepareShapeData: async function (
-        args: PrepareShapeDataArgs<PreparedAreaSeries>,
+        args: PrepareShapeDataArgs<PreparedAreaSeries, PreparedSeriesOptions, PreparedSeries>,
     ): Promise<PrepareShapeDataResult<PreparedAreaData, PreparedAreaData>> {
         const {
             series,
@@ -164,7 +164,7 @@ export const areaPlugin = {
         seriesOptions,
         dispatcher,
         labels,
-    }: RenderShapesArgs<PreparedAreaData>) {
+    }: RenderShapesArgs<PreparedAreaData, PreparedSeriesOptions>) {
         const data = preparedData;
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
         const cleanup = renderArea(

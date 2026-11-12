@@ -175,7 +175,8 @@ export const DefaultTooltipContent = ({
                 }
 
                 return tooltipRows.map((row, rowIndex) => {
-                    const rowCells: ReadonlyArray<PluginTooltipRowCell> = row.cells ?? [];
+                    const rowCells: ReadonlyArray<PluginTooltipRowCell<TooltipDataChunk>> =
+                        row.cells ?? [];
                     const rowId = 'id' in row ? row.id : String(rowIndex);
                     const key = `${seriesId}_${chunkIndex}_${rowId}`;
 

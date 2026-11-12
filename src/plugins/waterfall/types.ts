@@ -1,4 +1,4 @@
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
 import type {TooltipDataChunkWaterfall} from '~core/types';
 
 import type {LabelData, WaterfallSeriesData} from '../../types';
@@ -15,7 +15,7 @@ export type PreparedWaterfallData = {
     data: WaterfallSeriesData;
     label?: LabelData;
     subTotal: number;
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
 
 export interface WaterfallTooltipChunk extends Omit<TooltipDataChunkWaterfall, 'series'> {
     series: PreparedWaterfallSeries;

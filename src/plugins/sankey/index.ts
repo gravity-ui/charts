@@ -4,9 +4,9 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
-import type {ChartSeries, ChartSeriesOptions, TooltipDataChunkSankey} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {getSourcePoint} from '~core/utils/source-point';
 
 import type {SankeySeries} from '../../types';
@@ -18,9 +18,9 @@ import {prepareSankeyData} from './prepare-data';
 import {prepareSankeySeries} from './prepare-sankey-series';
 import type {PreparedSankeySeries} from './prepared-series';
 import {renderSankey} from './renderer';
-import type {PreparedSankeyData} from './types';
+import type {PreparedSankeyData, SankeyTooltipChunk} from './types';
 
-function getLinkValue({target, data: source, value}: TooltipDataChunkSankey) {
+function getLinkValue({target, data: source, value}: SankeyTooltipChunk) {
     return value ?? source.links.find((link) => link.name === target?.name)?.value;
 }
 
@@ -28,10 +28,11 @@ function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedSankeySeries>): PrepareShapeDataResult<
-    PreparedSankeyData,
-    PreparedSankeyData
-> {
+}: PrepareShapeDataArgs<
+    PreparedSankeySeries,
+    PreparedSeriesOptions,
+    PreparedSeries
+>): PrepareShapeDataResult<PreparedSankeyData, PreparedSankeyData> {
     const data = prepareSankeyData({
         series: series[0],
         width: boundsWidth,
@@ -51,7 +52,7 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedSankeyData>) {
+}: RenderShapesArgs<PreparedSankeyData, PreparedSeriesOptions>) {
     return renderSankey({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
@@ -121,7 +122,7 @@ export const sankeyPlugin = {
     prepared: PreparedSankeySeries;
     shape: PreparedSankeyData;
     options: ChartSeriesOptions;
-    tooltipChunk: TooltipDataChunkSankey;
+    tooltipChunk: SankeyTooltipChunk;
     interaction: SankeyInteractionItem;
     allRaw: ChartSeries;
     allPrepared: PreparedSeries;

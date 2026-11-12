@@ -4,7 +4,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
@@ -34,7 +34,7 @@ import {filterLineData, getLineAxisData} from './zoom';
 import './styles.scss';
 
 async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedLineSeries>,
+    args: PrepareShapeDataArgs<PreparedLineSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareShapeDataResult<PreparedLineData, PreparedLineData>> {
     const {
         series,
@@ -88,7 +88,7 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedLineData>) {
+}: RenderShapesArgs<PreparedLineData, PreparedSeriesOptions>) {
     return renderLine({plot, labelsPlot, getCurveFactory}, preparedData, seriesOptions, dispatcher);
 }
 

@@ -194,7 +194,7 @@ export async function getShapes(args: Args) {
             markers = [],
             annotations = [],
             htmlLabels = [],
-            getHoverMarkers = () => [],
+            getHoverMarkers,
             layoutData = [],
             labels,
             gradientGeometry,
@@ -215,7 +215,16 @@ export async function getShapes(args: Args) {
         });
 
         if (gradientGeometry) preparedGradientGeometry.push(...gradientGeometry);
-        if (renderData.length === 0) {
+        if (
+            renderData.length === 0 &&
+            markers.length === 0 &&
+            annotations.length === 0 &&
+            htmlLabels.length === 0 &&
+            !labels?.length &&
+            layoutData.length === 0 &&
+            tooltipItems.length === 0 &&
+            !getHoverMarkers
+        ) {
             continue;
         }
 
@@ -247,7 +256,7 @@ export async function getShapes(args: Args) {
                 markers={markers}
                 annotations={annotations}
                 htmlLabels={htmlLabels}
-                getHoverMarkers={getHoverMarkers}
+                getHoverMarkers={getHoverMarkers ?? (() => [])}
                 labels={labels}
                 boundsWidth={boundsWidth}
                 boundsHeight={boundsHeight}

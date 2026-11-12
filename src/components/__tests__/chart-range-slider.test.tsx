@@ -1,7 +1,6 @@
 /** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 import React from 'react';
 
-import {ThemeProvider} from '@gravity-ui/uikit';
 import {waitFor} from '@testing-library/react';
 
 import {DAY} from '~core/constants';
@@ -49,12 +48,7 @@ describe('Chart/rangeSlider', () => {
 
     function renderUpdatableChart(data: ChartData) {
         const {container, rerender} = renderChart(<Chart data={data} />);
-        const update = (nextData: ChartData) =>
-            rerender(
-                <ThemeProvider theme="light">
-                    <Chart data={nextData} />
-                </ThemeProvider>,
-            );
+        const update = (nextData: ChartData) => rerender(<Chart data={nextData} />);
         return {container, update};
     }
 

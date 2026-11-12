@@ -5,7 +5,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
@@ -28,7 +28,7 @@ async function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedTreemapSeries>): Promise<
+}: PrepareShapeDataArgs<PreparedTreemapSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
     PrepareShapeDataResult<PreparedTreemapData, PreparedTreemapData>
 > {
     const data = await prepareTreemapData({
@@ -50,7 +50,7 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedTreemapData>) {
+}: RenderShapesArgs<PreparedTreemapData, PreparedSeriesOptions>) {
     return renderTreemap({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 

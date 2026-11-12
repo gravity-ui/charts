@@ -5,7 +5,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipYValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {getFormattedValue} from '~core/utils/format';
@@ -24,7 +24,7 @@ import {renderXRange} from './renderer';
 import type {PreparedXRangeData, XRangeTooltipChunk} from './types';
 
 async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedXRangeSeries>,
+    args: PrepareShapeDataArgs<PreparedXRangeSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareShapeDataResult<PreparedXRangeData, PreparedXRangeData>> {
     const {series, xAxis, xScale, yAxis, yScale, boundsWidth, isRangeSlider} = args;
 
@@ -56,7 +56,7 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedXRangeData>) {
+}: RenderShapesArgs<PreparedXRangeData, PreparedSeriesOptions>) {
     return renderXRange({plot, labelsPlot}, preparedData, seriesOptions, dispatcher);
 }
 

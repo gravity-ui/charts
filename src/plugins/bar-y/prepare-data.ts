@@ -367,9 +367,6 @@ export async function prepareBarYData(
         shapes: result.map((item) => item.shape),
         svgLabels,
         htmlLabels,
-        markers: [],
-        getHoverMarkers: () => [],
-        annotations: [],
     };
 }
 

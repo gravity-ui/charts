@@ -137,9 +137,6 @@ export async function prepareXRangeData(
                 series: s,
                 htmlLabels: [],
                 svgLabels: [],
-                markers: [],
-                getHoverMarkers: () => [],
-                annotations: [],
             });
         });
     });

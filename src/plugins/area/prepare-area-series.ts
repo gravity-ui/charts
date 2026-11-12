@@ -8,6 +8,7 @@ import {
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
@@ -65,7 +66,7 @@ function prepareSeriesData(series: AreaSeries): AreaSeriesData[] {
     }
 }
 
-export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
+export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries, ChartSeriesOptions>) {
     const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
     const defaultAreaWidth = get(seriesOptions, 'area.lineWidth', DEFAULT_LINE_WIDTH);
     const defaultOpacity = get(seriesOptions, 'area.opacity', 0.75);
@@ -82,22 +83,17 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
             typeof areaFillColor === 'string' ? areaFillColor : getGradientMidColor(areaFillColor);
         const yAxisIndex = get(series, 'yAxis', 0);
 
-        const prepared: PreparedAreaSeries = {
-            type: series.type,
+        const metadata = prepareSeriesMetadata({
+            series: {...series, id, name},
             color,
+            legend,
+            symbol: prepareLegendSymbol(series),
+        });
+        const prepared: PreparedAreaSeries = {
+            ...metadata,
+            type: series.type,
             opacity: get(series, 'opacity', defaultOpacity),
             lineWidth: get(series, 'lineWidth', defaultAreaWidth),
-            name,
-            id,
-            visible: get(series, 'visible', true),
-            legend: {
-                color: fillColor,
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
-                groupId: series.legend?.groupId ?? getUniqId(),
-                source: series.legend,
-                itemText: series.legend?.itemText ?? name,
-            },
             data: prepareSeriesData(series),
             stacking: series.stacking,
             stackLabels: series.stackLabels,
@@ -112,7 +108,6 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
                 format: series.dataLabels?.format,
             },
             marker: prepareMarker(series, seriesOptions),
-            cursor: get(series, 'cursor', null),
             yAxis: yAxisIndex,
             tooltip: {
                 ...series.tooltip,
@@ -125,7 +120,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries>) {
             gradient,
             fillColor,
             fillGradient,
-            custom: series.custom,
+            legend: {...metadata.legend, color: fillColor},
         };
 
         prepared.fullData = prepared.data;

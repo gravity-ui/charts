@@ -3,6 +3,7 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
@@ -38,19 +39,15 @@ export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedHe
         const name = series.name || '';
         const color = series.color || colorScale(name);
 
-        return {
-            type: series.type,
+        const metadata = prepareSeriesMetadata({
+            series: {...series, id: getUniqId(), name},
             color,
-            name,
-            id: getUniqId(),
-            visible: get(series, 'visible', true),
-            legend: {
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
-                groupId: series.legend?.groupId ?? getUniqId(),
-                source: series.legend,
-                itemText: series.legend?.itemText ?? name,
-            },
+            legend,
+            symbol: prepareLegendSymbol(series),
+        });
+        return {
+            ...metadata,
+            type: series.type,
             data: prepareSeriesData(series),
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
@@ -59,15 +56,12 @@ export function prepareHeatmapSeries(args: PrepareHeatmapSeriesArgs): PreparedHe
                 html: series.dataLabels?.html ?? false,
                 format: series.dataLabels?.format,
             },
-            cursor: get(series, 'cursor', null),
             yAxis: get(series, 'yAxis', 0),
-            tooltip: series.tooltip,
             borderColor:
                 series.borderColor ??
                 seriesOptions?.heatmap?.borderColor ??
                 'var(--gcharts-shape-border-color)',
             borderWidth: series.borderWidth ?? seriesOptions?.heatmap?.borderWidth ?? 0,
-            custom: series.custom,
         };
     }, []);
 }

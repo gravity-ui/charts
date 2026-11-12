@@ -6,7 +6,7 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSeries} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterOverlappingLabels} from '~core/utils';
@@ -27,7 +27,7 @@ import type {PreparedWaterfallData, WaterfallTooltipChunk} from './types';
 import './styles.scss';
 
 async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedWaterfallSeries>,
+    args: PrepareShapeDataArgs<PreparedWaterfallSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareShapeDataResult<PreparedWaterfallData, PreparedWaterfallData>> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
 
@@ -124,7 +124,7 @@ export const waterfallPlugin = {
         preparedData,
         seriesOptions,
         dispatcher,
-    }: RenderShapesArgs<PreparedWaterfallData>) {
+    }: RenderShapesArgs<PreparedWaterfallData, PreparedSeriesOptions>) {
         const data = preparedData;
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
         return renderWaterfall({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);

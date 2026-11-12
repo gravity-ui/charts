@@ -1,4 +1,4 @@
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
 import type {TooltipDataChunkScatter} from '~core/types';
 
 import type {HtmlItem, LabelData, ScatterClusterData, ScatterSeriesData} from '../../types';
@@ -32,7 +32,7 @@ export type PreparedScatterData = MarkerData;
 export type PreparedScatterShapeData = {
     scatterData: PreparedScatterData[];
     svgLabels: ScatterSvgLabelData[];
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
 
 export interface ScatterTooltipChunk extends Omit<TooltipDataChunkScatter, 'series'> {
     series: PreparedScatterSeries;

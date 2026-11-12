@@ -2,7 +2,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
 import type {ChartScale} from '../scales/types';
 import type {PrepareShapeDataArgs} from '../series/plugin';
-import type {PreparedSeries, PreparedSeriesOptions} from '../series/types';
+import type {BasePreparedSeries} from '../series/types';
 import type {GradientShapeData} from '../shapes/types';
 
 import {hasGradient} from './gradient';
@@ -23,8 +23,8 @@ interface ProjectionArgs<T extends object, TOptions, TAllSeries> extends Omit<
 
 export function createGradientGeometryPreparer<
     T extends object,
-    TOptions = PreparedSeriesOptions,
-    TAllSeries = PreparedSeries,
+    TOptions = object,
+    TAllSeries = BasePreparedSeries & {type: string},
 >(
     project: (
         args: ProjectionArgs<T, TOptions, TAllSeries>,

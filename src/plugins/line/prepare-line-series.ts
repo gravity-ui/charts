@@ -15,6 +15,7 @@ import {
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import type {PreparedLegendSymbol} from '~core/series/types';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
@@ -129,7 +130,7 @@ function prepareSeriesData(series: LineSeries): LineSeriesData[] {
     }
 }
 
-export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
+export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries, ChartSeriesOptions>) {
     const {colorScale, series: seriesList, seriesOptions, legend, yAxis} = args;
 
     const defaultLineWidth = get(seriesOptions, 'line.lineWidth', DEFAULT_LINE_WIDTH);
@@ -145,20 +146,16 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
         const dashStyle = get(series, 'dashStyle', defaultDashStyle);
         const yAxisIndex = get(series, 'yAxis', 0);
 
-        const prepared: PreparedLineSeries = {
-            type: series.type,
+        const metadata = prepareSeriesMetadata({
+            series: {...series, id, name},
             color,
+            legend,
+            symbol: prepareLineLegendSymbol(series, seriesOptions),
+        });
+        const prepared: PreparedLineSeries = {
+            ...metadata,
+            type: series.type,
             lineWidth: get(series, 'lineWidth', defaultLineWidth),
-            name,
-            id,
-            visible: get(series, 'visible', true),
-            legend: {
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLineLegendSymbol(series, seriesOptions),
-                groupId: series.legend?.groupId ?? getUniqId(),
-                source: series.legend,
-                itemText: series.legend?.itemText ?? name,
-            },
             data: prepareSeriesData(series),
             dataLabels: {
                 enabled: series.dataLabels?.enabled || false,
@@ -177,7 +174,6 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
             linejoin: prepareLinejoin(dashStyle, series, seriesOptions),
             interpolation: series.interpolation,
             opacity: get(series, 'opacity', null),
-            cursor: get(series, 'cursor', null),
             yAxis: yAxisIndex,
             gradient,
             tooltip: {
@@ -190,7 +186,6 @@ export function prepareLineSeries(args: PrepareSeriesArgs<LineSeries>) {
                 ...seriesRangeSliderOptionsDefaults,
                 ...series.rangeSlider,
             },
-            custom: series.custom,
         };
 
         return prepared;

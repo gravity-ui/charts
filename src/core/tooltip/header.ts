@@ -74,7 +74,9 @@ export function prepareTooltipHeaderFormat({
         const header = getSeriesPlugin(series.type).tooltip?.header;
         if (!header) continue;
         const data = Array.isArray(series.data) ? series.data : [series.data];
-        const points = data.filter((point) => isPointTooltipEnabled({data: point, series}));
+        const points = data.filter((point) =>
+            isPointTooltipEnabled<ChartSeriesData>({data: point, series}),
+        );
         // Empty series still provide a default format to getDefaultTooltipHeaderFormat callers.
         const enabled = data.length ? points.length > 0 : isPointTooltipEnabled({series});
         if (!enabled) continue;

@@ -236,8 +236,5 @@ export async function prepareTreemapData(args: {
         leaves,
         series,
         htmlLabels,
-        markers: [],
-        getHoverMarkers: () => [],
-        annotations: [],
     };
 }

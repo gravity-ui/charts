@@ -1,5 +1,5 @@
 import type {AnnotationAnchor, PreparedAnnotation} from '~core/series/types';
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
 import type {TooltipDataChunkBarX} from '~core/types';
 
 import type {LabelData} from '../../types';
@@ -23,7 +23,7 @@ export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     isStackEnd: boolean;
     /** Whether the value end is above the segment's baseline in screen coordinates. */
     extendsUp: boolean;
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
 
 export interface BarXTooltipChunk extends Omit<TooltipDataChunkBarX, 'series'> {
     series: PreparedBarXSeries;

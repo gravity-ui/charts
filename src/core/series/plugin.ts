@@ -3,12 +3,10 @@ import type {ScaleOrdinal} from 'd3-scale';
 
 import type {
     ChartInteractionItem,
-    ChartSeries,
-    ChartSeriesOptions,
+    ChartInteractionSeries,
     ChartXAxis,
     ChartYAxis,
     CustomFormatContext,
-    TooltipDataChunk,
     TooltipRowCellItem,
     ValueFormat,
 } from '~core/types';
@@ -27,12 +25,7 @@ import type {FilterSeriesDataArgs, SeriesDataSelection} from '../zoom/filter-dat
 import type {ZoomState} from '../zoom/types';
 
 import type {AxisDomainValue, SeriesAxes} from './axis-contract';
-import type {
-    BasePreparedSeries,
-    PreparedLegendOptions,
-    PreparedSeries,
-    PreparedSeriesOptions,
-} from './types';
+import type {BasePreparedSeries, PreparedLegendOptions} from './types';
 
 export type {AxisDomainValue, DomainAxis, DomainViewport, GetAxisDataArgs} from './axis-contract';
 
@@ -55,12 +48,12 @@ export interface PluginSeries {
     data: unknown[];
 }
 
-export interface PluginTooltipChunk {
+export interface PluginTooltipChunk<TType extends string = string> {
     data: unknown;
-    series: {type: string};
+    series: ChartInteractionSeries<TType>;
 }
 
-export interface PrepareSeriesArgs<T = ChartSeries, TOptions = ChartSeriesOptions> {
+export interface PrepareSeriesArgs<T = PluginSeries, TOptions = object> {
     series: T[];
     /** Raw user options; preparation resolves its fallbacks from the plugin's own defaults. */
     seriesOptions?: TOptions;
@@ -72,9 +65,9 @@ export interface PrepareSeriesArgs<T = ChartSeries, TOptions = ChartSeriesOption
 }
 
 export interface PrepareShapeDataArgs<
-    TSeries = PreparedSeries,
-    TOptions = PreparedSeriesOptions,
-    TAllSeries = PreparedSeries,
+    TSeries = BasePreparedSeries & {type: string},
+    TOptions = object,
+    TAllSeries = BasePreparedSeries & {type: string},
 > {
     /** Visible members of this layer, in config order. Core prepares upper layers first. */
     series: TSeries[];
@@ -102,11 +95,12 @@ export interface PrepareShapeDataArgs<
 }
 
 export interface PrepareShapeDataResult<
-    TShape = SeriesShapeData,
+    TShape = object,
     TTooltipItem = unknown,
 > extends Partial<SeriesShapeData> {
+    /** Private geometry; may be empty when this layer supplies other output. */
     renderData: TShape[];
-    /** Private lookup payloads for tooltip/interaction adapters. Core retains their owner separately. */
+    /** Explicit lookup payloads for tooltip/interaction; never inferred from renderData. */
     tooltipItems?: TTooltipItem[];
     /**
      * Groups reserved for placement in lower layers, passed through their `otherLayers`.
@@ -119,14 +113,14 @@ export interface PrepareShapeDataResult<
     labels?: SvgLabel[];
 }
 
-export interface GetTooltipValueArgs<TTooltipChunk = TooltipDataChunk> {
+export interface GetTooltipValueArgs<TTooltipChunk = PluginTooltipChunk> {
     item: TTooltipChunk;
     xAxis?: ChartXAxis | null;
     /** Y axis assigned to this item's series (defaults to axis 0). */
     yAxis?: ChartYAxis;
 }
 
-export interface SeriesPluginZoomOptions<TSeries = ChartSeries, TPoint = unknown> {
+export interface SeriesPluginZoomOptions<TSeries = PluginSeries, TPoint = unknown> {
     /** Supported brush directions. */
     types: ZoomType[];
     /** Preferred direction when chart.zoom.type is omitted. */
@@ -135,11 +129,12 @@ export interface SeriesPluginZoomOptions<TSeries = ChartSeries, TPoint = unknown
     filterData?(args: FilterSeriesDataArgs<TSeries>): SeriesDataSelection<TPoint>;
 }
 
-export interface RenderShapesArgs<TShape = SeriesShapeData, TOptions = PreparedSeriesOptions> {
+export interface RenderShapesArgs<TShape = object, TOptions = object> {
     /** SVG container for series geometry, such as lines, areas, bars, and sectors. */
     plot: SVGGElement;
     /** SVG container for labels above the layer's shapes and markers, clipped like `plot`. */
     labelsPlot: SVGGElement;
+    /** May be empty for layers containing only core-rendered output or lookup data. */
     preparedData: TShape[];
     labels?: SvgLabel[];
     seriesOptions: TOptions;
@@ -154,9 +149,9 @@ export interface RenderShapesArgs<TShape = SeriesShapeData, TOptions = PreparedS
 }
 
 export interface ValidateSeriesArgs<
-    T = ChartSeries,
-    TOptions = ChartSeriesOptions,
-    TAllSeries = ChartSeries,
+    T = PluginSeries,
+    TOptions = object,
+    TAllSeries = PluginSeries,
 > {
     /** The series being validated. */
     series: T;
@@ -193,7 +188,7 @@ type PluginChunk<T extends SeriesPluginData> = PluginDataValue<
     'tooltipChunk',
     {data: T['raw']['data'][number]; series: T['prepared']}
 > &
-    PluginTooltipChunk;
+    PluginTooltipChunk<T['raw']['type']> & {series: T['prepared']};
 type PluginInteraction<T extends SeriesPluginData> = PluginDataValue<
     T,
     'interaction',
@@ -369,7 +364,7 @@ export interface SeriesPlugin<TData extends SeriesPluginData = SeriesPluginData>
     };
 }
 
-export interface PluginTooltipRowCell<TTooltipChunk = TooltipDataChunk> extends Omit<
+export interface PluginTooltipRowCell<TTooltipChunk = PluginTooltipChunk> extends Omit<
     TooltipRowCellItem,
     'source'
 > {
@@ -378,7 +373,7 @@ export interface PluginTooltipRowCell<TTooltipChunk = TooltipDataChunk> extends 
     formatValue?(args: {item: TTooltipChunk; value: unknown; format?: ValueFormat}): string;
 }
 
-export interface TooltipRowDef<TTooltipChunk = TooltipDataChunk> {
+export interface TooltipRowDef<TTooltipChunk = PluginTooltipChunk> {
     /** Unique identifier within one chunk's row list. Used as part of the React key. */
     id: string;
     cells: ReadonlyArray<PluginTooltipRowCell<TTooltipChunk>>;

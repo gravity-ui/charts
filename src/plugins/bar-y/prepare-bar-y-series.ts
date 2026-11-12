@@ -2,8 +2,10 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
+import type {ChartSeriesOptions} from '~core/types';
 import {getLabelsSize, getUniqId} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
@@ -74,7 +76,7 @@ async function prepareDataLabels(series: BarYSeries) {
     };
 }
 
-export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
+export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries, ChartSeriesOptions>) {
     const {colorScale, series: seriesList, seriesOptions, legend, xAxis} = args;
 
     const preparedSeries = await Promise.all(
@@ -84,20 +86,16 @@ export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                 const color = series.color || colorScale(name);
                 const opacity = series.opacity ?? seriesOptions?.['bar-y']?.opacity ?? 1;
 
-                return {
-                    type: series.type,
+                const metadata = prepareSeriesMetadata({
+                    series: {...series, id: getUniqId(), name},
                     color,
+                    legend,
+                    symbol: {...prepareLegendSymbol(series), opacity},
+                });
+                return {
+                    ...metadata,
+                    type: series.type,
                     opacity,
-                    name,
-                    id: getUniqId(),
-                    visible: get(series, 'visible', true),
-                    legend: {
-                        enabled: get(series, 'legend.enabled', legend.enabled),
-                        symbol: {...prepareLegendSymbol(series), opacity},
-                        groupId: series.legend?.groupId ?? getUniqId(),
-                        source: series.legend,
-                        itemText: series.legend?.itemText ?? name,
-                    },
                     data: prepareSeriesData(series),
                     stacking: series.stacking,
                     grouping: series.grouping ?? true,
@@ -114,7 +112,6 @@ export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                         series.grouping === false && !series.stacking ? getUniqId() : undefined,
                     valueAxis: 'x',
                     dataLabels: await prepareDataLabels(series),
-                    cursor: get(series, 'cursor', null),
                     borderRadius:
                         series.borderRadius ?? seriesOptions?.['bar-y']?.borderRadius ?? 0,
                     borderWidth: series.borderWidth ?? seriesOptions?.['bar-y']?.borderWidth ?? 0,
@@ -128,7 +125,6 @@ export async function prepareBarYSeries(args: PrepareSeriesArgs<BarYSeries>) {
                             series.tooltip?.valueFormat ??
                             getDefaultValueFormat({axis: xAxis ?? undefined}),
                     },
-                    custom: series.custom,
                 };
             },
         ),

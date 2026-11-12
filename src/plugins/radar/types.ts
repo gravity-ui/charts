@@ -1,4 +1,4 @@
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
 import type {TooltipDataChunkRadar} from '~core/types';
 
 import type {LabelData, RadarSeriesData} from '../../types';
@@ -66,7 +66,7 @@ export type PreparedRadarData = {
     center: [number, number];
     radius: number;
     cursor: string | null;
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
 
 export interface RadarTooltipChunk extends Omit<TooltipDataChunkRadar, 'series'> {
     series: PreparedRadarSeries;
