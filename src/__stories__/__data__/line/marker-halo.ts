@@ -4,10 +4,9 @@ export const lineMarkerHaloData: ChartData = {
     series: {
         options: {
             line: {
-                marker: {radius: 3, symbol: 'square'},
                 states: {
                     hover: {
-                        marker: {radius: 5, borderWidth: 0, halo: {enabled: true}},
+                        marker: {halo: {enabled: true}},
                     },
                 },
             },
@@ -15,7 +14,7 @@ export const lineMarkerHaloData: ChartData = {
         data: [
             {
                 type: 'line',
-                name: 'Always-visible markers',
+                name: 'Always visible',
                 marker: {enabled: true},
                 data: [
                     {x: 0, y: 7},
@@ -25,8 +24,8 @@ export const lineMarkerHaloData: ChartData = {
             },
             {
                 type: 'line',
-                name: 'Hover-only markers',
-                marker: {enabled: false},
+                name: 'On hover',
+                marker: {enabled: false, symbol: 'square'},
                 data: [
                     {x: 0, y: 3},
                     {x: 1, y: 3, color: '#7048e8'},

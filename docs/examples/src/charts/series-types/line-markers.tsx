@@ -9,15 +9,9 @@ const data: ChartData = {
     series: {
         options: {
             line: {
-                marker: {radius: 3},
                 states: {
                     hover: {
-                        marker: {
-                            radius: 8,
-                            borderColor: '#ffffff',
-                            borderWidth: 2,
-                            halo: {enabled: true},
-                        },
+                        marker: {halo: {enabled: true}},
                     },
                 },
             },
@@ -31,9 +25,6 @@ const data: ChartData = {
                     {x: 0, y: 42},
                     {x: 1, y: 58},
                     {x: 2, y: 51},
-                    {x: 3, y: 73},
-                    {x: 4, y: 68},
-                    {x: 5, y: 84},
                 ],
             },
             {
@@ -44,16 +35,13 @@ const data: ChartData = {
                     {x: 0, y: 24},
                     {x: 1, y: 32},
                     {x: 2, y: 29},
-                    {x: 3, y: 45},
-                    {x: 4, y: 40},
-                    {x: 5, y: 55},
                 ],
             },
         ],
     },
     xAxis: {
         type: 'category',
-        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        categories: ['Jan', 'Feb', 'Mar'],
     },
     yAxis: [{title: {text: 'Amount'}}],
 };

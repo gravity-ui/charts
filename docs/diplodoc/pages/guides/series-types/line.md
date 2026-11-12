@@ -20,13 +20,11 @@ Set `type: 'line'`. Each point contains `x` and `y`. For a category axis, use a 
 
 Set `marker.enabled: true` to keep point markers visible, or `false` to show them only on hover. Configure their hover radius, border color, and border width through `series.options.line.states.hover.marker`.
 
-Hover styles apply to both always-visible and hover-only markers. The normal appearance returns when hover moves to another point or leaves the chart. Set `states.hover.enabled: false` to keep always-visible markers unchanged while retaining hover-only markers. Set `states.hover.marker.enabled: false` to disable both marker hover styles and hover-only markers. Area and area-range series support the same options under their respective series keys.
-
-In this example, Revenue uses always-visible markers and Costs uses hover-only markers.
+Line marker halos are disabled by default. This example enables them for Revenue's always-visible markers and Costs' hover-only markers.
 
 <div data-chart-example="series-types/line-markers"></div>
 
-Line marker halos are disabled by default. Set `states.hover.marker.halo.enabled: true` to highlight hovered points in either marker mode:
+Set `series.options.line.states.hover.marker.halo.enabled: true` to enable halos for all line series:
 
 ```javascript
 series: {
@@ -42,7 +40,14 @@ series: {
 }
 ```
 
-The halo uses the marker's symbol and fill color, including point overrides. Use `halo.size` to set its extension beyond the marker radius in pixels (default `6`) and `halo.opacity` to set its opacity (default `0.25`). Setting opacity to `0` makes it transparent.
+The halo uses the marker's symbol and fill color, including point overrides.
+
+- `halo.size`: Extension beyond the marker radius in pixels (default `6`).
+- `halo.opacity`: Opacity from `0` to `1` (default `0.25`).
+
+Hover styles apply to both marker modes and reset when hover moves to another point or leaves the chart. Set `states.hover.marker.enabled: false` to disable marker hover styles and hover-only markers. Set `states.hover.enabled: false` to keep always-visible markers unchanged while retaining hover-only markers.
+
+Area and area-range series support the same radius, border, and marker visibility settings under their respective series keys.
 
 Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
 
