@@ -18,9 +18,11 @@ Set `type: 'line'`. Each point contains `x` and `y`. For a category axis, use a 
 
 ### Markers
 
-Set `marker.enabled: true` to keep point markers visible. Configure their hover radius, border color, and border width through `series.options.line.states.hover.marker`.
+Set `marker.enabled: true` to keep point markers visible, or `false` to show them only on hover. Configure their hover radius, border color, and border width through `series.options.line.states.hover.marker`.
 
 Hover styles apply to both always-visible and hover-only markers. The normal appearance returns when hover moves to another point or leaves the chart. Set `states.hover.enabled: false` to keep always-visible markers unchanged while retaining hover-only markers. Set `states.hover.marker.enabled: false` to disable both marker hover styles and hover-only markers. Area and area-range series support the same options under their respective series keys.
+
+In this example, Revenue uses always-visible markers and Costs uses hover-only markers.
 
 <div data-chart-example="series-types/line-markers"></div>
 

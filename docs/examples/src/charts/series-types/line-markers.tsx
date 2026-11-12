@@ -9,7 +9,7 @@ const data: ChartData = {
     series: {
         options: {
             line: {
-                marker: {enabled: true, radius: 3},
+                marker: {radius: 3},
                 states: {
                     hover: {
                         marker: {
@@ -26,6 +26,7 @@ const data: ChartData = {
             {
                 type: 'line',
                 name: 'Revenue',
+                marker: {enabled: true},
                 data: [
                     {x: 0, y: 42},
                     {x: 1, y: 58},
@@ -35,13 +36,26 @@ const data: ChartData = {
                     {x: 5, y: 84},
                 ],
             },
+            {
+                type: 'line',
+                name: 'Costs',
+                marker: {enabled: false},
+                data: [
+                    {x: 0, y: 24},
+                    {x: 1, y: 32},
+                    {x: 2, y: 29},
+                    {x: 3, y: 45},
+                    {x: 4, y: 40},
+                    {x: 5, y: 55},
+                ],
+            },
         ],
     },
     xAxis: {
         type: 'category',
         categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     },
-    yAxis: [{title: {text: 'Revenue'}}],
+    yAxis: [{title: {text: 'Amount'}}],
 };
 
 export default function LineMarkersExample() {
@@ -55,6 +69,6 @@ export default function LineMarkersExample() {
 export const meta = {
     seriesType: 'Line',
     title: 'Point markers',
-    description: 'Show point markers and highlight them with a halo on hover.',
+    description: 'Compare always-visible and hover-only markers with a halo on hover.',
     docsUrl: 'pages/guides/series-types/line.html#markers',
 } satisfies ExampleMeta;
