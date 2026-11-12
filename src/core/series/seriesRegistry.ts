@@ -1,45 +1,19 @@
 import {ChartError} from '../../libs';
-import type {
-    ChartInteractionItem,
-    ChartSeries,
-    ChartSeriesOptions,
-    CustomFormatContext,
-    MeaningfulAny,
-    TooltipDataChunk,
-} from '../../types';
+import type {MeaningfulAny} from '../../types';
 
-import type {SeriesPlugin, SeriesPluginData} from './plugin';
-import type {PreparedSeries, PreparedSeriesOptions} from './types';
+import type {SeriesPlugin} from './plugin';
 
-// A heterogeneous registry erases associations only at lookup; plugin declarations and
-// registration retain their complete contracts. The chart's public input is still built-in.
-type RuntimeSeriesPlugin = SeriesPlugin<MeaningfulAny, MeaningfulAny, MeaningfulAny, MeaningfulAny>;
+const registry = new Map<string, SeriesPlugin>();
 
-interface RegisteredPluginData extends SeriesPluginData {
-    prepared: PreparedSeries;
-    shape: MeaningfulAny;
-    tooltipItem: MeaningfulAny;
-    interaction: ChartInteractionItem;
-    options: ChartSeriesOptions;
-    preparedOptions: PreparedSeriesOptions;
-    allRaw: ChartSeries;
-    allPrepared: PreparedSeries;
-}
-
-export type RegisteredSeriesPlugin = SeriesPlugin<
-    ChartSeries,
-    TooltipDataChunk,
-    CustomFormatContext,
-    RegisteredPluginData
->;
-
-const registry = new Map<string, RuntimeSeriesPlugin>();
-
-export function registerSeriesPlugin<T extends RuntimeSeriesPlugin>(plugin: T) {
+// The heterogeneous registry erases associations here; concrete plugin declarations
+// retain their own data types. The chart's public input is still built-in.
+export function registerSeriesPlugin<
+    T extends SeriesPlugin<MeaningfulAny, MeaningfulAny, MeaningfulAny, MeaningfulAny>,
+>(plugin: T) {
     registry.set(plugin.type, plugin);
 }
 
-export function getSeriesPlugin(type: string): RegisteredSeriesPlugin {
+export function getSeriesPlugin(type: string): SeriesPlugin {
     const plugin = registry.get(type);
     if (!plugin) {
         throw new ChartError({message: `Unknown series type: "${type}"`});

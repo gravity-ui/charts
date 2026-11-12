@@ -6,7 +6,7 @@ import type {Dispatch} from 'd3-dispatch';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {getSeriesLayers} from '~core/series/layers';
-import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
+import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
@@ -118,7 +118,7 @@ function IS_OUTSIDE_BOUNDS() {
 }
 
 function resolveClipPathId(args: {
-    plugin: RegisteredSeriesPlugin;
+    plugin: SeriesPlugin;
     clipPathId: string;
     isRangeSlider?: boolean;
     yAxis: PreparedYAxis[];

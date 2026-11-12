@@ -8,7 +8,6 @@ import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {barXStackedOverlayData} from '../__stories__/__data__/bar-x/stacked-overlay';
 import {barYStackedOverlayData} from '../__stories__/__data__/bar-y/stacked-overlay';
 import {DEFAULT_PALETTE} from '../core/constants';
-import {getPreparedOptions} from '../core/series/prepare-options';
 import type {ChartData} from '../types';
 
 import {getLocatorBoundingBox} from './utils';
@@ -467,7 +466,7 @@ for (const type of ['bar-x', 'bar-y'] as const) {
                 vertical
                     ? boxes[0].y - boxes[1].y - boxes[1].height
                     : boxes[1].x - boxes[0].x - boxes[0].width,
-            ).toBeCloseTo(getPreparedOptions()[type].stackGap);
+            ).toBeCloseTo(1);
             await expect(component).toHaveScreenshot();
             await bars.nth(3).hover();
             const tooltip = page.locator('.gcharts-tooltip');

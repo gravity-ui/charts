@@ -8,6 +8,7 @@ import type {
     ChartXAxis,
     ChartYAxis,
     CustomFormatContext,
+    MeaningfulAny,
     TooltipDataChunk,
     TooltipRowCellItem,
     ValueFormat,
@@ -159,10 +160,19 @@ export interface SeriesPluginData<TType extends string = string> {
 }
 
 export interface SeriesPlugin<
-    T extends PluginSeries = PluginSeries,
-    TTooltipChunk extends PluginTooltipChunk = PluginTooltipChunk,
+    T extends PluginSeries = ChartSeries,
+    TTooltipChunk extends PluginTooltipChunk = TooltipDataChunk,
     TFormatContext extends CustomFormatContext = CustomFormatContext,
-    TData extends SeriesPluginData<T['type']> = SeriesPluginData<T['type']>,
+    TData extends SeriesPluginData<T['type']> = {
+        prepared: Extract<PreparedSeries, {type: T['type']}>;
+        shape: MeaningfulAny;
+        tooltipItem: MeaningfulAny;
+        interaction: ChartInteractionItem;
+        options: ChartSeriesOptions;
+        preparedOptions: PreparedSeriesOptions;
+        allRaw: ChartSeries;
+        allPrepared: PreparedSeries;
+    },
 > {
     // --- Metadata ---
 

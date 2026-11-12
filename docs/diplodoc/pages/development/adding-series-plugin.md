@@ -19,7 +19,7 @@ Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core
 
 ### Pipeline types
 
-The first three `SeriesPlugin` parameters describe raw series, tooltip chunks, and value-formatter context. The fourth associates the remaining pipeline types through `SeriesPluginData`:
+Without type arguments, `SeriesPlugin` describes the built-in chart context used by the shared pipeline. For a concrete plugin, the first three parameters describe raw series, tooltip chunks, and value-formatter context. The fourth associates the remaining pipeline types through `SeriesPluginData`:
 
 ```typescript
 interface IntervalPluginData extends SeriesPluginData<'interval'> {
