@@ -4,12 +4,12 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
-import type {CustomFormatContext, TooltipDataChunkSankey} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions, TooltipDataChunkSankey} from '~core/types';
 import {getSourcePoint} from '~core/utils/source-point';
 
 import type {SankeySeries} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -37,7 +37,12 @@ function prepareShapeData({
         width: boundsWidth,
         height: boundsHeight,
     });
-    return {renderData: [data], tooltipItems: [data]};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        layoutData: [data],
+        tooltipItems: [data],
+    };
 }
 
 function renderShapes({
@@ -50,12 +55,7 @@ function renderShapes({
     return renderSankey({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
-export const sankeyPlugin: SeriesPlugin<
-    SankeySeries,
-    TooltipDataChunkSankey,
-    CustomFormatContext,
-    BuiltinPluginData<PreparedSankeySeries, PreparedSankeyData, SankeyInteractionItem>
-> = {
+export const sankeyPlugin = {
     type: 'sankey',
     getClipPath: () => false,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
@@ -116,4 +116,13 @@ export const sankeyPlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: SankeySeries;
+    prepared: PreparedSankeySeries;
+    shape: PreparedSankeyData;
+    options: ChartSeriesOptions;
+    tooltipChunk: TooltipDataChunkSankey;
+    interaction: SankeyInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

@@ -76,17 +76,16 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     const result: TooltipCandidate[] = [];
     const contenders: Contender[] = [];
     const xLookupPoints: ShapePoint<TooltipDataChunk['data'], TooltipDataChunk['series']>[] = [];
-    const groups = groupBy(shapesData, (item) => item.type);
+    const groups = Object.entries(groupBy(shapesData, (item) => item.type)).filter(
+        ([type]) => hasSeriesPlugin(type) && getSeriesPlugin(type).tooltip,
+    );
     // With a single series type there is nothing to arbitrate between.
-    const measureDistance = Object.keys(groups).length > 1;
+    const measureDistance = groups.length > 1;
 
-    for (const [seriesType, list] of Object.entries(groups)) {
-        if (!hasSeriesPlugin(seriesType)) {
-            continue;
-        }
-        const plugin = getSeriesPlugin(seriesType);
-
-        const {chunks = [], xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
+    for (const [seriesType, list] of groups) {
+        const tooltip = getSeriesPlugin(seriesType).tooltip;
+        if (!tooltip) continue;
+        const {chunks = [], xLookupPoints: seriesXLookupPoints} = tooltip.prepareData({
             data: list.map((item) => item.data),
             position,
             boundsWidth,

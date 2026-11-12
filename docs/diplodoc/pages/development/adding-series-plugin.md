@@ -20,7 +20,24 @@ Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core
 
 Keep implementation files and styles in the plugin directory; import styles from its entry point. Reuse core's geometry, label, marker, and measurement helpers.
 
-The generic parameters describe raw series, tooltip chunks, formatter context, and associated pipeline types. Built-ins use `BuiltinPluginData` from `plugins/plugin-data.ts`; a plugin with its own types can implement `SeriesPluginData`. See the [custom-plugin fixture](https://github.com/gravity-ui/charts/blob/main/src/core/series/__tests__/fixtures/custom-plugin.ts) for typed hooks and payloads.
+Use one type map with `SeriesPlugin`. A minimum declaration needs only raw series, prepared series, and geometry types:
+
+```typescript
+const samplePlugin = {
+  type: 'sample',
+  prepareSeries,
+  prepareShapeData,
+  renderShapes,
+} satisfies SeriesPlugin<{
+  raw: SampleSeries;
+  prepared: PreparedSampleSeries;
+  shape: SampleShape;
+}>;
+```
+
+Add `options` for the plugin's config namespace. Lookup defaults to geometry; specify `tooltipItem` when they differ. Tooltip chunks default to raw points with prepared series metadata; specify `tooltipChunk`, `formatContext`, or `interaction` for different payloads. Mixed-chart context is opaque unless explicitly described with `allRaw`/`allPrepared`.
+
+Every plugin uses the same contract. See the [custom-plugin fixture](https://github.com/gravity-ui/charts/blob/main/src/core/series/__tests__/fixtures/custom-plugin.ts) for the minimal declaration and optional adapters.
 
 ## 2. Prepare and render the series
 
@@ -41,11 +58,13 @@ prepareSeries: ({series, colorScale, legend}) =>
 
 The helper accepts a resolved color and an optional resolved legend symbol. IDs must be chart-unique across preparation calls and layers; the helper generates them and retains an explicit ID when the raw type provides one. Core rejects duplicate IDs. Use `legend.groupId` to preserve legend selection across data updates.
 
-`prepareShapeData` returns `renderData` for rendering and `tooltipItems` for lookup. Their structures can differ. Lookup payloads are private to the plugin: core retains their owner separately, so they need no `type` or `series` field.
+`prepareShapeData` returns private `renderData` for rendering. Supply `tooltipItems` when tooltip or interaction needs lookup data; core retains their owner separately, so they need no `type` or `series` field. Both fields can use different structures.
+
+Return `markers`, `annotations`, `htmlLabels`, and `getHoverMarkers` only when needed; core renders these separately from the geometry. Use `layoutData` to reserve label groups for lower layers through their `otherLayers` input. SVG labels stay in render geometry or the layer-wide `labels` field.
 
 Preserve raw configuration and original points. Store derived values separately, register derived point copies with `withSourcePoint`, and use `getSourcePoint` for nested callback payloads. Hoist reusable calculations and DOM measurements out of point loops.
 
-Return cleanup from `renderShapes` when it creates subscriptions or other retained work. For delayed DOM updates, register completion during rendering and respect the cancellation signal; see [RenderShapesArgs](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts).
+Preparation can run for several layers and slider previews. Core calls render cleanup before reusing a container or unmounting. Register delayed DOM work during rendering and respect the cancellation signal; see [RenderShapesArgs](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts).
 
 ## 3. Add tooltip and interaction
 
@@ -58,7 +77,7 @@ Do not return both strategies. Multiple chunks and multiple rows per chunk are s
 
 Define `tooltip.rows` for displayed content, `getValue` for sorting/totals, and optional `header` and `getValueFormatContext` for formatting. Return raw values and resolve category indices to names. Reuse helpers from `core/tooltip/utils.ts`.
 
-For chart queries and clicks, implement `interaction.prepareNearestData` with unfiltered reference positions and `getTargetElements` with painted SVG geometry. Map every target to its original point and series. Include permanent markers; exclude labels and hover decorations. Use `getClosestItem` for composite selections.
+Tooltip and interaction are independent optional capabilities. For chart queries and clicks, implement `interaction.prepareNearestData` with unfiltered reference positions and `getTargetElements` with painted SVG geometry. Map every target to its original point and series. Include permanent markers; exclude labels and hover markers. Use `getClosestItem` for composite selections.
 
 ## 4. Register and verify
 
@@ -75,7 +94,7 @@ Keep series-specific behavior in the plugin. Extend the contract when needed; do
 
 Use these only when the new series needs them:
 
-- **Axes:** `axes: true` enables scalar X/Y coordinates. For custom coordinates, domains, or ticks, use [SeriesAxes](https://github.com/gravity-ui/charts/blob/main/src/core/series/axis-contract.ts). Core selects visible contributions and combines requests.
+- **Axes:** `axes: true` enables scalar X/Y coordinates. For custom coordinates, domains, or ticks, use [SeriesAxes](https://github.com/gravity-ui/charts/blob/main/src/core/series/axis-contract.ts). Core selects visible contributions and combines requests. Guard absent scales, select the series' Y axis (default `0`), and add its split plot's top once to projected Y. Reuse `getXValue`/`getYValue` from `core/shapes/utils.ts` for scalar/category projection.
 - **Padding:** `axisPadding` reserves label space before the initial X scale and measures paint extents before scale fitting. Follow the units and precedence in [SeriesAxisPadding](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts); account for split-plot origins.
 - **Zoom:** declare supported directions in `zoom`. Use `filterData` for custom coordinates or retained path anchors, reusing `filterPoints` from `core/zoom/filter-data.ts`. Keep filtering, domains, sorting, and missing-value handling consistent with rendering.
 - **Layers:** the default is one layer per plugin type. `getLayerKey` selects independent layers or groups; `getClipPath` controls shape/SVG-label clipping. Preserve stack/group geometry when partitioning layers.

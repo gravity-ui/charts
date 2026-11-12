@@ -5,12 +5,17 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
-import type {PieFormatContext, TooltipDataChunkPie} from '~core/types';
+import type {
+    ChartSeries,
+    ChartSeriesOptions,
+    PieFormatContext,
+    TooltipDataChunkPie,
+} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {PieSeries} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {pieDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
@@ -36,7 +41,12 @@ async function prepareShapeData({
         boundsWidth,
         boundsHeight,
     });
-    return {renderData: data, tooltipItems: data};
+    return {
+        renderData: data,
+        htmlLabels: data.flatMap((item) => item.htmlLabels),
+        layoutData: data,
+        tooltipItems: data,
+    };
 }
 
 function renderShapes({
@@ -58,12 +68,7 @@ function renderShapes({
     );
 }
 
-export const piePlugin: SeriesPlugin<
-    PieSeries,
-    TooltipDataChunkPie,
-    PieFormatContext,
-    BuiltinPluginData<PreparedPieSeries, PreparedPieData, PieInteractionItem>
-> = {
+export const piePlugin = {
     type: 'pie',
     defaults: pieDefaults,
     getClipPath: () => false,
@@ -115,4 +120,14 @@ export const piePlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: PieSeries;
+    prepared: PreparedPieSeries;
+    shape: PreparedPieData;
+    options: ChartSeriesOptions;
+    tooltipChunk: TooltipDataChunkPie;
+    interaction: PieInteractionItem;
+    formatContext: PieFormatContext;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

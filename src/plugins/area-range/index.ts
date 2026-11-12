@@ -7,8 +7,9 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue} from '~core/tooltip/utils';
-import type {CustomFormatContext} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -20,7 +21,6 @@ import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaRangeSeries, AreaRangeSeriesData} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {getAreaRangeAxisPadding} from './axis-padding';
 import {areaRangeDefaults} from './defaults';
@@ -43,12 +43,7 @@ function isAreaRangePointInYRange({y0, y1}: AreaRangeSeriesData, {range}: Domain
     return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
 }
 
-export const areaRangePlugin: SeriesPlugin<
-    AreaRangeSeries,
-    AreaRangeTooltipChunk,
-    CustomFormatContext,
-    BuiltinPluginData<PreparedAreaRangeSeries, PreparedAreaRangeData, AreaRangeInteractionItem>
-> = {
+export const areaRangePlugin = {
     type: 'area-range',
     defaults: areaRangeDefaults,
     axes: {
@@ -155,6 +150,11 @@ export const areaRangePlugin: SeriesPlugin<
         const filteredData = filterLayerLabels(data, otherLayers);
         return {
             renderData: filteredData,
+            markers: filteredData.flatMap((item) => item.markers),
+            htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+            getHoverMarkers: (hovered) =>
+                filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
+            layoutData: filteredData,
             tooltipItems: filteredData,
             gradientGeometry: getGradientGeometry(filteredData),
         };
@@ -208,4 +208,13 @@ export const areaRangePlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: AreaRangeSeries;
+    prepared: PreparedAreaRangeSeries;
+    shape: PreparedAreaRangeData;
+    options: ChartSeriesOptions;
+    tooltipChunk: AreaRangeTooltipChunk;
+    interaction: AreaRangeInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

@@ -236,7 +236,7 @@ it('reuses prepared values for totals after sorting instead of resolving plugin 
     const getValue = jest.fn(({item}) => item.data.y);
     jest.spyOn(seriesRegistry, 'getSeriesPlugin').mockImplementation((type) => {
         const plugin = original(type);
-        return {...plugin, tooltip: {...plugin.tooltip, getValue}};
+        return {...plugin, tooltip: plugin.tooltip ? {...plugin.tooltip, getValue} : undefined};
     });
     const dispatcher = dispatch('hover-shape');
     const tooltip = {enabled: true, sorting: {key: 'value'}} as PreparedTooltip;

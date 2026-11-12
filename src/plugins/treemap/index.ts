@@ -5,12 +5,12 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
-import type {CustomFormatContext} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TreemapSeries} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {treemapDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
@@ -36,7 +36,12 @@ async function prepareShapeData({
         width: boundsWidth,
         height: boundsHeight,
     });
-    return {renderData: [data], tooltipItems: [data]};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        layoutData: [data],
+        tooltipItems: [data],
+    };
 }
 
 function renderShapes({
@@ -98,12 +103,7 @@ function validateTreemapData(series: TreemapSeries) {
     });
 }
 
-export const treemapPlugin: SeriesPlugin<
-    TreemapSeries,
-    TreemapTooltipChunk,
-    CustomFormatContext,
-    BuiltinPluginData<PreparedTreemapSeries, PreparedTreemapData, TreemapInteractionItem>
-> = {
+export const treemapPlugin = {
     type: 'treemap',
     defaults: treemapDefaults,
     getClipPath: () => false,
@@ -148,4 +148,13 @@ export const treemapPlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: TreemapSeries;
+    prepared: PreparedTreemapSeries;
+    shape: PreparedTreemapData;
+    options: ChartSeriesOptions;
+    tooltipChunk: TreemapTooltipChunk;
+    interaction: TreemapInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

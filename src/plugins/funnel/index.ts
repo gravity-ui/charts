@@ -4,11 +4,11 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
-import type {CustomFormatContext} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
 import type {FunnelSeries} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {funnelDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
@@ -34,7 +34,12 @@ async function prepareShapeData({
         boundsWidth,
         boundsHeight,
     });
-    return {renderData: [data], tooltipItems: [data]};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        layoutData: [data],
+        tooltipItems: [data],
+    };
 }
 
 function renderShapes({
@@ -47,12 +52,7 @@ function renderShapes({
     return renderFunnel({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
-export const funnelPlugin: SeriesPlugin<
-    FunnelSeries,
-    FunnelTooltipChunk,
-    CustomFormatContext,
-    BuiltinPluginData<PreparedFunnelSeries, PreparedFunnelData, FunnelInteractionItem>
-> = {
+export const funnelPlugin = {
     type: 'funnel',
     defaults: funnelDefaults,
     getClipPath: () => false,
@@ -87,4 +87,13 @@ export const funnelPlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: FunnelSeries;
+    prepared: PreparedFunnelSeries;
+    shape: PreparedFunnelData;
+    options: ChartSeriesOptions;
+    tooltipChunk: FunnelTooltipChunk;
+    interaction: FunnelInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

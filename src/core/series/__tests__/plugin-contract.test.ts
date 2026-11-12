@@ -3,7 +3,7 @@
 import {scaleOrdinal} from 'd3-scale';
 
 import {getShapes} from '../../../hooks/useShapes';
-import type {ChartSeries} from '../../../types';
+import type {ChartSeries, ChartSeriesOptions} from '../../../types';
 import {getChartClosest, getClosestPoints} from '../../utils/get-closest-data';
 import type * as Options from '../prepare-options';
 import {getPreparedOptions} from '../prepare-options';
@@ -137,6 +137,44 @@ test('core routes opaque lookup payloads to their owner for tooltip and chart qu
     ).toBe(first);
 });
 
+test.each([undefined, 8])(
+    'preparation retains raw options and geometry receives merged defaults: %s',
+    async (offset) => {
+        const point = {at: 10, amount: 20, caption: 'Orders'};
+        const options =
+            offset === undefined ? undefined : Object.freeze({sample: Object.freeze({offset})});
+        const prepareSeries = jest.spyOn(samplePlugin, 'prepareSeries');
+        const prepareShapeData = jest.spyOn(samplePlugin, 'prepareShapeData');
+        const series = await getPreparedSeries({
+            seriesData: [{type: 'sample', data: [point]}] as unknown as ChartSeries[],
+            seriesOptions: options as unknown as ChartSeriesOptions,
+            colors: ['black'],
+            preparedLegend: legend,
+        });
+        const result = await getShapes({
+            ...bounds,
+            series,
+            seriesOptions: getPreparedOptions(options as unknown as ChartSeriesOptions),
+            clipPathId: 'plot',
+            htmlLayout: null,
+            split: {plots: [], gap: 0},
+            xAxis: null,
+            yAxis: [],
+        });
+        expect(prepareSeries.mock.calls[0][0].seriesOptions).toBe(options);
+        expect(prepareShapeData.mock.calls[0][0].seriesOptions).toEqual(
+            expect.objectContaining({sample: {offset: offset ?? 4}}),
+        );
+        const hovered = getClosestPoints({
+            ...bounds,
+            position: [offset === undefined ? 14 : 18, 20],
+            shapesData: result.shapesData,
+        });
+        expect(hovered[0].data).toBe(point);
+        expect(samplePlugin.defaults).toEqual({offset: 4});
+    },
+);
+
 test('multiple SVG targets retain their own series and original point', async () => {
     const first = {at: 10, amount: 20, caption: 'Orders'};
     const second = {at: 30, amount: 40, caption: 'Returns'};
@@ -225,7 +263,6 @@ test('X selection retains the custom chunk fields needed by formatters', async (
 test('a standalone plugin keeps its data types through preparation, rendering and interaction', async () => {
     const sample = {at: 10, amount: 20, caption: 'Orders'};
     const raw: SampleSeries = {type: 'sample', data: [sample]};
-    samplePlugin.validate?.({series: raw, allSeries: [raw]});
     const series = await samplePlugin.prepareSeries({
         series: [raw],
         colorScale: scaleOrdinal<string, string>().range(['black']),

@@ -81,6 +81,7 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
             });
             return {
                 renderData,
+                layoutData: renderData,
                 tooltipItems: args.series.map((s) => ({series: s})),
             };
         });
@@ -111,6 +112,47 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
         [series[3].id]: 1,
         [series[4].id]: 2,
     });
+});
+
+it('passes explicit layer fields without adding them to private render geometry', async () => {
+    const series = await prepare([rawSeries[0]]);
+    const renderData = [Object.freeze({radius: 3})];
+    const markers: SeriesShapeData['markers'] = [
+        {
+            cx: 10,
+            cy: 20,
+            radius: 3,
+            symbolType: 'circle',
+            fill: 'red',
+            stroke: 'red',
+            strokeWidth: 0,
+            opacity: 1,
+            active: true,
+            clipped: false,
+            series: series[0],
+            data: rawSeries[0].data[0],
+        },
+    ];
+    const annotations = createShape().annotations;
+    const htmlLabels = [{x: 10, y: 20, content: 'Orders', size: {width: 40, height: 16}}];
+    const getHoverMarkers = jest.fn(() => markers);
+    jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
+        renderData,
+        markers,
+        annotations,
+        htmlLabels,
+        getHoverMarkers,
+    });
+
+    const {shapes, shapesData} = await getShapes(getShapeArgs(series));
+    const {props} = shapes[0];
+    expect(props.preparedData).toBe(renderData);
+    expect(props.markers).toBe(markers);
+    expect(props.annotations).toBe(annotations);
+    expect(props.htmlLabels).toBe(htmlLabels);
+    expect(props.getHoverMarkers).toBe(getHoverMarkers);
+    expect(shapesData).toEqual([]);
+    expect(renderData).toEqual([{radius: 3}]);
 });
 
 interface ClipCase {

@@ -6,7 +6,6 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedSeriesOptions} from '~core/series/types';
 import {buildHoverMarkerGetter, getMarkerFill} from '~core/shapes/marker';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '~core/shapes/utils';
 import {
@@ -18,7 +17,7 @@ import {getGradientBBox, setGradientPointFills} from '~core/utils/gradient';
 import {applyCapturedPointColors, prepareGradientCoords} from '~core/utils/gradient-reference';
 import {getPositiveShare} from '~core/utils/percentage';
 
-import type {AreaSeriesData} from '../../types';
+import type {AreaSeriesData, ChartSeriesOptions} from '../../types';
 
 import type {PreparedAreaSeries} from './prepared-series';
 import {createAreaStackAccumulator, getAreaNeighborPoint, getAreaStackContext} from './stack';
@@ -92,7 +91,7 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: 
 
 export const projectAreaData = (args: {
     series: PreparedAreaSeries[];
-    seriesOptions?: PreparedSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];

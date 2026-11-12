@@ -11,12 +11,14 @@ import {getCurveFactory} from '../../../plugins/line/interpolation';
 import {prepareLineData} from '../../../plugins/line/prepare-data';
 import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';
 import type {PreparedPieData} from '../../../plugins/pie/types';
+import {scatterPlugin} from '../../../plugins/scatter';
 import {prepareScatterData} from '../../../plugins/scatter/prepare-data';
 import {prepareScatterSeries} from '../../../plugins/scatter/prepare-scatter-series';
 import type {LineSeries, ScatterClusterData, ScatterSeries} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
-import {getSeriesPlugin} from '../../series/seriesRegistry';
+import {sampleShapesPlugin} from '../../series/__tests__/fixtures/custom-plugin';
+import {registerSeriesPlugin} from '../../series/seriesRegistry';
 import type {PreparedLegend} from '../../series/types';
 import type {TooltipItemData} from '../../shapes/types';
 import {getClosestPoints} from '../get-closest-data';
@@ -620,8 +622,20 @@ describe('getClosestPoints with a single series type', () => {
     });
 
     test('does not ask the plugin to measure distances', async () => {
-        const spy = jest.spyOn(getSeriesPlugin('scatter').tooltip, 'prepareData');
+        const spy = jest.spyOn(scatterPlugin.tooltip, 'prepareData');
         getActive(await prepareScatter([{x: 10, y: 10}]), [20, 20]);
+        expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
+    });
+
+    test('a plugin without tooltip does not request mixed-tooltip distances', async () => {
+        registerSeriesPlugin(sampleShapesPlugin);
+        const spy = jest.spyOn(scatterPlugin.tooltip, 'prepareData');
+        const scatter = await prepareScatter([{x: 10, y: 10}]);
+        getClosestPoints({
+            ...BOUNDS,
+            position: [20, 20],
+            shapesData: [{type: 'sample', data: {}}, ...lookupData(scatter)],
+        });
         expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
     });
 

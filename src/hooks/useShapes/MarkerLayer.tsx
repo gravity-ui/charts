@@ -6,14 +6,19 @@ import {select} from 'd3-selection';
 import {renderHoverMarkers, renderMarkers} from '~core/shapes/marker';
 import type {HoveredShapeData, MarkerItem, SeriesShapeData} from '~core/shapes/types';
 
-interface Props {
-    preparedData: SeriesShapeData[];
+interface Props extends Pick<SeriesShapeData, 'markers' | 'getHoverMarkers'> {
     dispatcher?: Dispatch<object>;
     namespace: string;
     elementRef?: React.RefObject<SVGGElement>;
 }
 
-export const MarkerLayer = ({preparedData, dispatcher, namespace, elementRef}: Props) => {
+export const MarkerLayer = ({
+    markers,
+    getHoverMarkers,
+    dispatcher,
+    namespace,
+    elementRef,
+}: Props) => {
     const ref = React.useRef<SVGGElement>(null);
     const hoverRef = React.useRef<SVGGElement>(null);
 
@@ -21,10 +26,7 @@ export const MarkerLayer = ({preparedData, dispatcher, namespace, elementRef}: P
         if (!ref.current || !hoverRef.current) return () => {};
 
         const hoverContainer = select(hoverRef.current);
-        const normalMarkers = renderMarkers(
-            select(ref.current),
-            preparedData.flatMap((d) => d.markers),
-        );
+        const normalMarkers = renderMarkers(select(ref.current), markers);
         const markersByData = new Map<unknown, {marker: MarkerItem; element: SVGGElement}[]>();
         normalMarkers.each(function (marker) {
             const entries = markersByData.get(marker.data) ?? [];
@@ -38,7 +40,7 @@ export const MarkerLayer = ({preparedData, dispatcher, namespace, elementRef}: P
                 select(element).attr('visibility', null);
             }
             hidden = [];
-            const items = preparedData.flatMap((d) => d.getHoverMarkers(data ?? []));
+            const items = getHoverMarkers(data ?? []);
             for (const item of items) {
                 // One raw point can back several series or boundary markers.
                 for (const {marker, element} of markersByData.get(item.data) ?? []) {
@@ -61,7 +63,7 @@ export const MarkerLayer = ({preparedData, dispatcher, namespace, elementRef}: P
         return () => {
             dispatcher?.on(`hover-shape.${namespace}`, null);
         };
-    }, [preparedData, dispatcher, namespace]);
+    }, [markers, getHoverMarkers, dispatcher, namespace]);
 
     return (
         <g ref={elementRef}>

@@ -167,9 +167,9 @@ export const DefaultTooltipContent = ({
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
                 const valueFormatContext =
-                    plugin?.tooltip.getValueFormatContext?.(seriesItem) ?? {};
+                    plugin?.tooltip?.getValueFormatContext?.(seriesItem) ?? {};
 
-                let tooltipRows = rows ?? plugin?.tooltip.rows ?? [];
+                let tooltipRows = rows ?? plugin?.tooltip?.rows ?? [];
                 if (typeof tooltipRows === 'function') {
                     tooltipRows = tooltipRows(seriesItem);
                 }

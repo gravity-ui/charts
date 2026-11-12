@@ -5,8 +5,9 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
-import type {BarYFormatContext} from '~core/types';
+import type {BarYFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
 import {
     validateAxisPlotValues,
@@ -22,7 +23,6 @@ import {validateBarGrouping} from '../bar-grouping';
 import {validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
-import type {BuiltinPluginData} from '../plugin-data';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
@@ -77,7 +77,13 @@ async function prepareShapeData(
         {svgLabels: labels, htmlLabels: []},
     ]);
 
-    return {renderData: [filteredData], tooltipItems: data.shapes, labels};
+    return {
+        renderData: [filteredData],
+        htmlLabels: filteredData.htmlLabels,
+        layoutData: [filteredData],
+        tooltipItems: data.shapes,
+        labels,
+    };
 }
 
 function renderShapes({
@@ -93,12 +99,7 @@ function renderShapes({
     return cleanup;
 }
 
-export const barYPlugin: SeriesPlugin<
-    BarYSeries,
-    BarYTooltipChunk,
-    BarYFormatContext,
-    BuiltinPluginData<PreparedBarYSeries, BarYShapesArgs, BarYInteractionItem, PreparedBarYData>
-> = {
+export const barYPlugin = {
     type: 'bar-y',
     defaults: barYDefaults,
     axes: {
@@ -193,4 +194,15 @@ export const barYPlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: BarYSeries;
+    prepared: PreparedBarYSeries;
+    shape: BarYShapesArgs;
+    options: ChartSeriesOptions;
+    tooltipChunk: BarYTooltipChunk;
+    interaction: BarYInteractionItem;
+    formatContext: BarYFormatContext;
+    tooltipItem: PreparedBarYData;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

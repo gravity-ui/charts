@@ -4,8 +4,9 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
-import type {CustomFormatContext} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -15,7 +16,6 @@ import {
 } from '~core/validation/helpers';
 
 import type {LineSeries} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {getLineAxisPadding} from './axis-padding';
 import {lineDefaults} from './defaults';
@@ -72,6 +72,11 @@ async function prepareShapeData(
     const filteredData = filterLayerLabels(data, otherLayers ?? []);
     return {
         renderData: filteredData,
+        markers: filteredData.flatMap((item) => item.markers),
+        annotations: filteredData.flatMap((item) => item.annotations),
+        htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+        getHoverMarkers: (hovered) => filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
+        layoutData: filteredData,
         tooltipItems: filteredData,
         gradientGeometry: getGradientGeometry(filteredData),
     };
@@ -87,12 +92,7 @@ function renderShapes({
     return renderLine({plot, labelsPlot, getCurveFactory}, preparedData, seriesOptions, dispatcher);
 }
 
-export const linePlugin: SeriesPlugin<
-    LineSeries,
-    LineTooltipChunk,
-    CustomFormatContext,
-    BuiltinPluginData<PreparedLineSeries, PreparedLineData, LineInteractionItem>
-> = {
+export const linePlugin = {
     type: 'line',
     defaults: lineDefaults,
     axes: {
@@ -165,4 +165,13 @@ export const linePlugin: SeriesPlugin<
             ];
         },
     },
-};
+} satisfies SeriesPlugin<{
+    raw: LineSeries;
+    prepared: PreparedLineSeries;
+    shape: PreparedLineData;
+    options: ChartSeriesOptions;
+    tooltipChunk: LineTooltipChunk;
+    interaction: LineInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

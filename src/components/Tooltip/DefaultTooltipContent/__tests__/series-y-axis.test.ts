@@ -133,7 +133,7 @@ it.each([
         const original = seriesRegistry.getSeriesPlugin;
         jest.spyOn(seriesRegistry, 'getSeriesPlugin').mockImplementation((type) => {
             const plugin = original(type);
-            return {...plugin, tooltip: {...plugin.tooltip, getValue}};
+            return {...plugin, tooltip: plugin.tooltip ? {...plugin.tooltip, getValue} : undefined};
         });
         const hovered = [makeChunk('Primary', 10), makeChunk('Secondary', 1, 1)];
         const yAxes: ChartYAxis[] = [

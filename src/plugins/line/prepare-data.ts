@@ -4,10 +4,11 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeries} from '~core/series/types';
 import {buildHoverMarkerGetter, getMarkerFill} from '~core/shapes/marker';
 import type {ShapeLabels} from '~core/shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '~core/shapes/utils';
+import type {ChartSeriesOptions} from '~core/types';
 import {getGradientBBox, setGradientPointFills} from '~core/utils/gradient';
 import {applyCapturedPointColors, prepareGradientCoords} from '~core/utils/gradient-reference';
 
@@ -55,7 +56,7 @@ function buildSegmentGetter(
 
 interface Args {
     series: PreparedLineSeries[];
-    seriesOptions?: PreparedSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];

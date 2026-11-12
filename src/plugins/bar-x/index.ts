@@ -5,8 +5,9 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
-import type {BarXFormatContext} from '~core/types';
+import type {BarXFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {
     validateAxisPlotValues,
@@ -22,7 +23,6 @@ import {validateBarGrouping} from '../bar-grouping';
 import {validateBarLabelPlacement} from '../bar-label-placement';
 import {validateBarOpacity} from '../bar-opacity';
 import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
-import type {BuiltinPluginData} from '../plugin-data';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
@@ -83,7 +83,14 @@ async function prepareShapeData(
         ...otherLayers,
         {svgLabels: labels, htmlLabels: []},
     ]);
-    return {renderData: filteredData, tooltipItems: filteredData, labels};
+    return {
+        renderData: filteredData,
+        annotations: filteredData.flatMap((item) => item.annotations),
+        htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+        layoutData: filteredData,
+        tooltipItems: filteredData,
+        labels,
+    };
 }
 
 function renderShapes({
@@ -109,12 +116,7 @@ function renderShapes({
     return cleanup;
 }
 
-export const barXPlugin: SeriesPlugin<
-    BarXSeries,
-    BarXTooltipChunk,
-    BarXFormatContext,
-    BuiltinPluginData<PreparedBarXSeries, PreparedBarXData, BarXInteractionItem>
-> = {
+export const barXPlugin = {
     type: 'bar-x',
     defaults: barXDefaults,
     axes: {
@@ -199,4 +201,14 @@ export const barXPlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: BarXSeries;
+    prepared: PreparedBarXSeries;
+    shape: PreparedBarXData;
+    options: ChartSeriesOptions;
+    tooltipChunk: BarXTooltipChunk;
+    interaction: BarXInteractionItem;
+    formatContext: BarXFormatContext;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

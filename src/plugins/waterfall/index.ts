@@ -6,13 +6,13 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
-import type {CustomFormatContext} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterOverlappingLabels} from '~core/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {WaterfallSeries} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {waterfallDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
@@ -53,19 +53,24 @@ async function prepareShapeData(
                 {...first, htmlLabels: filtered},
                 ...rest.map((d) => ({...d, htmlLabels: [] as typeof d.htmlLabels})),
             ];
-            return {renderData: filteredData, tooltipItems: filteredData};
+            return {
+                renderData: filteredData,
+                htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+                layoutData: filteredData,
+                tooltipItems: filteredData,
+            };
         }
     }
 
-    return {renderData: data, tooltipItems: data};
+    return {
+        renderData: data,
+        htmlLabels: data.flatMap((item) => item.htmlLabels),
+        layoutData: data,
+        tooltipItems: data,
+    };
 }
 
-export const waterfallPlugin: SeriesPlugin<
-    WaterfallSeries,
-    WaterfallTooltipChunk,
-    CustomFormatContext,
-    BuiltinPluginData<PreparedWaterfallSeries, PreparedWaterfallData, WaterfallInteractionItem>
-> = {
+export const waterfallPlugin = {
     type: 'waterfall',
     defaults: waterfallDefaults,
     axes: {
@@ -188,4 +193,13 @@ export const waterfallPlugin: SeriesPlugin<
             ];
         },
     },
-};
+} satisfies SeriesPlugin<{
+    raw: WaterfallSeries;
+    prepared: PreparedWaterfallSeries;
+    shape: PreparedWaterfallData;
+    options: ChartSeriesOptions;
+    tooltipChunk: WaterfallTooltipChunk;
+    interaction: WaterfallInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

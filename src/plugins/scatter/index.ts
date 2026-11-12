@@ -5,15 +5,15 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
-import type {CustomFormatContext} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {calculateNumericProperty} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 
 import {getScatterAxisPadding} from './axis-padding';
 import {scatterDefaults} from './defaults';
@@ -62,7 +62,12 @@ async function prepareShapeData(
         isRangeSlider,
     });
 
-    return {renderData: [data], tooltipItems: data.scatterData};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        layoutData: [data],
+        tooltipItems: data.scatterData,
+    };
 }
 
 function renderShapes({
@@ -75,17 +80,7 @@ function renderShapes({
     return renderScatter({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
-export const scatterPlugin: SeriesPlugin<
-    ScatterSeries,
-    ScatterTooltipChunk,
-    CustomFormatContext,
-    BuiltinPluginData<
-        PreparedScatterSeries,
-        PreparedScatterShapeData,
-        ScatterInteractionItem,
-        PreparedScatterData
-    >
-> = {
+export const scatterPlugin = {
     type: 'scatter',
     defaults: scatterDefaults,
     axes: {x: {singleValueDomain: 'center'}, y: {singleValueDomain: 'center'}},
@@ -202,4 +197,14 @@ export const scatterPlugin: SeriesPlugin<
             ];
         },
     },
-};
+} satisfies SeriesPlugin<{
+    raw: ScatterSeries;
+    prepared: PreparedScatterSeries;
+    shape: PreparedScatterShapeData;
+    options: ChartSeriesOptions;
+    tooltipChunk: ScatterTooltipChunk;
+    interaction: ScatterInteractionItem;
+    tooltipItem: PreparedScatterData;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

@@ -5,8 +5,9 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
-import type {AreaFormatContext} from '~core/types';
+import type {AreaFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -20,7 +21,6 @@ import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaSeries, AreaSeriesData} from '../../types';
-import type {BuiltinPluginData} from '../plugin-data';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
@@ -44,12 +44,7 @@ function isAreaPointDefined(point: AreaSeriesData) {
     return point.y !== null && point.y !== undefined;
 }
 
-export const areaPlugin: SeriesPlugin<
-    AreaSeries,
-    AreaTooltipChunk,
-    AreaFormatContext,
-    BuiltinPluginData<PreparedAreaSeries, PreparedAreaData, AreaInteractionItem>
-> = {
+export const areaPlugin = {
     type: 'area',
     defaults: areaDefaults,
     axes: {
@@ -151,6 +146,12 @@ export const areaPlugin: SeriesPlugin<
         ]);
         return {
             renderData: filteredData,
+            markers: filteredData.flatMap((item) => item.markers),
+            annotations: filteredData.flatMap((item) => item.annotations),
+            htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+            getHoverMarkers: (hovered) =>
+                filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
+            layoutData: filteredData,
             tooltipItems: filteredData,
             labels,
             gradientGeometry: getGradientGeometry(filteredData),
@@ -206,4 +207,14 @@ export const areaPlugin: SeriesPlugin<
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: AreaSeries;
+    prepared: PreparedAreaSeries;
+    shape: PreparedAreaData;
+    options: ChartSeriesOptions;
+    tooltipChunk: AreaTooltipChunk;
+    interaction: AreaInteractionItem;
+    formatContext: AreaFormatContext;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;
