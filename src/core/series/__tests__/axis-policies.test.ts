@@ -2,24 +2,25 @@
 
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
-import {getTickValues} from '../../../components/AxisY/utils';
+import type {ChartSeries, LineSeries} from '~core/types';
+
 import type * as YTicks from '../../../components/AxisY/utils';
+import {getTickValues} from '../../../components/AxisY/utils';
 import type * as LinePlugin from '../../../plugins/line';
 import type {PreparedYAxis} from '../../axes/types';
 import {getPreparedXAxis} from '../../axes/x-axis';
 import {getPreparedYAxis} from '../../axes/y-axis';
 import {createXScale} from '../../scales/x-scale';
 import {createYScale} from '../../scales/y-scale';
-import type {ChartSeries} from '../../types';
-import {getXAxisTickValues} from '../../utils/axis/x-axis';
 import type * as XTicks from '../../utils/axis/x-axis';
+import {getXAxisTickValues} from '../../utils/axis/x-axis';
 import type {SeriesAxes} from '../axis-contract';
+import type * as AxisDomain from '../axis-domain';
 import {
     collectAxisCoordinateValues,
     getAxisCoordinateValues,
     getAxisDomainValues,
 } from '../axis-domain';
-import type * as AxisDomain from '../axis-domain';
 import {
     getAxisPaddingDefaults,
     getSeriesAxisRequirements,
@@ -161,7 +162,7 @@ test('axis opt-in and tick hooks work with an isolated registry', () => {
         const xTicks = jest.requireActual<typeof XTicks>('../../utils/axis/x-axis');
         const yTicks = jest.requireActual<typeof YTicks>('../../../components/AxisY/utils');
         expect(registry.getRegisteredSeriesTypes()).toEqual([]);
-        const series: ChartSeries[] = [
+        const series: LineSeries[] = [
             {
                 type: 'line',
                 name: 'Line',

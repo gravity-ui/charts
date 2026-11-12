@@ -3,11 +3,14 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE, LayoutAlgorithm} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedLegendOptions, PreparedTreemapSeries} from '~core/series/types';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
+import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
 import type {ChartSeriesOptions, TreemapSeries} from '../../types';
+
+import type {PreparedTreemapSeries} from './prepared-series';
 
 type PrepareTreemapSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;
@@ -24,8 +27,14 @@ export function prepareTreemap(args: PrepareTreemapSeriesArgs) {
         const name = s.name || '';
         const color = s.color || colorScale(name);
 
-        const preparedSeries: PreparedTreemapSeries = {
+        const metadata = prepareSeriesMetadata({
+            series: {...s, id, name},
             color,
+            legend,
+            symbol: prepareLegendSymbol(s),
+        });
+        const preparedSeries: PreparedTreemapSeries = {
+            ...metadata,
             data: s.data,
             dataLabels: {
                 enabled: get(s, 'dataLabels.enabled', true),
@@ -36,27 +45,14 @@ export function prepareTreemap(args: PrepareTreemapSeriesArgs) {
                 align: get(s, 'dataLabels.align', 'left'),
                 format: s.dataLabels?.format,
             },
-            id,
             type: s.type,
-            name,
-            visible: get(s, 'visible', true),
-            legend: {
-                enabled: get(s, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(s),
-                groupId: s.legend?.groupId ?? getUniqId(),
-                source: s.legend,
-                itemText: s.legend?.itemText ?? name,
-            },
             levels: s.levels ?? [],
             layoutAlgorithm: get(s, 'layoutAlgorithm', LayoutAlgorithm.Binary),
-            cursor: get(s, 'cursor', null),
             sorting: {
                 enabled: false,
                 direction: 'desc',
                 ...s.sorting,
             },
-            tooltip: s.tooltip,
-            custom: s.custom,
         };
 
         return preparedSeries;

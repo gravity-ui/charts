@@ -1,0 +1,105 @@
+import type {Dispatch} from 'd3-dispatch';
+import type {BaseType} from 'd3-selection';
+import {select} from 'd3-selection';
+import get from 'es-toolkit/compat/get';
+
+import type {PreparedSeriesOptions} from '~core/series/types';
+import {renderDataLabels} from '~core/shapes/data-labels';
+import {
+    getMarkerHaloVisibility,
+    renderMarker,
+    selectMarkerHalo,
+    selectMarkerSymbol,
+    setMarker,
+} from '~core/shapes/marker';
+import {setActiveState, shapeKey} from '~core/shapes/utils';
+
+import type {TooltipDataChunk, TooltipDataChunkScatter} from '../../types';
+import {block} from '../../utils';
+
+import type {MarkerData, PreparedScatterShapeData} from './types';
+
+const b = block('scatter');
+
+export function renderScatter(
+    elements: {
+        plot: SVGGElement;
+        labelsPlot: SVGGElement;
+    },
+    preparedData: PreparedScatterShapeData,
+    seriesOptions: PreparedSeriesOptions,
+    dispatcher?: Dispatch<object>,
+): () => void {
+    const svgElement = select(elements.plot);
+    const hoverOptions = get(seriesOptions, 'scatter.states.hover');
+    const inactiveOptions = get(seriesOptions, 'scatter.states.inactive');
+
+    svgElement.selectAll('*').remove();
+
+    const selection = svgElement
+        .selectAll('path')
+        .data(preparedData.scatterData, shapeKey)
+        .join('g')
+        .call(renderMarker)
+        .attr('opacity', (d) => d.point.opacity)
+        .attr('cursor', (d) => d.point.series.cursor);
+
+    renderDataLabels({
+        container: select(elements.labelsPlot),
+        data: preparedData.svgLabels,
+        className: b('label'),
+    })
+        .attr('class', (data) => (data.cluster ? b('cluster-label') : b('label')))
+        .attr('dominant-baseline', (data) => (data.cluster ? 'central' : null))
+        .attr('pointer-events', (data) => (data.cluster ? 'none' : null));
+
+    const hoverEnabled = hoverOptions?.enabled;
+    const inactiveEnabled = inactiveOptions?.enabled;
+
+    function handleShapeHover(data?: TooltipDataChunk[]) {
+        const selected = data?.find(
+            (d): d is TooltipDataChunkScatter => d.series.type === 'scatter' && Boolean(d.closest),
+        );
+        const selectedDataItem = selected?.data;
+        const selectedSeriesId = selected?.series?.id;
+
+        selection.datum((d, index, list) => {
+            const elementSelection = select<BaseType, MarkerData>(list[index]);
+
+            const hovered = Boolean(
+                hoverEnabled &&
+                d.point.series.marker.states.hover.enabled &&
+                d.point.data === selectedDataItem,
+            );
+            if (d.hovered !== hovered) {
+                d.hovered = hovered;
+                elementSelection.attr('z-index', hovered ? 999 : null);
+                selectMarkerHalo(elementSelection).attr('visibility', getMarkerHaloVisibility);
+                selectMarkerSymbol(elementSelection).call(setMarker, hovered ? 'hover' : 'normal');
+            }
+
+            if (hovered) {
+                elementSelection.raise();
+            }
+
+            if (d.point.series.marker.states.normal.enabled) {
+                const isActive = Boolean(
+                    !inactiveEnabled || !selectedSeriesId || selectedSeriesId === d.point.series.id,
+                );
+                setActiveState<MarkerData>({
+                    element: list[index],
+                    state: inactiveOptions,
+                    active: isActive,
+                    datum: d,
+                });
+            }
+            return d;
+        });
+    }
+
+    dispatcher?.on('hover-shape.scatter', handleShapeHover);
+
+    return () => {
+        dispatcher?.on('hover-shape.scatter', null);
+    };
+}

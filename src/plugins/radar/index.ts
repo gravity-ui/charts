@@ -4,30 +4,43 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedRadarSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/radar/get-tooltip-data';
-import {prepareRadarData} from '~core/shapes/radar/prepare-data';
-import {renderRadar} from '~core/shapes/radar/renderer';
-import type {PreparedRadarData} from '~core/shapes/radar/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {RadarSeries, TooltipDataChunkRadar} from '../../types';
+import type {RadarSeries} from '../../types';
 
+import {radarDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {RadarInteractionItem} from './interaction-types';
+import {prepareRadarData} from './prepare-data';
 import {prepareRadarSeries} from './prepare-radar-series';
+import type {PreparedRadarSeries} from './prepared-series';
+import {renderRadar} from './renderer';
+import type {PreparedRadarData, RadarTooltipChunk} from './types';
+
+import './styles.scss';
 
 async function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+}: PrepareShapeDataArgs<PreparedRadarSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareShapeDataResult<PreparedRadarData, PreparedRadarData>
+> {
     const data = await prepareRadarData({
-        series: series as PreparedRadarSeries[],
+        series: series,
         boundsWidth,
         boundsHeight,
     });
-    return {renderData: data, tooltipItems: data};
+    return {
+        renderData: data,
+        htmlLabels: data.flatMap((item) => item.htmlLabels),
+        layoutData: data,
+        tooltipItems: data,
+    };
 }
 
 function renderShapes({
@@ -36,17 +49,13 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderRadar(
-        {plot, labelsPlot},
-        preparedData as PreparedRadarData[],
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderShapesArgs<PreparedRadarData, PreparedSeriesOptions>) {
+    return renderRadar({plot, labelsPlot}, preparedData, seriesOptions, dispatcher);
 }
 
-export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
+export const radarPlugin = {
     type: 'radar',
+    defaults: radarDefaults,
     getClipPath: () => false,
     validate: ({series, allSeries}) => {
         if (
@@ -116,4 +125,13 @@ export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: RadarSeries;
+    prepared: PreparedRadarSeries;
+    shape: PreparedRadarData;
+    options: ChartSeriesOptions;
+    tooltipChunk: RadarTooltipChunk;
+    interaction: RadarInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

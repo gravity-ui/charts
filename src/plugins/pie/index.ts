@@ -5,30 +5,48 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedPieSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/pie/get-tooltip-data';
-import {preparePieData} from '~core/shapes/pie/prepare-data';
-import {renderPie} from '~core/shapes/pie/renderer';
-import type {PreparedPieData} from '~core/shapes/pie/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
+import type {
+    ChartSeries,
+    ChartSeriesOptions,
+    PieFormatContext,
+    TooltipDataChunkPie,
+} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {PieFormatContext, PieSeries, TooltipDataChunkPie} from '../../types';
+import type {PieSeries} from '../../types';
 
+import {pieDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {PieInteractionItem} from './interaction-types';
+import {preparePieData} from './prepare-data';
 import {preparePieSeries} from './prepare-pie-series';
+import type {PreparedPieSeries} from './prepared-series';
+import {renderPie} from './renderer';
+import type {PreparedPieData} from './types';
+
+import './styles.scss';
 
 async function prepareShapeData({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+}: PrepareShapeDataArgs<PreparedPieSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareShapeDataResult<PreparedPieData, PreparedPieData>
+> {
     const data = await preparePieData({
-        series: series as PreparedPieSeries[],
+        series: series,
         boundsWidth,
         boundsHeight,
     });
-    return {renderData: data, tooltipItems: data};
+    return {
+        renderData: data,
+        htmlLabels: data.flatMap((item) => item.htmlLabels),
+        layoutData: data,
+        tooltipItems: data,
+    };
 }
 
 function renderShapes({
@@ -39,10 +57,10 @@ function renderShapes({
     dispatcher,
     registerCompletion,
     signal,
-}: RenderShapesArgs) {
+}: RenderShapesArgs<PreparedPieData, PreparedSeriesOptions>) {
     return renderPie(
         {plot, labelsPlot},
-        preparedData as PreparedPieData[],
+        preparedData,
         seriesOptions,
         dispatcher,
         registerCompletion,
@@ -50,8 +68,9 @@ function renderShapes({
     );
 }
 
-export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatContext> = {
+export const piePlugin = {
     type: 'pie',
+    defaults: pieDefaults,
     getClipPath: () => false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
@@ -75,7 +94,7 @@ export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatCo
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,
-        getValueFormatContext: (item) => {
+        getValueFormatContext: (item: TooltipDataChunkPie) => {
             return {
                 percentage: item.percentage,
                 name: item.data.name,
@@ -101,4 +120,14 @@ export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatCo
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: PieSeries;
+    prepared: PreparedPieSeries;
+    shape: PreparedPieData;
+    options: ChartSeriesOptions;
+    tooltipChunk: TooltipDataChunkPie;
+    interaction: PieInteractionItem;
+    formatContext: PieFormatContext;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

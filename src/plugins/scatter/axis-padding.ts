@@ -1,16 +1,19 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
-import type {PreparedScatterSeries} from '~core/series/types';
-import {prepareClusterMarkerSeries} from '~core/shapes/scatter/cluster';
-import {getScatterMarkerBounds} from '~core/shapes/scatter/marker-bounds';
 import {getXValue, getYValue} from '~core/shapes/utils';
 import type {ChartMargin} from '~core/types';
 
 import {createPaddingPointFilter} from '../marker-axis-padding';
 
-export function getScatterAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+import {prepareClusterMarkerSeries} from './cluster';
+import {getScatterMarkerBounds} from './marker-bounds';
+import type {PreparedScatterSeries} from './prepared-series';
+
+export function getScatterAxisPadding(
+    args: PrepareAxisPaddingArgs<PreparedScatterSeries>,
+): AxisPaddingPoint[] {
     const points: AxisPaddingPoint[] = [];
     const hoverEnabled = args.seriesOptions?.scatter?.states?.hover?.enabled !== false;
-    for (const s of args.series as PreparedScatterSeries[]) {
+    for (const s of args.series) {
         const yScale = args.yScale[s.yAxis];
         if (!yScale) continue;
         const inRange = createPaddingPointFilter(args.xScale, yScale);

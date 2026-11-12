@@ -1,20 +1,20 @@
-import type {PreparedSankeyData, SankeyLink, SankeyNode} from '~core/shapes/sankey/types';
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getSourcePoint} from '~core/utils/source-point';
 
 import type {PointPosition} from '../../types';
 
 import type {SankeyInteractionItem, SankeyLinkPoint} from './interaction-types';
+import type {PreparedSankeyData, SankeyLink, SankeyNode} from './types';
 
 const linkPoints = new WeakMap<SankeyLink, SankeyLinkPoint>();
 
 export function getTargetElements({
     plot,
     preparedData,
-}: InteractionElementsArgs): InteractionElement<SankeyInteractionItem>[] {
-    const shape = preparedData[0] as PreparedSankeyData | undefined;
+}: InteractionElementsArgs<PreparedSankeyData>): InteractionElement<SankeyInteractionItem>[] {
+    const shape = preparedData[0];
     if (!shape) return [];
     const {series} = shape;
     return [

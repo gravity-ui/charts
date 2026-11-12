@@ -5,12 +5,9 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedScatterSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/scatter/get-tooltip-data';
-import {prepareScatterData} from '~core/shapes/scatter/prepare-data';
-import {renderScatter} from '~core/shapes/scatter/renderer';
-import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {calculateNumericProperty} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 import {validateAxisPlotValues, validateXYSeries} from '~core/validation/helpers';
@@ -19,10 +16,21 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
 
 import {getScatterAxisPadding} from './axis-padding';
+import {scatterDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {ScatterInteractionItem} from './interaction-types';
+import {prepareScatterData} from './prepare-data';
 import {prepareScatterSeries} from './prepare-scatter-series';
+import type {PreparedScatterSeries} from './prepared-series';
+import {renderScatter} from './renderer';
+import type {PreparedScatterData, PreparedScatterShapeData, ScatterTooltipChunk} from './types';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareShapeData(
+    args: PrepareShapeDataArgs<PreparedScatterSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareShapeDataResult<PreparedScatterShapeData, PreparedScatterData>> {
     const {
         series,
         xAxis,
@@ -41,7 +49,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareScatterData({
-        series: series as PreparedScatterSeries[],
+        series: series,
         seriesOptions: args.seriesOptions,
         xAxis,
         xScale,
@@ -54,7 +62,12 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         isRangeSlider,
     });
 
-    return {renderData: [data], tooltipItems: data.scatterData};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        layoutData: [data],
+        tooltipItems: data.scatterData,
+    };
 }
 
 function renderShapes({
@@ -63,19 +76,15 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderScatter(
-        {plot, labelsPlot},
-        preparedData[0] as PreparedScatterShapeData,
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderShapesArgs<PreparedScatterShapeData, PreparedSeriesOptions>) {
+    return renderScatter({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
-export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
+export const scatterPlugin = {
     type: 'scatter',
+    defaults: scatterDefaults,
     axes: {x: {singleValueDomain: 'center'}, y: {singleValueDomain: 'center'}},
-    getAxisPadding: getScatterAxisPadding,
+    axisPadding: {getPaintExtents: getScatterAxisPadding},
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
     prepareSeries: prepareScatterSeries,
@@ -188,4 +197,14 @@ export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
             ];
         },
     },
-};
+} satisfies SeriesPlugin<{
+    raw: ScatterSeries;
+    prepared: PreparedScatterSeries;
+    shape: PreparedScatterShapeData;
+    options: ChartSeriesOptions;
+    tooltipChunk: ScatterTooltipChunk;
+    interaction: ScatterInteractionItem;
+    tooltipItem: PreparedScatterData;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

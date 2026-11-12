@@ -1,0 +1,13 @@
+.gcharts-scatter {
+    &__label {
+        user-select: none;
+        pointer-events: none;
+        dominant-baseline: hanging;
+    }
+}
+
+.gcharts-scatter {
+    &__point {
+        stroke-width: 1px;
+    }
+}

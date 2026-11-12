@@ -4,19 +4,27 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedHeatmapSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/heatmap/get-tooltip-data';
-import {prepareHeatmapData} from '~core/shapes/heatmap/prepare-data';
-import {renderHeatmap} from '~core/shapes/heatmap/renderer';
-import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
-import type {HeatmapSeries, TooltipDataChunkHeatmap} from '../../types';
+import type {HeatmapSeries} from '../../types';
 
+import {heatmapDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {HeatmapInteractionItem} from './interaction-types';
+import {prepareHeatmapData} from './prepare-data';
 import {prepareHeatmapSeries} from './prepare-heatmap-series';
+import type {PreparedHeatmapSeries} from './prepared-series';
+import {renderHeatmap} from './renderer';
+import type {HeatmapTooltipChunk, PreparedHeatmapData} from './types';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareShapeData(
+    args: PrepareShapeDataArgs<PreparedHeatmapSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareShapeDataResult<PreparedHeatmapData, PreparedHeatmapData>> {
     const {series, xAxis, xScale, yAxis, yScale} = args;
 
     if (!xAxis || !xScale || !yScale?.[0]) {
@@ -24,14 +32,19 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareHeatmapData({
-        series: series[0] as PreparedHeatmapSeries,
+        series: series[0],
         xAxis,
         xScale,
         yAxis: yAxis![0],
         yScale: yScale[0]!,
     });
 
-    return {renderData: [data], tooltipItems: [data]};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        layoutData: [data],
+        tooltipItems: [data],
+    };
 }
 
 function renderShapes({
@@ -40,17 +53,13 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderHeatmap(
-        {plot, labelsPlot},
-        preparedData[0] as PreparedHeatmapData,
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderShapesArgs<PreparedHeatmapData, PreparedSeriesOptions>) {
+    return renderHeatmap({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
 }
 
-export const heatmapPlugin: SeriesPlugin<HeatmapSeries, TooltipDataChunkHeatmap> = {
+export const heatmapPlugin = {
     type: 'heatmap',
+    defaults: heatmapDefaults,
     axes: {
         x: {bandPadding: 0.5, grid: 'hidden', padding: {max: 0}},
         y: {bandPadding: 0.5, grid: 'hidden', padding: {max: 0}},
@@ -91,4 +100,13 @@ export const heatmapPlugin: SeriesPlugin<HeatmapSeries, TooltipDataChunkHeatmap>
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: HeatmapSeries;
+    prepared: PreparedHeatmapSeries;
+    shape: PreparedHeatmapData;
+    options: ChartSeriesOptions;
+    tooltipChunk: HeatmapTooltipChunk;
+    interaction: HeatmapInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

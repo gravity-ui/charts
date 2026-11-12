@@ -17,10 +17,10 @@ export interface InteractionElement<TItem extends ChartInteractionItem = ChartIn
     item: TItem;
 }
 
-export interface InteractionElementsArgs {
+export interface InteractionElementsArgs<TShape = object> {
     plot: SVGGElement;
     markers: SVGGElement;
-    preparedData: SeriesShapeData[];
+    preparedData: TShape[];
 }
 
 const layers = new WeakMap<SVGSVGElement, Map<SVGGElement, () => InteractionElement[]>>();
@@ -59,7 +59,7 @@ export function getInteractionElements<
     });
 }
 
-interface MarkerShapeData extends SeriesShapeData {
+interface MarkerShapeData extends Pick<SeriesShapeData, 'markers'> {
     series: ChartInteractionSeries;
 }
 

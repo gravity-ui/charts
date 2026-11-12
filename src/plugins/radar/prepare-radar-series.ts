@@ -7,13 +7,16 @@ import {
     DEFAULT_HALO_OPTIONS,
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
-import type {PreparedLegendOptions, PreparedRadarSeries} from '~core/series/types';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
+import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getUniqId} from '~core/utils';
 import {merge} from '~core/utils/merge';
 
 import type {ChartSeriesOptions, RadarSeries} from '../../types';
+
+import type {PreparedRadarSeries} from './prepared-series';
 
 type PrepareRadarSeriesArgs = {
     series: RadarSeries[];
@@ -63,21 +66,17 @@ export function prepareRadarSeries(args: PrepareRadarSeriesArgs) {
     return radarSeries.map((series, index) => {
         const name = series.name ?? `Series ${index + 1}`;
         const color = series.color ?? colorScale(name);
+        const metadata = prepareSeriesMetadata({
+            series: {...series, id: getUniqId(), name},
+            color,
+            legend,
+            symbol: prepareLegendSymbol(series),
+        });
         const preparedSeries: PreparedRadarSeries = {
+            ...metadata,
             type: 'radar',
             data: series.data,
             categories,
-            id: getUniqId(),
-            name,
-            color,
-            visible: typeof series.visible === 'boolean' ? series.visible : true,
-            legend: {
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
-                groupId: series.legend?.groupId ?? getUniqId(),
-                source: series.legend,
-                itemText: series.legend?.itemText ?? name,
-            },
             borderColor: series.borderColor || color,
             borderWidth: series.borderWidth ?? 1,
             fillOpacity: series.fillOpacity ?? 0.25,
@@ -89,10 +88,7 @@ export function prepareRadarSeries(args: PrepareRadarSeriesArgs) {
                 html: get(series, 'dataLabels.html', false),
                 format: series.dataLabels?.format,
             },
-            cursor: get(series, 'cursor', null),
             marker: prepareMarker(series, seriesOptions),
-            tooltip: series.tooltip,
-            custom: series.custom,
         };
 
         return preparedSeries;

@@ -167,15 +167,16 @@ export const DefaultTooltipContent = ({
 
                 const plugin = series?.type ? getSeriesPlugin(series.type) : undefined;
                 const valueFormatContext =
-                    plugin?.tooltip.getValueFormatContext?.(seriesItem) ?? {};
+                    plugin?.tooltip?.getValueFormatContext?.(seriesItem) ?? {};
 
-                let tooltipRows = rows ?? plugin?.tooltip.rows ?? [];
+                let tooltipRows = rows ?? plugin?.tooltip?.rows ?? [];
                 if (typeof tooltipRows === 'function') {
                     tooltipRows = tooltipRows(seriesItem);
                 }
 
                 return tooltipRows.map((row, rowIndex) => {
-                    const rowCells: ReadonlyArray<PluginTooltipRowCell> = row.cells ?? [];
+                    const rowCells: ReadonlyArray<PluginTooltipRowCell<TooltipDataChunk>> =
+                        row.cells ?? [];
                     const rowId = 'id' in row ? row.id : String(rowIndex);
                     const key = `${seriesId}_${chunkIndex}_${rowId}`;
 

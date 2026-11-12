@@ -1,22 +1,25 @@
 /** @jest-environment jsdom */
+
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 
+import type {PreparedAreaData} from '../../../plugins/area/types';
+import type {PreparedAreaRangeData} from '../../../plugins/area-range/types';
+import type {PreparedBarXData} from '../../../plugins/bar-x/types';
+import type {PreparedBarYData} from '../../../plugins/bar-y/types';
 import {getCurveFactory} from '../../../plugins/line/interpolation';
+import {prepareLineData} from '../../../plugins/line/prepare-data';
 import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';
+import type {PreparedPieData} from '../../../plugins/pie/types';
+import {scatterPlugin} from '../../../plugins/scatter';
+import {prepareScatterData} from '../../../plugins/scatter/prepare-data';
 import {prepareScatterSeries} from '../../../plugins/scatter/prepare-scatter-series';
 import type {LineSeries, ScatterClusterData, ScatterSeries} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
-import {getSeriesPlugin} from '../../series/seriesRegistry';
+import {sampleShapesPlugin} from '../../series/__tests__/fixtures/custom-plugin';
+import {registerSeriesPlugin} from '../../series/seriesRegistry';
 import type {PreparedLegend} from '../../series/types';
-import type {PreparedAreaData} from '../../shapes/area/types';
-import type {PreparedAreaRangeData} from '../../shapes/area-range/types';
-import type {PreparedBarXData} from '../../shapes/bar-x/types';
-import type {PreparedBarYData} from '../../shapes/bar-y/types';
-import {prepareLineData} from '../../shapes/line/prepare-data';
-import type {PreparedPieData} from '../../shapes/pie/types';
-import {prepareScatterData} from '../../shapes/scatter/prepare-data';
 import type {TooltipItemData} from '../../shapes/types';
 import {getClosestPoints} from '../get-closest-data';
 
@@ -177,12 +180,26 @@ function getLayers(...ids: string[]) {
     return new Map(ids.map((id, index) => [id, index]));
 }
 
+type TestShape = {series: {type: string}} | {point: {series: {type: string}}};
+
+function lookupData(shapes: TestShape[]): TooltipItemData[] {
+    return shapes.map((data) => ({
+        type: 'series' in data ? data.series.type : data.point.series.type,
+        data,
+    }));
+}
+
 function getActive(
-    shapesData: TooltipItemData[],
+    data: TestShape[],
     position: [number, number],
     layerIndexes = new Map<string, number>(),
 ) {
-    const hovered = getClosestPoints({position, shapesData, layerIndexes, ...BOUNDS});
+    const hovered = getClosestPoints({
+        position,
+        shapesData: lookupData(data),
+        layerIndexes,
+        ...BOUNDS,
+    });
     const closest = hovered.filter((item) => item.closest);
     expect(closest).toHaveLength(1);
     return closest[0];
@@ -260,7 +277,7 @@ describe('getClosestPoints with mixed series types', () => {
         const scatter = await prepareScatter([{x: 150, y: 160, radius: 1}]);
         const hovered = getClosestPoints({
             position: [150, 150],
-            shapesData: [area, ...scatter, line],
+            shapesData: lookupData([area, ...scatter, line]),
             layerIndexes: getLayers('area', scatter[0].point.series.id, line.series.id),
             ...BOUNDS,
         });
@@ -420,7 +437,7 @@ describe('getClosestPoints with mixed series types', () => {
         const scatter = await prepareScatter(scatterPoints);
         const hovered = getClosestPoints({
             position: [200, LINE_Y],
-            shapesData: [...line, ...scatter],
+            shapesData: lookupData([...line, ...scatter]),
             layerIndexes: new Map(),
             ...BOUNDS,
         });
@@ -604,11 +621,20 @@ describe('getClosestPoints with a single series type', () => {
         jest.restoreAllMocks();
     });
 
-    test('does not ask the plugin to measure distances', async () => {
-        const spy = jest.spyOn(getSeriesPlugin('scatter').tooltip, 'prepareData');
-        getActive(await prepareScatter([{x: 10, y: 10}]), [20, 20]);
-        expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
-    });
+    test.each([{extraLayers: []}, {extraLayers: [{type: 'sample', data: {}}]}])(
+        'does not measure mixed-tooltip distances with extra layers $extraLayers',
+        async ({extraLayers}) => {
+            registerSeriesPlugin(sampleShapesPlugin);
+            const spy = jest.spyOn(scatterPlugin.tooltip, 'prepareData');
+            const scatter = await prepareScatter([{x: 10, y: 10}]);
+            getClosestPoints({
+                ...BOUNDS,
+                position: [20, 20],
+                shapesData: [...extraLayers, ...lookupData(scatter)],
+            });
+            expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
+        },
+    );
 
     test('scatter still picks the marker containing the pointer over a nearer center', async () => {
         // The contour measurement is the exception to `measureDistance: false`.

@@ -1,5 +1,4 @@
 import type {ChartSeries, ChartSeriesData, ChartTooltip, ChartXAxis, ChartYAxis} from '../../types';
-import type {SeriesPlugin} from '../series/plugin';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import {getMinSpaceBetween} from '../utils/array';
 import {isPointTooltipEnabled} from '../utils/tooltip-helpers';
@@ -33,9 +32,16 @@ export function getTooltipYAxis(series: TooltipSeries, yAxes?: ChartYAxis[]) {
 }
 
 export function getTooltipHeader<T extends TooltipHeaderItem>(items: T[]) {
-    let selected: {item: T; header: NonNullable<SeriesPlugin['tooltip']['header']>} | undefined;
+    let selected:
+        | {
+              item: T;
+              header: NonNullable<
+                  NonNullable<ReturnType<typeof getSeriesPlugin>['tooltip']>['header']
+              >;
+          }
+        | undefined;
     for (const item of items) {
-        const header = getSeriesPlugin(item.series.type).tooltip.header;
+        const header = getSeriesPlugin(item.series.type).tooltip?.header;
         if (header && (!selected || (header.priority ?? 0) > (selected.header.priority ?? 0))) {
             selected = {item, header};
         }
@@ -65,10 +71,12 @@ export function prepareTooltipHeaderFormat({
 
     for (const series of seriesData) {
         if (series.visible === false) continue;
-        const header = getSeriesPlugin(series.type).tooltip.header;
+        const header = getSeriesPlugin(series.type).tooltip?.header;
         if (!header) continue;
         const data = Array.isArray(series.data) ? series.data : [series.data];
-        const points = data.filter((point) => isPointTooltipEnabled({data: point, series}));
+        const points = data.filter((point) =>
+            isPointTooltipEnabled<ChartSeriesData>({data: point, series}),
+        );
         // Empty series still provide a default format to getDefaultTooltipHeaderFormat callers.
         const enabled = data.length ? points.length > 0 : isPointTooltipEnabled({series});
         if (!enabled) continue;

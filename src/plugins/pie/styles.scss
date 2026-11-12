@@ -1,0 +1,13 @@
+.gcharts-pie {
+    &__label {
+        user-select: none;
+        pointer-events: none;
+        dominant-baseline: hanging;
+    }
+}
+
+.gcharts-pie {
+    &__segment {
+        stroke: var(--g-color-base-background);
+    }
+}

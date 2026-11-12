@@ -5,12 +5,9 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedAreaSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
-import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
-import {renderArea} from '~core/shapes/area/renderer';
-import type {PreparedAreaData} from '~core/shapes/area/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {AreaFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -23,28 +20,33 @@ import {
 import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {
-    AreaFormatContext,
-    AreaSeries,
-    AreaSeriesData,
-    TooltipDataChunkArea,
-} from '../../types';
+import type {AreaSeries, AreaSeriesData} from '../../types';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
 
 import {getAreaAxisPadding} from './axis-padding';
+import {areaDefaults} from './defaults';
 import {getAreaAxisData} from './domain';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {AreaInteractionItem} from './interaction-types';
 import {prepareAreaSeries} from './prepare-area-series';
+import {prepareAreaData, projectAreaData} from './prepare-data';
+import type {PreparedAreaSeries} from './prepared-series';
+import {renderArea} from './renderer';
 import {getAreaStackLabelAnchors} from './stack-labels';
+import type {AreaTooltipChunk, PreparedAreaData} from './types';
+
+import './styles.scss';
 
 function isAreaPointDefined(point: AreaSeriesData) {
     return point.y !== null && point.y !== undefined;
 }
 
-export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
+export const areaPlugin = {
     type: 'area',
+    defaults: areaDefaults,
     axes: {
         x: {singleValueDomain: 'center'},
         y: {
@@ -54,7 +56,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             getData: getAreaAxisData,
         },
     },
-    getAxisPadding: getAreaAxisPadding,
+    axisPadding: {getPaintExtents: getAreaAxisPadding},
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
@@ -101,7 +103,9 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         }
     },
     getColorValue: (d) => d.y,
-    prepareShapeData: async function (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+    prepareShapeData: async function (
+        args: PrepareShapeDataArgs<PreparedAreaSeries, PreparedSeriesOptions, PreparedSeries>,
+    ): Promise<PrepareShapeDataResult<PreparedAreaData, PreparedAreaData>> {
         const {
             series,
             seriesOptions,
@@ -120,7 +124,7 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         }
 
         const data = await prepareAreaData({
-            series: series as PreparedAreaSeries[],
+            series: series,
             seriesOptions,
             xAxis,
             xScale,
@@ -142,6 +146,12 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         ]);
         return {
             renderData: filteredData,
+            markers: filteredData.flatMap((item) => item.markers),
+            annotations: filteredData.flatMap((item) => item.annotations),
+            htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+            getHoverMarkers: (hovered) =>
+                filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
+            layoutData: filteredData,
             tooltipItems: filteredData,
             labels,
             gradientGeometry: getGradientGeometry(filteredData),
@@ -154,8 +164,8 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         seriesOptions,
         dispatcher,
         labels,
-    }: RenderShapesArgs) {
-        const data = preparedData as PreparedAreaData[];
+    }: RenderShapesArgs<PreparedAreaData, PreparedSeriesOptions>) {
+        const data = preparedData;
         const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
         const cleanup = renderArea(
             {plot, labelsPlot},
@@ -197,4 +207,14 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: AreaSeries;
+    prepared: PreparedAreaSeries;
+    shape: PreparedAreaData;
+    options: ChartSeriesOptions;
+    tooltipChunk: AreaTooltipChunk;
+    interaction: AreaInteractionItem;
+    formatContext: AreaFormatContext;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

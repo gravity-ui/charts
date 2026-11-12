@@ -1,0 +1,530 @@
+import {ascending, descending, max, min, reverse, sort} from 'd3-array';
+import type {AxisDomain, AxisScale} from 'd3-axis';
+import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
+import get from 'es-toolkit/compat/get';
+
+import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
+import type {PreparedSplit} from '~core/layout/split-types';
+import type {ChartScale} from '~core/scales/types';
+import {prepareAnnotation} from '~core/series/prepare-annotation';
+import type {PreparedSeriesOptions} from '~core/series/types';
+import {MIN_BAR_GROUP_GAP} from '~core/shapes/bar-constants';
+import {getBarLayout, getBarWidthBySeries} from '~core/shapes/bar-width';
+import {getDataCategoryValue, isPointDataLabelEnabled} from '~core/utils';
+import {getBandSize} from '~core/utils/band-size';
+import {getFormattedValue} from '~core/utils/format';
+import {getPositiveShare} from '~core/utils/percentage';
+import {hasOutsideOnlyPlacement, placeRectLabel} from '~core/utils/rect-label-placement';
+import {createLabelMeasurer} from '~core/utils/text';
+
+import type {BarXSeriesData, HtmlItem, LabelData} from '../../types';
+
+import type {PreparedBarXSeries} from './prepared-series';
+import type {PreparedBarXData} from './types';
+import {getBarXRect, getBarXStackKey} from './utils';
+
+/**
+ * BarX always filters out data with null or replace null by zero.
+ */
+type PreparedBarXSeriesData = BarXSeriesData & {y?: number | string};
+
+const isSeriesDataValid = (
+    d: BarXSeriesData | PreparedBarXSeriesData,
+): d is PreparedBarXSeriesData => d.y !== null;
+
+async function getLabelData(
+    d: PreparedBarXData,
+    xMax: number,
+    plot: {x: number; y: number; width: number; height: number},
+    measureLabel: ReturnType<typeof createLabelMeasurer>,
+): Promise<{svgLabel?: LabelData; htmlLabel?: HtmlItem}> {
+    const text = getFormattedValue({
+        value: d.data.label ?? d.data.y,
+        format: d.series.dataLabels.format,
+        context: {data: d.data, percentage: d.percentage},
+    });
+    const style = d.series.dataLabels.style;
+    const {width, height, hangingOffset} = await measureLabel(
+        text,
+        style,
+        d.series.dataLabels.html,
+    );
+    if (d.series.dataLabels.placement) {
+        const placed = placeRectLabel({
+            anchor: getBarXRect(d),
+            bounds: plot,
+            size: {width, height},
+            axis: 'y',
+            endAtMax: !d.extendsUp,
+            padding: d.series.dataLabels.padding,
+            positions: d.series.dataLabels.placement,
+            allowOutside:
+                d.isStackEnd ||
+                !d.series.stacking ||
+                hasOutsideOnlyPlacement(d.series.dataLabels.placement),
+            fallback: d.series.dataLabels.placementFallback,
+        });
+        if (!placed) return {};
+        return d.series.dataLabels.html
+            ? {htmlLabel: {content: text, size: {width, height}, style, ...placed}}
+            : {
+                  svgLabel: {
+                      text,
+                      size: {width, height, hangingOffset},
+                      style,
+                      series: d.series,
+                      textAnchor: 'middle',
+                      x: placed.x + width / 2,
+                      y: placed.y + hangingOffset,
+                  },
+              };
+    }
+
+    if (d.series.dataLabels.html) {
+        let y = Math.max(height, d.y - d.series.dataLabels.padding);
+        if (d.series.dataLabels.inside) {
+            y = d.y + d.height / 2 + height / 2;
+        }
+        const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
+        return {
+            htmlLabel: {
+                content: text,
+                x: centerX - width / 2,
+                y: y - height,
+                size: {width, height},
+                style,
+            },
+        };
+    } else {
+        let y = Math.max(hangingOffset, d.y - height + hangingOffset - d.series.dataLabels.padding);
+        if (d.series.dataLabels.inside) {
+            const centerY = d.y + d.height / 2;
+            y = Math.min(
+                d.y + d.height - height + hangingOffset,
+                centerY - height / 2 + hangingOffset,
+            );
+        }
+        const centerX = Math.min(xMax - width / 2, Math.max(width / 2, d.x + d.width / 2));
+        return {
+            svgLabel: {
+                text,
+                x: centerX,
+                y,
+                style,
+                size: {width, height, hangingOffset},
+                textAnchor: 'middle',
+                series: d.series,
+            },
+        };
+    }
+}
+
+type PlotIndex = number;
+type XValue = string | number;
+type StackId = string;
+type GroupedSeries = Map<
+    PlotIndex,
+    Record<XValue, Record<StackId, {data: PreparedBarXSeriesData; series: PreparedBarXSeries}[]>>
+>;
+
+export const prepareBarXData = async (args: {
+    series: PreparedBarXSeries[];
+    seriesOptions: PreparedSeriesOptions;
+    xAxis: PreparedXAxis;
+    xScale: ChartScale;
+    yAxis: PreparedYAxis[];
+    yScale: (ChartScale | undefined)[];
+    boundsHeight: number;
+    boundsWidth: number;
+    split: PreparedSplit;
+    isRangeSlider?: boolean;
+}): Promise<PreparedBarXData[]> => {
+    const {
+        series,
+        seriesOptions,
+        xAxis,
+        xScale,
+        yAxis,
+        yScale,
+        boundsHeight: plotHeight,
+        boundsWidth,
+        split,
+        isRangeSlider,
+    } = args;
+    const configuredStackGap = seriesOptions['bar-x'].stackGap;
+    const stackGap = Number.isFinite(configuredStackGap) ? Math.max(0, configuredStackGap) : 0;
+    const categories = xAxis?.categories ?? [];
+    const sortingOptions = get(seriesOptions, 'bar-x.dataSorting');
+    const comparator = sortingOptions?.direction === 'desc' ? descending : ascending;
+    const sortKey = (() => {
+        switch (sortingOptions?.key) {
+            case 'y': {
+                return 'data.y';
+            }
+            case 'name': {
+                return 'series.name';
+            }
+            default: {
+                return undefined;
+            }
+        }
+    })();
+
+    const categoryDomain =
+        xAxis.type === 'category' ? new Set((xScale as ScaleBand<string>).domain()) : undefined;
+    const domain = new Set<string | number>();
+    const layoutSeries = new Set<PreparedBarXSeries>();
+    let maxGroupSize = 1;
+
+    // series grouped by plotIndex > xValue > data[];
+    const dataByPlots: GroupedSeries = new Map();
+    series.forEach((s) => {
+        const yAxisIndex = s.yAxis;
+        const seriesYAxis = yAxis[yAxisIndex];
+        const plotIndex = seriesYAxis.plotIndex;
+
+        if (!dataByPlots.has(plotIndex)) {
+            dataByPlots.set(plotIndex, {});
+        }
+        const data = dataByPlots.get(plotIndex) ?? {};
+
+        const stackId = getBarXStackKey(s);
+        s.data.forEach((d) => {
+            if (!isSeriesDataValid(d)) {
+                return;
+            }
+            const key =
+                xAxis.type === 'category'
+                    ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
+                    : d.x;
+
+            if (key !== undefined) {
+                if (!data[key]) {
+                    data[key] = {};
+                }
+
+                if (!data[key][stackId]) {
+                    data[key][stackId] = [];
+                }
+
+                data[key][stackId].push({data: d, series: s});
+                domain.add(key);
+                if (!categoryDomain || categoryDomain.has(String(key))) layoutSeries.add(s);
+            }
+        });
+    });
+
+    for (const data of dataByPlots.values()) {
+        maxGroupSize = Math.max(
+            maxGroupSize,
+            max(
+                Object.values(data),
+                (d) =>
+                    Object.values(d).filter((items) =>
+                        items.some((item) => item.series.grouping !== false),
+                    ).length,
+            ) || 1,
+        );
+    }
+
+    const result: PreparedBarXData[] = [];
+
+    const barMaxWidth = get(seriesOptions, 'bar-x.barMaxWidth');
+    const barPadding = get(seriesOptions, 'bar-x.barPadding');
+    const groupPadding = get(seriesOptions, 'bar-x.groupPadding');
+    const bandSize = getBandSize({
+        domain: Array.from(domain),
+        scale: xScale as AxisScale<AxisDomain>,
+    });
+    const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
+    const groupSize = Math.max(0, bandSize - groupGap);
+    const barSlotSize = groupSize / maxGroupSize;
+    const {width: rectWidth, gap: rectGap} = getBarLayout(
+        layoutSeries,
+        barSlotSize,
+        barPadding,
+        barMaxWidth,
+    );
+    const widthBySeries = getBarWidthBySeries(series, barSlotSize, groupSize);
+    const borderWidthBySeries = new Map(
+        series.map((s) => {
+            const width = widthBySeries.get(s) ?? rectWidth;
+            const borderWidth =
+                !isRangeSlider &&
+                Number.isFinite(s.borderWidth) &&
+                s.borderWidth > 0 &&
+                width > s.borderWidth * 2
+                    ? s.borderWidth
+                    : 0;
+            return [s, borderWidth];
+        }),
+    );
+    const positiveExtendsUpByAxis = yScale.map((scale) => {
+        const range = scale?.range() ?? [1, 0];
+        return range[0] > range[range.length - 1];
+    });
+    const plotsWithGrid = new Set(
+        yAxis.filter((axis) => axis.visible && axis.grid.enabled).map((axis) => axis.plotIndex),
+    );
+
+    const plotIndexes = Array.from(dataByPlots.keys());
+    for (let plotDataIndex = 0; plotDataIndex < plotIndexes.length; plotDataIndex++) {
+        const data = dataByPlots.get(plotIndexes[plotDataIndex]) ?? {};
+        const groupedData = Object.entries(data);
+
+        for (let groupedDataIndex = 0; groupedDataIndex < groupedData.length; groupedDataIndex++) {
+            const [xValue, val] = groupedData[groupedDataIndex];
+            let xCenter;
+
+            if (xAxis.type === 'category') {
+                const xBandScale = xScale as ScaleBand<string>;
+
+                if (!categoryDomain?.has(xValue)) {
+                    continue;
+                }
+
+                xCenter = (xBandScale(xValue) || 0) + bandSize / 2;
+            } else {
+                const scale = xScale as ScaleLinear<number, number> | ScaleTime<number, number>;
+                xCenter = scale(Number(xValue));
+            }
+
+            const stacks = Object.values(val);
+            const groupedCount = stacks.filter((items) =>
+                items.some((item) => item.series.grouping !== false),
+            ).length;
+            const currentGroupWidth =
+                rectWidth * groupedCount + rectGap * Math.max(0, groupedCount - 1);
+            let groupedIndex = 0;
+
+            for (let groupItemIndex = 0; groupItemIndex < stacks.length; groupItemIndex++) {
+                const yValues = stacks[groupItemIndex];
+                const slotIndex = yValues.some((item) => item.series.grouping !== false)
+                    ? groupedIndex++
+                    : 0;
+                const percentStack = yValues.some((item) => item.series.stacking === 'percent');
+                let positiveStackSum = 0;
+                let negativeStackSum = 0;
+                let hasZeroStackItem = false;
+                const stackItems: PreparedBarXData[] = [];
+
+                let sortedData = yValues;
+                if (sortKey) {
+                    sortedData = sort(yValues, (a, b) =>
+                        comparator(get(a, sortKey), get(b, sortKey)),
+                    );
+                } else if (sortingOptions?.direction === 'desc') {
+                    sortedData = reverse(yValues);
+                }
+
+                for (let yValueIndex = 0; yValueIndex < sortedData.length; yValueIndex++) {
+                    const yValue = sortedData[yValueIndex];
+                    const overlay = yValue.series.grouping === false;
+                    const independent = overlay && !yValue.series.stacking;
+                    const width = widthBySeries.get(yValue.series) ?? rectWidth;
+                    const yAxisIndex = yValue.series.yAxis;
+                    const seriesYScale = yScale[yAxisIndex] as
+                        | ScaleLinear<number, number>
+                        | undefined;
+                    if (!seriesYScale) {
+                        continue;
+                    }
+
+                    const seriesYAxis = yAxis[yAxisIndex];
+                    const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
+
+                    const x = overlay
+                        ? xCenter - width / 2
+                        : xCenter -
+                          currentGroupWidth / 2 +
+                          (rectWidth + rectGap) * slotIndex +
+                          (rectWidth - width) / 2;
+
+                    const yDataValue = (yValue.data.y ?? 0) as number;
+
+                    const positiveExtendsUp = positiveExtendsUpByAxis[yAxisIndex];
+                    let extendsUp = positiveExtendsUp;
+                    let shapeHeight = 0;
+                    let barPositionY = yAxisTop;
+                    if (!percentStack) {
+                        const baseValue =
+                            seriesYAxis.type === 'logarithmic'
+                                ? (min(seriesYScale.domain()) ?? 0)
+                                : 0;
+                        let stackSum = yDataValue > 0 ? positiveStackSum : negativeStackSum;
+                        if (independent) stackSum = 0;
+                        const startPixel = seriesYScale(stackSum === 0 ? baseValue : stackSum);
+                        const endPixel = seriesYScale(stackSum + yDataValue);
+                        const height = Math.abs(endPixel - startPixel);
+                        const defaultExtendsUp =
+                            yDataValue >= 0 ? positiveExtendsUp : !positiveExtendsUp;
+                        extendsUp = height > 0 ? endPixel < startPixel : defaultExtendsUp;
+                        // Keep the value end fixed; the gap belongs next to the previous
+                        // segment of the same sign, including on reversed axes.
+                        // Preserve the baseline gap after zero segments so the first
+                        // visible bar does not merge with the axis.
+                        const hasPreviousItem =
+                            !independent && (stackSum !== 0 || hasZeroStackItem);
+                        const itemGap = hasPreviousItem && height >= stackGap ? stackGap : 0;
+                        shapeHeight = height - itemGap;
+                        barPositionY =
+                            yAxisTop + Math.min(startPixel, endPixel) + (extendsUp ? 0 : itemGap);
+                    }
+
+                    const barData: PreparedBarXData = {
+                        annotation:
+                            yValue.data.annotation && !isRangeSlider
+                                ? await prepareAnnotation({
+                                      annotation: yValue.data.annotation,
+                                      optionsLabel: seriesOptions['bar-x']?.annotation?.label,
+                                      optionsPopup: seriesOptions['bar-x']?.annotation?.popup,
+                                  })
+                                : undefined,
+                        annotations: [],
+                        x,
+                        y: barPositionY,
+                        width,
+                        height: shapeHeight,
+                        valueEndPadding: 0,
+                        borderWidth: borderWidthBySeries.get(yValue.series) ?? 0,
+                        opacity: yValue.data.opacity ?? yValue.series.opacity,
+                        data: yValue.data,
+                        series: yValue.series,
+                        htmlLabels: [],
+                        svgLabels: [],
+                        isStackEnd: independent,
+                        extendsUp,
+                    };
+
+                    stackItems.push(barData);
+                    if (yDataValue === 0) hasZeroStackItem = true;
+
+                    if (yDataValue > 0) {
+                        positiveStackSum += yDataValue;
+                    } else {
+                        negativeStackSum += yDataValue;
+                    }
+                }
+
+                if (percentStack) {
+                    const currentPlot = split.plots[plotIndexes[plotDataIndex]];
+                    const currentPlotHeight = currentPlot?.height ?? plotHeight;
+                    const currentPlotTop = currentPlot?.top ?? 0;
+
+                    const visibleCount = stackItems.filter(
+                        (item) => Number(item.data.y) > 0,
+                    ).length;
+                    const gapCount = Math.max(0, visibleCount - 1);
+                    const availableHeight = Math.max(0, currentPlotHeight);
+                    const gap = gapCount ? Math.min(stackGap, availableHeight / gapCount) : 0;
+                    const segmentsHeight = Math.max(0, availableHeight - gap * gapCount);
+                    const extendsUp =
+                        positiveExtendsUpByAxis[stackItems[0]?.series.yAxis ?? 0] ?? true;
+                    let offset = 0;
+                    let visibleIndex = 0;
+                    stackItems.forEach((item) => {
+                        const share = getPositiveShare(Number(item.data.y ?? 0), positiveStackSum);
+                        item.percentage = item.series.stacking === 'percent' ? share : undefined;
+                        if (share > 0 && visibleIndex > 0) offset += gap;
+                        // Snap the final end to the plot edge to avoid floating-point overflow.
+                        item.height =
+                            share > 0 && visibleIndex === visibleCount - 1
+                                ? Math.max(0, availableHeight - offset)
+                                : share * segmentsHeight;
+                        item.extendsUp = extendsUp;
+                        item.y =
+                            currentPlotTop +
+                            (extendsUp
+                                ? Math.max(0, availableHeight - offset - item.height)
+                                : offset);
+                        offset += item.height;
+                        if (share > 0) visibleIndex++;
+                    });
+                }
+
+                let lastPositiveItem: PreparedBarXData | undefined;
+                let lastNegativeItem: PreparedBarXData | undefined;
+                for (const item of stackItems) {
+                    if (item.height <= 0 || Number(item.data.y) === 0) continue;
+                    if (Number(item.data.y) > 0) {
+                        lastPositiveItem = item;
+                    } else {
+                        lastNegativeItem = item;
+                    }
+                }
+                if (lastPositiveItem) {
+                    lastPositiveItem.isStackEnd = true;
+                    if (
+                        percentStack &&
+                        !isRangeSlider &&
+                        plotsWithGrid.has(plotIndexes[plotDataIndex])
+                    ) {
+                        // AxisY uses SVG's default 1px centered grid stroke. Cover its
+                        // outer half without changing stack gaps or logical label anchors.
+                        lastPositiveItem.valueEndPadding = 0.5;
+                    }
+                }
+                if (lastNegativeItem) lastNegativeItem.isStackEnd = true;
+
+                result.push(...stackItems);
+            }
+        }
+    }
+
+    if (series.some((s) => s.grouping === false)) {
+        const seriesOrder = new Map(series.map((s, index) => [s, index]));
+        result.sort((a, b) => (seriesOrder.get(a.series) ?? 0) - (seriesOrder.get(b.series) ?? 0));
+    }
+
+    for (const barData of result) {
+        if (barData.annotation) {
+            barData.annotations = [
+                {
+                    annotation: barData.annotation,
+                    x: barData.x + barData.width / 2,
+                    y: barData.y,
+                },
+            ];
+        }
+    }
+
+    const xMax = Math.max(...xScale.range());
+    const measureLabel = createLabelMeasurer();
+
+    for (let i = 0; i < result.length; i++) {
+        const barData = result[i];
+
+        const isBarOutsideBounds =
+            barData.x + barData.width <= 0 ||
+            barData.x >= xMax ||
+            barData.y + barData.height <= 0 ||
+            barData.y >= plotHeight;
+        const isZeroValue = (barData.data.y ?? 0) === 0;
+        if (
+            !isRangeSlider &&
+            (!isBarOutsideBounds || isZeroValue) &&
+            isPointDataLabelEnabled({data: barData.data, series: barData.series})
+        ) {
+            const currentPlot = split.plots[yAxis[barData.series.yAxis].plotIndex];
+            const {svgLabel, htmlLabel} = await getLabelData(
+                barData,
+                xMax,
+                {
+                    x: 0,
+                    y: currentPlot?.top ?? 0,
+                    width: boundsWidth,
+                    height: currentPlot?.height ?? plotHeight,
+                },
+                measureLabel,
+            );
+            if (svgLabel) {
+                barData.svgLabels.push(svgLabel);
+            }
+            if (htmlLabel) {
+                barData.htmlLabels.push(htmlLabel);
+            }
+        }
+    }
+
+    return result;
+};

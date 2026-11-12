@@ -31,7 +31,7 @@ function calculateXAxisPadding(series: PreparedSeries[]) {
     series.forEach((seriesItem) => {
         result = Math.max(
             result,
-            getSeriesPlugin(seriesItem.type).getXAxisPadding?.(seriesItem) ?? 0,
+            getSeriesPlugin(seriesItem.type).axisPadding?.getXDomainReserve?.(seriesItem) ?? 0,
         );
     });
 

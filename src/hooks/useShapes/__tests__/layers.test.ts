@@ -81,6 +81,7 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
             });
             return {
                 renderData,
+                layoutData: renderData,
                 tooltipItems: args.series.map((s) => ({series: s})),
             };
         });
@@ -97,7 +98,7 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
         'hover-markers-bar-x',
         `hover-markers-${series[4].id}`,
     ]);
-    expect(shapesData.map((item) => item.series)).toEqual([
+    expect(shapesData.map((item) => (item.data as {series: PreparedSeries}).series)).toEqual([
         series[0],
         series[4],
         series[1],
@@ -111,6 +112,41 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
         [series[3].id]: 1,
         [series[4].id]: 2,
     });
+});
+
+it('passes explicit layer fields independently of private geometry', async () => {
+    const series = await prepare([rawSeries[0]]);
+    const renderData = [Object.freeze({radius: 3})];
+    const {markers, annotations, getHoverMarkers} = createShape();
+    const htmlLabels = [{x: 10, y: 20, content: 'Orders', size: {width: 40, height: 16}}];
+    jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
+        renderData,
+        markers,
+        annotations,
+        htmlLabels,
+        getHoverMarkers,
+    });
+
+    const {shapes, shapesData} = await getShapes(getShapeArgs(series));
+    const {props} = shapes[0];
+    expect(props.preparedData).toBe(renderData);
+    expect(props.markers).toBe(markers);
+    expect(props.annotations).toBe(annotations);
+    expect(props.htmlLabels).toBe(htmlLabels);
+    expect(props.getHoverMarkers).toBe(getHoverMarkers);
+    expect(shapesData).toEqual([]);
+});
+
+it('retains a layer that only supplies hover markers', async () => {
+    const series = await prepare([rawSeries[0]]);
+    const {getHoverMarkers} = createShape();
+    jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
+        renderData: [],
+        getHoverMarkers,
+    });
+    const {shapes} = await getShapes(getShapeArgs(series));
+    expect(shapes).toHaveLength(1);
+    expect(shapes[0].props.getHoverMarkers).toBe(getHoverMarkers);
 });
 
 interface ClipCase {

@@ -1,7 +1,6 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import get from 'es-toolkit/compat/get';
 
 import type {ChartScale} from '~core/scales/types';
 import type {TooltipItemData} from '~core/shapes/types';
@@ -70,14 +69,10 @@ export function useDefaultState(props: Props) {
                 return;
             }
 
-            const shapesDataWithTooltipEnabled = shapesData.filter((d) =>
-                get(d, 'series.tooltip.enabled', true),
-            );
-
             const closest = getClosestPoints({
                 position: [x, y],
                 layerIndexes,
-                shapesData: shapesDataWithTooltipEnabled,
+                shapesData,
                 boundsHeight,
                 boundsWidth,
             });

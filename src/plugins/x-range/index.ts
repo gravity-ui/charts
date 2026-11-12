@@ -5,21 +5,27 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedXRangeSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/x-range/get-tooltip-data';
-import {prepareXRangeData} from '~core/shapes/x-range/prepare-data';
-import {renderXRange} from '~core/shapes/x-range/renderer';
-import type {PreparedXRangeData} from '~core/shapes/x-range/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipYValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {getFormattedValue} from '~core/utils/format';
 import {filterPoints} from '~core/zoom/filter-data';
 
-import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
+import type {XRangeSeries, XRangeSeriesData} from '../../types';
 
+import {xRangeDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {XRangeInteractionItem} from './interaction-types';
+import {prepareXRangeData} from './prepare-data';
 import {prepareXRangeSeries} from './prepare-x-range-series';
+import type {PreparedXRangeSeries} from './prepared-series';
+import {renderXRange} from './renderer';
+import type {PreparedXRangeData, XRangeTooltipChunk} from './types';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+async function prepareShapeData(
+    args: PrepareShapeDataArgs<PreparedXRangeSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareShapeDataResult<PreparedXRangeData, PreparedXRangeData>> {
     const {series, xAxis, xScale, yAxis, yScale, boundsWidth, isRangeSlider} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
@@ -27,7 +33,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     }
 
     const data = await prepareXRangeData({
-        series: series as PreparedXRangeSeries[],
+        series: series,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
@@ -36,7 +42,12 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         isRangeSlider,
     });
 
-    return {renderData: data, tooltipItems: data};
+    return {
+        renderData: data,
+        htmlLabels: data.flatMap((item) => item.htmlLabels),
+        layoutData: data,
+        tooltipItems: data,
+    };
 }
 
 function renderShapes({
@@ -45,21 +56,17 @@ function renderShapes({
     preparedData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderXRange(
-        {plot, labelsPlot},
-        preparedData as PreparedXRangeData[],
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderShapesArgs<PreparedXRangeData, PreparedSeriesOptions>) {
+    return renderXRange({plot, labelsPlot}, preparedData, seriesOptions, dispatcher);
 }
 
 function getXRangeWidth(data: XRangeSeriesData) {
     return Math.abs(Number(data.x1) - Number(data.x0));
 }
 
-export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = {
+export const xRangePlugin = {
     type: 'x-range',
+    defaults: xRangeDefaults,
     axes: {
         x: {
             getData: ({series}) => ({
@@ -115,9 +122,8 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = 
                     {
                         id: 'value',
                         source: ({item}) => {
-                            const {data, series} = item as TooltipDataChunkXRange;
-                            const format = (series as unknown as PreparedXRangeSeries).tooltip
-                                ?.valueFormat;
+                            const {data, series} = item;
+                            const format = series.tooltip?.valueFormat;
                             const x0 = getFormattedValue({value: data.x0, format}) ?? data.x0;
                             const x1 = getFormattedValue({value: data.x1, format}) ?? data.x1;
                             return `${x0} — ${x1}`;
@@ -128,4 +134,13 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = 
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: XRangeSeries;
+    prepared: PreparedXRangeSeries;
+    shape: PreparedXRangeData;
+    options: ChartSeriesOptions;
+    tooltipChunk: XRangeTooltipChunk;
+    interaction: XRangeInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

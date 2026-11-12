@@ -366,7 +366,7 @@ describe('axis padding', () => {
             },
         ]);
         args.yAxis[0].padding = allAuto;
-        const measurement = jest.spyOn(getSeriesPlugin('area'), 'getAxisPadding');
+        const measurement = jest.spyOn(getSeriesPlugin('area').axisPadding!, 'getPaintExtents');
         try {
             applyAxisPadding(args);
             expect(measurement).not.toHaveBeenCalled();

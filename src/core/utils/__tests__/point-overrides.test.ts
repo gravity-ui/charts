@@ -4,6 +4,7 @@ import {isPointTooltipEnabled} from '../tooltip-helpers';
 describe('isPointTooltipEnabled', () => {
     it('returns true when nothing is set', () => {
         expect(isPointTooltipEnabled({})).toBe(true);
+        expect(isPointTooltipEnabled({data: {at: 10, amount: 20}})).toBe(true);
     });
 
     it('returns true when only series is enabled', () => {

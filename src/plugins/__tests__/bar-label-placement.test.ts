@@ -30,7 +30,7 @@ describe('bar placement options', () => {
             legend: {enabled: false} as PreparedLegend,
         });
 
-        expect(barYPlugin.getXAxisPadding?.(series)).toBe(0);
+        expect(barYPlugin.axisPadding?.getXDomainReserve?.(series)).toBe(0);
     });
 
     test('expands auto while preserving explicit candidate order and omitted placement', () => {

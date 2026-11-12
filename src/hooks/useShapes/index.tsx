@@ -6,7 +6,6 @@ import type {Dispatch} from 'd3-dispatch';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {getSeriesLayers} from '~core/series/layers';
-import type {SeriesPlugin} from '~core/series/plugin';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
@@ -21,8 +20,6 @@ import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 
 import {SeriesShapes} from './SeriesShapes';
 import type {GradientLayoutReference} from './types';
-
-import './styles.scss';
 
 export type {TooltipItemData};
 
@@ -120,7 +117,7 @@ function IS_OUTSIDE_BOUNDS() {
 }
 
 function resolveClipPathId(args: {
-    plugin: SeriesPlugin;
+    plugin: ReturnType<typeof getSeriesPlugin>;
     clipPathId: string;
     isRangeSlider?: boolean;
     yAxis: PreparedYAxis[];
@@ -191,7 +188,17 @@ export async function getShapes(args: Args) {
         const seriesType = chartSeries[0].type;
         const plugin = getSeriesPlugin(seriesType);
 
-        const {renderData, tooltipItems, labels, gradientGeometry} = await plugin.prepareShapeData({
+        const {
+            renderData,
+            tooltipItems = [],
+            markers = [],
+            annotations = [],
+            htmlLabels = [],
+            getHoverMarkers,
+            layoutData = [],
+            labels,
+            gradientGeometry,
+        } = await plugin.prepareShapeData({
             series: chartSeries,
             boundsWidth,
             boundsHeight,
@@ -208,7 +215,16 @@ export async function getShapes(args: Args) {
         });
 
         if (gradientGeometry) preparedGradientGeometry.push(...gradientGeometry);
-        if (renderData.length === 0) {
+        if (
+            renderData.length === 0 &&
+            markers.length === 0 &&
+            annotations.length === 0 &&
+            htmlLabels.length === 0 &&
+            !labels?.length &&
+            layoutData.length === 0 &&
+            tooltipItems.length === 0 &&
+            !getHoverMarkers
+        ) {
             continue;
         }
 
@@ -237,6 +253,10 @@ export async function getShapes(args: Args) {
                 plugin={plugin}
                 isRangeSlider={isRangeSlider}
                 preparedData={renderData}
+                markers={markers}
+                annotations={annotations}
+                htmlLabels={htmlLabels}
+                getHoverMarkers={getHoverMarkers ?? (() => [])}
                 labels={labels}
                 boundsWidth={boundsWidth}
                 boundsHeight={boundsHeight}
@@ -247,8 +267,8 @@ export async function getShapes(args: Args) {
                 namespace={`hover-markers-${groupKey}`}
             />
         );
-        shapesData.splice(index, 0, ...tooltipItems);
-        layers.push(...renderData);
+        shapesData.splice(index, 0, ...tooltipItems.map((data) => ({type: seriesType, data})));
+        layers.push(...layoutData);
         if (labels?.length) {
             layers.push({svgLabels: labels, htmlLabels: []});
         }
