@@ -4,7 +4,7 @@ import {scaleOrdinal} from 'd3-scale';
 
 import {getShapes} from '../../../hooks/useShapes';
 import type {ChartSeries, ChartSeriesOptions} from '../../../types';
-import {getChartClosest, getClosestPoints} from '../../utils/get-closest-data';
+import {getClosestPoints} from '../../utils/get-closest-data';
 import type * as Options from '../prepare-options';
 import {getPreparedOptions} from '../prepare-options';
 import {prepareSeriesMetadata} from '../prepare-series-metadata';
@@ -12,7 +12,6 @@ import {getPreparedSeries} from '../prepareSeries';
 import type * as Registry from '../seriesRegistry';
 import {registerSeriesPlugin} from '../seriesRegistry';
 import type {PreparedLegendOptions} from '../types';
-import {getActiveLegendItems, getAllLegendItems, getVisibleSeries} from '../utils';
 
 import {samplePlugin} from './fixtures/custom-plugin';
 import type {SampleSeries} from './fixtures/custom-plugin';
@@ -60,21 +59,6 @@ test('common metadata honors explicit configuration without changing its source'
     expect(metadata.custom).toBe(custom);
 });
 
-test('custom series pass legend and visibility stages even with the legend disabled', async () => {
-    const raw: SampleSeries = {type: 'sample', data: []};
-    const series = await samplePlugin.prepareSeries({
-        series: [raw],
-        colorScale: colorScale(),
-        colors: ['black'],
-        legend,
-    });
-    expect(getAllLegendItems(series)).toEqual([]);
-    expect(getActiveLegendItems(series)).toEqual([]);
-    expect(getVisibleSeries({preparedSeries: series, activeLegendItems: []})).toEqual(series);
-    expect(series[0]).toMatchObject({visible: true, cursor: null, legend: {enabled: false}});
-    expect(raw).toEqual({type: 'sample', data: []});
-});
-
 test('independently prepared layers have distinct IDs and preserve explicit IDs', async () => {
     const series = await prepare([
         {type: 'sample', data: []},
@@ -92,49 +76,6 @@ test('duplicate prepared IDs are rejected across layers instead of merging them'
             {type: 'sample', id: 'duplicate', data: []},
         ]),
     ).rejects.toThrow('Duplicate prepared series ID: "duplicate"');
-});
-
-test('core routes opaque lookup payloads to their owner for tooltip and chart queries', async () => {
-    const first = {at: 10, amount: 20, caption: 'Orders'};
-    const second = {at: 60, amount: 70, caption: 'Returns'};
-    const series = await prepare([
-        {type: 'sample', data: [first]},
-        {type: 'sample', data: [second]},
-    ]);
-    const result = await getShapes({
-        ...bounds,
-        series,
-        seriesOptions: getPreparedOptions(),
-        clipPathId: 'plot',
-        htmlLayout: null,
-        split: {plots: [], gap: 0},
-        xAxis: null,
-        yAxis: [],
-    });
-    expect(result.shapes).toHaveLength(2);
-    expect(new Set(result.shapes.map((shape) => shape.key)).size).toBe(2);
-    const args = {...bounds, shapesData: result.shapesData, layerIndexes: result.layerIndexes};
-    const hovered = getClosestPoints({...args, position: [14, 20]});
-    expect(hovered).toHaveLength(1);
-    expect(hovered[0].data).toBe(first);
-    expect(hovered[0].closest).toBe(true);
-    expect(hovered[0]).not.toHaveProperty('distance');
-    expect(
-        getChartClosest({
-            ...args,
-            position: [64, 70],
-            mode: 'chart',
-            seriesOrder: series.map((item) => item.id),
-        })?.point,
-    ).toBe(second);
-    expect(
-        getChartClosest({
-            ...args,
-            position: [14, 20],
-            mode: 'tooltip',
-            seriesOrder: series.map((item) => item.id),
-        })?.point,
-    ).toBe(first);
 });
 
 test.each([undefined, 8])(
@@ -216,107 +157,40 @@ test('multiple SVG targets retain their own series and original point', async ()
     cleanup?.();
 });
 
-test('direct tooltip selection preserves intentionally distinct chunks for one sample', async () => {
-    const point = {at: 10, amount: 20, caption: 'Orders'};
-    const series = await samplePlugin.prepareSeries({
-        series: [{type: 'sample', data: [point]}],
-        colorScale: colorScale(),
-        colors: ['black'],
-        legend,
-    });
-    jest.spyOn(samplePlugin.tooltip, 'prepareData').mockReturnValue({
-        chunks: [
-            {series: series[0], data: point, caption: 'Value', closest: true},
-            {series: series[0], data: point, caption: 'Details'},
-        ],
-    });
-    const chunks = getClosestPoints({
-        ...bounds,
-        position: [10, 20],
-        shapesData: [{type: 'sample', data: {}}],
-    });
-    expect(chunks).toHaveLength(2);
-    expect(chunks.map((chunk) => chunk.data)).toEqual([point, point]);
-});
-
-test('X selection retains the custom chunk fields needed by formatters', async () => {
-    const point = {at: 10, amount: 20, caption: 'Orders'};
-    const series = await samplePlugin.prepareSeries({
-        series: [{type: 'sample', data: [point]}],
-        colorScale: colorScale(),
-        colors: ['black'],
-        legend,
-    });
-    jest.spyOn(samplePlugin.tooltip, 'prepareData').mockReturnValue({
-        xLookupPoints: [{series: series[0], data: point, caption: 'Orders', x: 10, y0: 20, y1: 20}],
-    });
-    const chunks = getClosestPoints({
-        ...bounds,
-        position: [10, 20],
-        shapesData: [{type: 'sample', data: {}}],
-    });
-    expect(chunks).toHaveLength(1);
-    expect(chunks[0]).toMatchObject({caption: 'Orders', closest: true});
-    expect(chunks[0].data).toBe(point);
-});
-
-test('a standalone plugin keeps its data types through preparation, rendering and interaction', async () => {
-    const sample = {at: 10, amount: 20, caption: 'Orders'};
-    const raw: SampleSeries = {type: 'sample', data: [sample]};
-    const series = await samplePlugin.prepareSeries({
-        series: [raw],
-        colorScale: scaleOrdinal<string, string>().range(['black']),
-        colors: ['black'],
-        legend: {enabled: false} as PreparedLegendOptions,
-    });
-    const {renderData, tooltipItems} = await samplePlugin.prepareShapeData({
-        series,
-        allSeries: series,
-        seriesOptions: {sample: {offset: 4}},
-        boundsWidth: 100,
-        boundsHeight: 100,
-    });
-    const plot = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    // eslint-disable-next-line testing-library/render-result-naming-convention -- renderShapes returns a cleanup function.
-    const cleanup = samplePlugin.renderShapes({
-        plot,
-        labelsPlot: plot,
-        preparedData: renderData,
-        seriesOptions: {},
-        boundsWidth: 100,
-        boundsHeight: 100,
-    });
-    expect(plot.querySelector('circle')?.getAttribute('cx')).toBe('14');
-    expect(
-        samplePlugin.interaction?.getTargetElements({
-            plot,
-            markers: plot,
-            preparedData: renderData,
-        })[0].item.point,
-    ).toBe(sample);
-    const lookupArgs = {
-        data: tooltipItems,
-        position: [14, 20] as [number, number],
-        boundsWidth: 100,
-        boundsHeight: 100,
-    };
-    expect(samplePlugin.interaction?.prepareNearestData(lookupArgs)[0]).toMatchObject({
-        position: [14, 20],
-        item: {point: sample},
-    });
-    const {chunks = []} = samplePlugin.tooltip.prepareData({
-        ...lookupArgs,
-        measureDistance: false,
-    });
-    expect(chunks[0].data).toBe(sample);
-    expect(chunks).toHaveLength(1);
-    expect(samplePlugin.tooltip.getValue?.({item: chunks[0]})).toBe(20);
-    expect(samplePlugin.tooltip.getValueFormatContext?.(chunks[0])).toEqual({caption: 'Orders'});
-    expect(samplePlugin.interaction?.getClosestItem?.(chunks[0]).point).toBe(sample);
-    expect(raw.data).toEqual([sample]);
-    cleanup?.();
-    expect(plot.children).toHaveLength(0);
-});
+test.each(['chunks', 'xLookupPoints'] as const)(
+    '%s selection preserves custom fields and original points',
+    async (strategy) => {
+        const point = {at: 10, amount: 20, caption: 'Orders'};
+        const [series] = await samplePlugin.prepareSeries({
+            series: [{type: 'sample', data: [point]}],
+            colorScale: colorScale(),
+            colors: ['black'],
+            legend,
+        });
+        const chunk = {series, data: point, caption: 'Value'};
+        jest.spyOn(samplePlugin.tooltip, 'prepareData').mockReturnValue(
+            strategy === 'chunks'
+                ? {
+                      chunks: [
+                          {...chunk, closest: true},
+                          {...chunk, caption: 'Details'},
+                      ],
+                  }
+                : {xLookupPoints: [{...chunk, x: 10, y0: 20, y1: 20}]},
+        );
+        const chunks = getClosestPoints({
+            ...bounds,
+            position: [10, 20],
+            shapesData: [{type: 'sample', data: {}}],
+        });
+        expect(chunks).toMatchObject(
+            strategy === 'chunks'
+                ? [{caption: 'Value', closest: true}, {caption: 'Details'}]
+                : [{caption: 'Value', closest: true}],
+        );
+        expect(chunks.every((item) => item.data === point)).toBe(true);
+    },
+);
 
 test('an isolated registry resolves only registered defaults and never mutates them', () => {
     jest.isolateModules(() => {

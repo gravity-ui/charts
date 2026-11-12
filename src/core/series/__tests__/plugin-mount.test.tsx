@@ -57,7 +57,11 @@ test.each([
     const onReady = jest.fn();
     const {container, unmount} = renderChart(<Chart data={data} onReady={onReady} />);
     await waitFor(() => expect(onReady).toHaveBeenCalled());
-    expect(container.querySelectorAll('.gcharts-sample circle')).toHaveLength(2);
+    expect(
+        Array.from(container.querySelectorAll('.gcharts-sample circle'), (circle) =>
+            circle.getAttribute('cx'),
+        ),
+    ).toEqual(['14', '64']);
     const svg = container.querySelector('svg');
     if (!svg) throw new Error('Chart SVG is missing');
     fireEvent.click(svg, {clientX: 14, clientY: 20});
