@@ -14,27 +14,18 @@ import {registerSeriesPlugin} from '../seriesRegistry';
 import {samplePlugin, sampleShapesPlugin} from './fixtures/custom-plugin';
 import type {SampleSeries} from './fixtures/custom-plugin';
 
-afterEach(() => jest.restoreAllMocks());
+const first = {at: 10, amount: 20, caption: 'Ordered units'};
+const second = {at: 60, amount: 70, caption: 'Returned units'};
+const series: SampleSeries[] = [
+    {type: 'sample', name: 'Orders', legend: {groupId: 'orders'}, data: [first]},
+    {type: 'sample', name: 'Returns', legend: {groupId: 'returns'}, data: [second]},
+];
+let api: ChartApi | undefined;
+let data: ChartData;
 
-test.each([
-    {mode: 'shapes only', plugin: sampleShapesPlugin, interaction: false, tooltip: false},
-    {
-        mode: 'interaction without tooltip',
-        plugin: {...samplePlugin, tooltip: undefined},
-        interaction: true,
-        tooltip: false,
-    },
-    {mode: 'interaction and tooltip', plugin: samplePlugin, interaction: true, tooltip: true},
-])('a custom plugin mounts and cleans up two series: $mode', async (mode) => {
-    registerSeriesPlugin(mode.plugin);
-    const first = {at: 10, amount: 20, caption: 'Orders'};
-    const second = {at: 60, amount: 70, caption: 'Returns'};
-    const series: SampleSeries[] = [
-        {type: 'sample', name: 'Orders', data: [first]},
-        {type: 'sample', name: 'Returns', data: [second]},
-    ];
-    let api: ChartApi | undefined;
-    const data: ChartData = {
+beforeEach(() => {
+    api = undefined;
+    data = {
         chart: {
             margin: {top: 0, bottom: 0, left: 0, right: 0},
             events: {
@@ -45,14 +36,26 @@ test.each([
             },
         },
         legend: {enabled: false},
-        // The test's new type is not part of the public built-in config union.
+        // The host's public config union does not include the test plugin.
         series: {data: series as unknown as ChartSeries[]},
     };
-    const plots: SVGGElement[] = [];
+});
+afterEach(() => jest.restoreAllMocks());
+
+test.each([
+    {mode: 'shapes only', plugin: sampleShapesPlugin, interaction: false},
+    {
+        mode: 'interaction without tooltip',
+        plugin: {...samplePlugin, getLayerKey: undefined, tooltip: undefined},
+        interaction: true,
+    },
+])('a custom plugin mounts and cleans up two series: $mode', async (mode) => {
+    registerSeriesPlugin(mode.plugin);
+    const plots = new Map<SVGGElement, Parameters<typeof samplePlugin.renderShapes>[0]>();
     // eslint-disable-next-line testing-library/render-result-naming-convention -- Preserve the plugin renderer while recording its SVG containers.
     const drawShapes = mode.plugin.renderShapes;
     jest.spyOn(mode.plugin, 'renderShapes').mockImplementation((args) => {
-        plots.push(args.plot);
+        plots.set(args.plot, args);
         return drawShapes(args);
     });
     const onReady = jest.fn();
@@ -70,15 +73,24 @@ test.each([
         expect(api?.getClosest([14, 20])?.point).toBe(first);
         expect(api?.getClosest([64, 70])?.point).toBe(second);
         expect(api?.getClosest([14, 20])?.series.id).not.toBe(api?.getClosest([64, 70])?.series.id);
+        const targets = [...plots.values()].flatMap(({plot, preparedData}) =>
+            samplePlugin.interaction.getTargetElements({plot, markers: plot, preparedData}),
+        );
+        const preparedData = [...plots.values()].flatMap((args) => args.preparedData);
+        expect(targets.map(({element}) => element)).toEqual(
+            Array.from(container.querySelectorAll('.gcharts-sample circle')),
+        );
+        targets.forEach(({item}, index) => {
+            expect(item.point).toBe(series[index].data[0]);
+            expect(item.series).toBe(preparedData[index].series);
+        });
     } else {
         expect(api?.getClosest([14, 20])).toBeNull();
     }
-    const selected = api?.getClosest([14, 20], {mode: 'tooltip'});
-    if (mode.tooltip) expect(selected?.point).toBe(first);
-    else expect(selected).toBeNull();
+    expect(api?.getClosest([14, 20], {mode: 'tooltip'})).toBeNull();
     unmount();
-    expect(plots.length).toBeGreaterThan(0);
-    expect(plots.every((plot) => plot.children.length === 0)).toBe(true);
+    expect(plots.size).toBeGreaterThan(0);
+    expect([...plots.keys()].every((plot) => plot.children.length === 0)).toBe(true);
     expect(api?.getClosest([14, 20])).toBeNull();
 });
 
@@ -94,29 +106,8 @@ test('a custom plugin follows legend, data and size updates in a mixed chart', a
     } as CanvasRenderingContext2D);
     registerSeriesPlugin(samplePlugin);
     const validate = jest.spyOn(samplePlugin, 'validate');
-    const first = {at: 10, amount: 20, caption: 'Ordered units'};
-    const second = {at: 60, amount: 70, caption: 'Returned units'};
-    const series: SampleSeries[] = [
-        {type: 'sample', id: 'orders', name: 'Orders', legend: {groupId: 'orders'}, data: [first]},
-        {
-            type: 'sample',
-            id: 'returns',
-            name: 'Returns',
-            legend: {groupId: 'returns'},
-            data: [second],
-        },
-    ];
-    let api: ChartApi | undefined;
-    const data: ChartData = {
-        chart: {
-            margin: {top: 0, bottom: 0, left: 0, right: 0},
-            events: {
-                clickMode: 'plot',
-                click: ({chart}) => {
-                    api = chart;
-                },
-            },
-        },
+    data = {
+        ...data,
         legend: {enabled: true, position: 'bottom'},
         xAxis: {min: 0, max: 100},
         yAxis: [{min: 0, max: 100}],
@@ -144,6 +135,7 @@ test('a custom plugin follows legend, data and size updates in a mixed chart', a
     fireEvent.click(svg, {clientX: 50, clientY: 20});
     fireEvent.click(svg, {clientX: 50, clientY: 20});
     expect(api?.getClosest([14, 20])?.point).toBe(first);
+    expect(api?.getClosest([14, 20], {mode: 'tooltip'})?.point).toBe(first);
     fireEvent.click(screen.getByText('Orders'), {metaKey: true, ctrlKey: true});
     await waitFor(() =>
         expect(view.container.querySelectorAll('.gcharts-sample circle')).toHaveLength(1),
@@ -160,8 +152,7 @@ test('a custom plugin follows legend, data and size updates in a mixed chart', a
         series: {
             data: [
                 {...series[0], data: [point]},
-                data.series.data[1],
-                series[1],
+                ...data.series.data.slice(1),
             ] as unknown as ChartSeries[],
         },
     };
@@ -169,7 +160,6 @@ test('a custom plugin follows legend, data and size updates in a mixed chart', a
     await waitFor(() => expect(api?.getClosest([34, 20])?.point).toBe(point));
     fireEvent(svg, new MouseEvent('pointermove', {bubbles: true, clientX: 50, clientY: 20}));
     await screen.findByText(point.caption);
-    expect(api?.getClosest([34, 20])?.point).toBe(point);
     expect(
         Array.from(view.container.querySelectorAll('.gcharts-sample circle'), (circle) =>
             circle.getAttribute('cx'),
@@ -191,57 +181,34 @@ test('a custom plugin follows legend, data and size updates in a mixed chart', a
     await completion;
 
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() =>
-        view.rerender(
-            <Chart
-                data={{
-                    ...data,
-                    series: {
-                        data: [
-                            {...series[0], data: [{...first, amount: NaN}]},
-                        ] as unknown as ChartSeries[],
-                    },
-                }}
-            />,
-        ),
-    ).toThrow('Sample positions must be finite');
+    data = {
+        ...data,
+        series: {
+            data: [{...series[0], data: [{...first, amount: NaN}]}] as unknown as ChartSeries[],
+        },
+    };
+    expect(() => view.rerender(<Chart data={data} />)).toThrow('Sample positions must be finite');
     view.unmount();
     expect(api?.getClosest([34, 20])).toBeNull();
 });
 
 test('core renders HTML labels when the plugin has no private geometry', async () => {
-    registerSeriesPlugin({
-        ...sampleShapesPlugin,
-        prepareShapeData: ({
-            series,
-        }: Parameters<typeof sampleShapesPlugin.prepareShapeData>[0]) => ({
-            renderData: [],
-            htmlLabels: series.flatMap((s) =>
-                s.data.map((sample) => ({
-                    x: sample.at,
-                    y: sample.amount,
-                    content: sample.caption,
-                    size: {width: 40, height: 16},
-                })),
-            ),
-        }),
-    });
+    jest.spyOn(sampleShapesPlugin, 'prepareShapeData').mockImplementation((args) => ({
+        renderData: [],
+        htmlLabels: args.series.flatMap((s) =>
+            s.data.map((sample) => ({
+                x: sample.at,
+                y: sample.amount,
+                content: sample.caption,
+                size: {width: 40, height: 16},
+            })),
+        ),
+    }));
+    registerSeriesPlugin(sampleShapesPlugin);
     const onReady = jest.fn();
-    const view = renderChart(
-        <Chart
-            onReady={onReady}
-            data={{
-                legend: {enabled: false},
-                series: {
-                    data: [
-                        {type: 'sample', data: [{at: 10, amount: 20, caption: 'Orders'}]},
-                    ] as unknown as ChartSeries[],
-                },
-            }}
-        />,
-    );
-    await screen.findByText('Orders');
+    const view = renderChart(<Chart onReady={onReady} data={data} />);
+    await screen.findByText(first.caption);
     await waitFor(() => expect(onReady).toHaveBeenCalled());
     view.unmount();
-    expect(screen.queryByText('Orders')).toBeNull();
+    expect(screen.queryByText(first.caption)).toBeNull();
 });

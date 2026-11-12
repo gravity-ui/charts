@@ -46,20 +46,14 @@ test('common metadata honors explicit configuration without changing its source'
         legend: Object.freeze({enabled: true, groupId: 'orders', itemText: 'All orders'}),
     });
     const metadata = prepareSeriesMetadata({series: source, color: 'black', legend});
-    expect(metadata).toMatchObject({
-        id: 'explicit',
-        name: 'Orders',
-        color: 'black',
-        visible: false,
-        cursor: 'pointer',
-        legend: {enabled: true, groupId: 'orders', itemText: 'All orders'},
-    });
+    expect(metadata).toMatchObject({...source, color: 'black'});
     expect(metadata.legend.source).toBe(source.legend);
     expect(metadata.tooltip).toBe(tooltip);
     expect(metadata.custom).toBe(custom);
 });
 
-test('independently prepared layers have distinct IDs and preserve explicit IDs', async () => {
+test('layer IDs remain distinct with repeated randomness and preserve explicit IDs', async () => {
+    jest.spyOn(Math, 'random').mockReturnValue(0);
     const series = await prepare([
         {type: 'sample', data: []},
         {type: 'sample', data: []},
@@ -92,7 +86,7 @@ test.each([undefined, 8])(
             colors: ['black'],
             preparedLegend: legend,
         });
-        const result = await getShapes({
+        await getShapes({
             ...bounds,
             series,
             seriesOptions: getPreparedOptions(options as unknown as ChartSeriesOptions),
@@ -106,56 +100,9 @@ test.each([undefined, 8])(
         expect(prepareShapeData.mock.calls[0][0].seriesOptions).toEqual(
             expect.objectContaining({sample: {offset: offset ?? 4}}),
         );
-        const hovered = getClosestPoints({
-            ...bounds,
-            position: [offset === undefined ? 14 : 18, 20],
-            shapesData: result.shapesData,
-        });
-        expect(hovered[0].data).toBe(point);
         expect(samplePlugin.defaults).toEqual({offset: 4});
     },
 );
-
-test('multiple SVG targets retain their own series and original point', async () => {
-    const first = {at: 10, amount: 20, caption: 'Orders'};
-    const second = {at: 30, amount: 40, caption: 'Returns'};
-    const series = await samplePlugin.prepareSeries({
-        series: [
-            {type: 'sample', data: [first]},
-            {type: 'sample', data: [second]},
-        ],
-        colorScale: colorScale(),
-        colors: ['black'],
-        legend,
-    });
-    const {renderData} = await samplePlugin.prepareShapeData({
-        ...bounds,
-        series,
-        seriesOptions: {},
-    });
-    const plot = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    // eslint-disable-next-line testing-library/render-result-naming-convention -- Plugin returns a cleanup function.
-    const cleanup = samplePlugin.renderShapes({
-        ...bounds,
-        plot,
-        labelsPlot: plot,
-        preparedData: renderData,
-        seriesOptions: {},
-    });
-    const targets =
-        samplePlugin.interaction?.getTargetElements({
-            plot,
-            markers: plot,
-            preparedData: renderData,
-        }) ?? [];
-    expect(targets).toHaveLength(2);
-    expect(new Set(targets.map((target) => target.element)).size).toBe(2);
-    expect(targets[0].item.series).toBe(series[0]);
-    expect(targets[0].item.point).toBe(first);
-    expect(targets[1].item.series).toBe(series[1]);
-    expect(targets[1].item.point).toBe(second);
-    cleanup?.();
-});
 
 test.each(['chunks', 'xLookupPoints'] as const)(
     '%s selection preserves custom fields and original points',

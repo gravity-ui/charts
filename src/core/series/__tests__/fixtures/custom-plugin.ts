@@ -46,31 +46,17 @@ interface SampleChunk {
     caption: string;
 }
 
-interface SampleInteraction {
-    series: PreparedSampleSeries;
-    point: Sample;
-}
-
-interface SampleOptions {
-    sample?: {offset?: number};
-}
-
 interface SampleTypes extends SeriesPluginData {
     raw: SampleSeries;
     prepared: PreparedSampleSeries;
     shape: SampleShape;
-    options: SampleOptions;
+    options: {sample?: {offset?: number}};
 }
 
 interface SamplePluginData extends SampleTypes {
     tooltipItem: SampleLookup;
     tooltipChunk: SampleChunk;
-    formatContext: SampleFormatContext;
-}
-
-interface SampleFormatContext {
-    value: unknown;
-    caption: string;
+    formatContext: {value: unknown; caption: string};
 }
 
 /** Contract fixture using common metadata and otherwise independent plugin-owned data. */
@@ -89,8 +75,8 @@ export const sampleShapesPlugin = {
         })),
     prepareShapeData: ({series, seriesOptions}) => {
         const offset = seriesOptions.sample?.offset ?? 0;
-        const shapes = series.map(
-            (s): SampleShape => ({
+        return {
+            renderData: series.map((s) => ({
                 series: s,
                 samples: s.data.map((sample) => ({
                     sample,
@@ -98,10 +84,7 @@ export const sampleShapesPlugin = {
                     x: sample.at + offset,
                     y: sample.amount,
                 })),
-            }),
-        );
-        return {
-            renderData: shapes,
+            })),
         };
     },
     renderShapes: ({plot, preparedData}) => {
@@ -140,7 +123,7 @@ export const samplePlugin = {
         prepareNearestData: ({data}) =>
             data.map((p) => ({position: [p.x, p.y], item: {series: p.owner, point: p.sample}})),
         getTargetElements: ({plot}) =>
-            getInteractionElements<SampleLookup, SampleInteraction>(plot, 'circle', (lookup) => ({
+            getInteractionElements(plot, 'circle', (lookup: SampleLookup) => ({
                 series: lookup.owner,
                 point: lookup.sample,
             })),

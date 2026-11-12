@@ -621,23 +621,20 @@ describe('getClosestPoints with a single series type', () => {
         jest.restoreAllMocks();
     });
 
-    test('does not ask the plugin to measure distances', async () => {
-        const spy = jest.spyOn(scatterPlugin.tooltip, 'prepareData');
-        getActive(await prepareScatter([{x: 10, y: 10}]), [20, 20]);
-        expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
-    });
-
-    test('a plugin without tooltip does not request mixed-tooltip distances', async () => {
-        registerSeriesPlugin(sampleShapesPlugin);
-        const spy = jest.spyOn(scatterPlugin.tooltip, 'prepareData');
-        const scatter = await prepareScatter([{x: 10, y: 10}]);
-        getClosestPoints({
-            ...BOUNDS,
-            position: [20, 20],
-            shapesData: [{type: 'sample', data: {}}, ...lookupData(scatter)],
-        });
-        expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
-    });
+    test.each([{extraLayers: []}, {extraLayers: [{type: 'sample', data: {}}]}])(
+        'does not measure mixed-tooltip distances with extra layers $extraLayers',
+        async ({extraLayers}) => {
+            registerSeriesPlugin(sampleShapesPlugin);
+            const spy = jest.spyOn(scatterPlugin.tooltip, 'prepareData');
+            const scatter = await prepareScatter([{x: 10, y: 10}]);
+            getClosestPoints({
+                ...BOUNDS,
+                position: [20, 20],
+                shapesData: [...extraLayers, ...lookupData(scatter)],
+            });
+            expect(spy).toHaveBeenCalledWith(expect.objectContaining({measureDistance: false}));
+        },
+    );
 
     test('scatter still picks the marker containing the pointer over a nearer center', async () => {
         // The contour measurement is the exception to `measureDistance: false`.
