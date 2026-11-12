@@ -62,8 +62,8 @@ export interface GradientShapeData {
     fillGradientCoords?: GradientCoords | null;
 }
 
-export interface TooltipItemData {
-    type?: string;
-    series?: {type?: string; tooltip?: {enabled?: boolean}};
-    point?: {series?: {type?: string}};
+/** Core-owned lookup envelope. Only data is passed back to the owning plugin's adapters. */
+export interface TooltipItemData<T = unknown> {
+    type: string;
+    data: T;
 }

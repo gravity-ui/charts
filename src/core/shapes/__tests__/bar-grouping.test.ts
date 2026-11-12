@@ -142,7 +142,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
             expect(JSON.stringify(raw)).toBe(rawBefore);
         }
         const chunks = getClosestPoints({
-            shapesData,
+            shapesData: shapesData.map((data) => ({type, data})),
             position: [100, 100],
             boundsWidth: 400,
             boundsHeight: 400,

@@ -49,7 +49,7 @@ export function getTooltipData(
         };
     });
 
-    return {chunks: [], xLookupPoints};
+    return {xLookupPoints};
 }
 
 type PluginShapePoint = ShapePoint<BarXTooltipChunk['data'], BarXTooltipChunk['series']>;

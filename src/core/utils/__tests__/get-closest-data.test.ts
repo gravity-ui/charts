@@ -178,12 +178,26 @@ function getLayers(...ids: string[]) {
     return new Map(ids.map((id, index) => [id, index]));
 }
 
+type TestShape = {series: {type: string}} | {point: {series: {type: string}}};
+
+function lookupData(shapes: TestShape[]): TooltipItemData[] {
+    return shapes.map((data) => ({
+        type: 'series' in data ? data.series.type : data.point.series.type,
+        data,
+    }));
+}
+
 function getActive(
-    shapesData: TooltipItemData[],
+    data: TestShape[],
     position: [number, number],
     layerIndexes = new Map<string, number>(),
 ) {
-    const hovered = getClosestPoints({position, shapesData, layerIndexes, ...BOUNDS});
+    const hovered = getClosestPoints({
+        position,
+        shapesData: lookupData(data),
+        layerIndexes,
+        ...BOUNDS,
+    });
     const closest = hovered.filter((item) => item.closest);
     expect(closest).toHaveLength(1);
     return closest[0];
@@ -261,7 +275,7 @@ describe('getClosestPoints with mixed series types', () => {
         const scatter = await prepareScatter([{x: 150, y: 160, radius: 1}]);
         const hovered = getClosestPoints({
             position: [150, 150],
-            shapesData: [area, ...scatter, line],
+            shapesData: lookupData([area, ...scatter, line]),
             layerIndexes: getLayers('area', scatter[0].point.series.id, line.series.id),
             ...BOUNDS,
         });
@@ -421,7 +435,7 @@ describe('getClosestPoints with mixed series types', () => {
         const scatter = await prepareScatter(scatterPoints);
         const hovered = getClosestPoints({
             position: [200, LINE_Y],
-            shapesData: [...line, ...scatter],
+            shapesData: lookupData([...line, ...scatter]),
             layerIndexes: new Map(),
             ...BOUNDS,
         });

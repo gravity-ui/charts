@@ -39,7 +39,7 @@ test('unequal grouped stacks keep bar and line rows in the same tooltip category
         linecap: 'round',
     } as unknown as PreparedLineData;
     const chunks = getClosestPoints({
-        shapesData: [...bars, line],
+        shapesData: [...bars.map((data) => ({type: 'bar-x', data})), {type: 'line', data: line}],
         position: [100, 60],
         boundsWidth: 400,
         boundsHeight: 400,

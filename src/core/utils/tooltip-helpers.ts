@@ -52,12 +52,15 @@ export interface GetTooltipDataArgs<TShapeData = unknown> {
     measureDistance: boolean;
 }
 
-export interface GetTooltipDataResult<
+/** A plugin selects chunks itself, or delegates X-column selection to core. */
+export type GetTooltipDataResult<
     TChunk extends {data: unknown; series: object} = TooltipDataChunk,
-> {
-    chunks: TooltipCandidate<TChunk>[];
-    xLookupPoints?: ShapePoint<TChunk['data'], TChunk['series']>[];
-}
+> =
+    | {chunks: TooltipCandidate<TChunk>[]; xLookupPoints?: never}
+    | {
+          chunks?: never;
+          xLookupPoints: (ShapePoint<TChunk['data'], TChunk['series']> & TChunk)[];
+      };
 
 export type GetTooltipDataFn<
     TShapeData = MeaningfulAny,

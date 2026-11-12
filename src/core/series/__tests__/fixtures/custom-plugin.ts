@@ -1,6 +1,12 @@
+import {select} from 'd3-selection';
+
 import type {SeriesShapeData} from '../../../shapes/types';
+import type {BaseSeries, BaseSeriesLegend} from '../../../types';
+import {getInteractionElements} from '../../../utils/chart-interaction';
 import {filterPoints} from '../../../zoom/filter-data';
 import type {SeriesPlugin, SeriesPluginData} from '../../plugin';
+import {prepareSeriesMetadata} from '../../prepare-series-metadata';
+import type {BasePreparedSeries} from '../../types';
 
 export interface Sample {
     at: number;
@@ -8,15 +14,17 @@ export interface Sample {
     caption: string;
 }
 
-export interface SampleSeries {
+export interface SampleSeries extends BaseSeries {
     type: 'sample';
     data: Sample[];
+    id?: string;
+    name?: string;
+    legend?: BaseSeriesLegend;
 }
 
-interface PreparedSampleSeries extends SampleSeries {
-    id: string;
-    name: string;
-    color: string;
+interface PreparedSampleSeries extends BasePreparedSeries {
+    type: 'sample';
+    data: Sample[];
 }
 
 interface SampleShape extends SeriesShapeData {
@@ -25,7 +33,7 @@ interface SampleShape extends SeriesShapeData {
 }
 
 interface SampleLookup {
-    series: PreparedSampleSeries;
+    owner: PreparedSampleSeries;
     sample: Sample;
     x: number;
     y: number;
@@ -62,7 +70,7 @@ interface SampleFormatContext {
     caption: string;
 }
 
-/** A complete contract fixture with no built-in series, prepared types, or payloads. */
+/** Contract fixture using common metadata and otherwise independent plugin-owned data. */
 export const samplePlugin: SeriesPlugin<
     SampleSeries,
     SampleChunk,
@@ -87,12 +95,15 @@ export const samplePlugin: SeriesPlugin<
             throw new Error('Invalid sample data');
         }
     },
-    prepareSeries: ({series, colorScale}) =>
-        series.map((s, index) => ({
-            ...s,
-            id: `sample-${index}`,
-            name: 'Samples',
-            color: colorScale('Samples'),
+    prepareSeries: ({series, colorScale, legend}) =>
+        series.map((s) => ({
+            ...prepareSeriesMetadata({
+                series: {...s, name: s.name ?? 'Samples'},
+                color: colorScale(s.name ?? 'Samples'),
+                legend,
+            }),
+            type: s.type,
+            data: s.data,
         })),
     axisPadding: {
         getXDomainReserve: (series) => series.data.length,
@@ -120,7 +131,7 @@ export const samplePlugin: SeriesPlugin<
                 series: s,
                 samples: s.data.map((sample) => ({
                     sample,
-                    series: s,
+                    owner: s,
                     x: sample.at + offset,
                     y: sample.amount,
                 })),
@@ -139,46 +150,50 @@ export const samplePlugin: SeriesPlugin<
     prepareGradientGeometry: ({series}) =>
         series.map((s) => ({id: s.id, points: [], strokeBBox: null})),
     renderShapes: ({plot, preparedData}) => {
-        for (const shape of preparedData) {
-            for (const lookup of shape.samples) {
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', String(lookup.x));
-                circle.setAttribute('cy', String(lookup.y));
-                circle.setAttribute('r', '1');
-                plot.append(circle);
-            }
-        }
+        select(plot)
+            .selectAll<SVGCircleElement, SampleLookup>('circle')
+            .data(preparedData.flatMap((shape) => shape.samples))
+            .join('circle')
+            .attr('cx', (lookup) => lookup.x)
+            .attr('cy', (lookup) => lookup.y)
+            .attr('r', 1);
         return () => plot.replaceChildren();
     },
     interaction: {
         prepareNearestData: ({data}) =>
-            data.map((p) => ({position: [p.x, p.y], item: {series: p.series, point: p.sample}})),
-        getTargetElements: ({plot, preparedData}) =>
-            preparedData.flatMap((shape) =>
-                shape.samples.flatMap((lookup, index) => {
-                    const element = plot.querySelectorAll('circle')[index];
-                    return element
-                        ? [{element, item: {series: lookup.series, point: lookup.sample}}]
-                        : [];
-                }),
-            ),
+            data.map((p) => ({position: [p.x, p.y], item: {series: p.owner, point: p.sample}})),
+        getTargetElements: ({plot}) =>
+            getInteractionElements<SampleLookup, SampleInteraction>(plot, 'circle', (lookup) => ({
+                series: lookup.owner,
+                point: lookup.sample,
+            })),
         getClosestItem: ({series, data}) => ({series, point: data}),
     },
     tooltip: {
-        prepareData: ({data}) => ({
-            chunks: data.map((lookup) => ({
-                series: lookup.series,
-                data: lookup.sample,
-                caption: lookup.sample.caption,
-            })),
-            xLookupPoints: data.map((lookup) => ({
-                series: lookup.series,
-                data: lookup.sample,
-                x: lookup.x,
-                y0: lookup.y,
-                y1: lookup.y,
-            })),
-        }),
+        prepareData: ({data, position, measureDistance}) => {
+            let nearest: SampleLookup | undefined;
+            let distance = Infinity;
+            for (const lookup of data) {
+                const current = Math.hypot(lookup.x - position[0], lookup.y - position[1]);
+                if (current < distance) {
+                    nearest = lookup;
+                    distance = current;
+                }
+            }
+            return {
+                chunks: nearest
+                    ? [
+                          {
+                              series: nearest.owner,
+                              data: nearest.sample,
+                              caption: nearest.sample.caption,
+                              closest: true,
+                              distance: measureDistance ? Math.max(0, distance - 1) : undefined,
+                          },
+                      ]
+                    : [],
+            };
+        },
         getValue: ({item}) => item.data.amount,
         header: {getValue: ({item}) => item.data.at, axis: 'x'},
         getValueFormatContext: (item) => ({caption: item.caption}),
@@ -203,5 +218,24 @@ export function checkAssociatedTypes(shape: SampleShape, lookup: SampleLookup) {
     const renderData: Parameters<typeof samplePlugin.renderShapes>[0]['preparedData'] = [lookup];
     // @ts-expect-error A render-layer item cannot replace a tooltip lookup item.
     const tooltipData: Parameters<typeof samplePlugin.tooltip.prepareData>[0]['data'] = [shape];
-    return {renderData, tooltipData};
+    // @ts-expect-error Core requires metadata even for a plugin without a visible legend.
+    const prepared: SeriesPluginData<'sample'>['prepared'] = {type: 'sample'};
+    // @ts-expect-error Returning both strategies duplicates the selected sample.
+    const tooltipResult: ReturnType<typeof samplePlugin.tooltip.prepareData> = {
+        chunks: [],
+        xLookupPoints: [],
+    };
+    type XLookupPoint = NonNullable<
+        ReturnType<typeof samplePlugin.tooltip.prepareData>['xLookupPoints']
+    >[number];
+    const incompletePoint = {
+        series: lookup.owner,
+        data: lookup.sample,
+        x: lookup.x,
+        y0: lookup.y,
+        y1: lookup.y,
+    };
+    // @ts-expect-error X lookup points must carry the chunk's formatter context too.
+    const missingContext: XLookupPoint = incompletePoint;
+    return {renderData, tooltipData, prepared, tooltipResult, missingContext};
 }

@@ -88,7 +88,7 @@ export function getTooltipData(
         return acc;
     }, []);
 
-    return {chunks: [], xLookupPoints};
+    return {xLookupPoints};
 }
 
 type PluginShapePoint = ShapePoint<LineTooltipChunk['data'], LineTooltipChunk['series']>;

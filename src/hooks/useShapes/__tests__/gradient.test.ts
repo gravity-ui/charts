@@ -126,7 +126,9 @@ function areas(top: number[], bottom: (number | null)[], extra: Partial<AreaSeri
 
 function getTop(data: Awaited<ReturnType<typeof shapes>>) {
     return required(
-        (data.shapesData as PreparedAreaData[]).find((item) => item.series.name === 'top'),
+        (data.shapesData.map((item) => item.data) as PreparedAreaData[]).find(
+            (item) => item.series.name === 'top',
+        ),
     );
 }
 
@@ -228,10 +230,10 @@ test('category axes keep their existing filtered domain when the other axis is z
         ),
         yAxis: [{type: 'category', plotIndex: 0, categories: xAxis.categories}] as PreparedYAxis[],
     };
-    const before = (await shapes(source)).shapesData[0] as PreparedLineData;
+    const before = (await shapes(source)).shapesData[0].data as PreparedLineData;
     const target = zoom(source);
     expect(required(target.yScale?.[0]).domain()).toEqual(['A', 'C', 'E']);
-    const after = (await shapes(target, source)).shapesData[0] as PreparedLineData;
+    const after = (await shapes(target, source)).shapesData[0].data as PreparedLineData;
     after.points.forEach((point, index) => {
         const actual = required(color(point.fill ?? '')).rgb();
         const expected = required(color(before.points[index + 2].fill ?? '')).rgb();
@@ -266,7 +268,7 @@ test.each(['line', 'area-range'] as const)(
             scaleBand().domain(['A', 'D', 'E']).range([0, 400]),
             scaleLinear().domain([0, 5]).range([200, 0]),
         );
-        const chart = (await shapes(source)).shapesData[0] as
+        const chart = (await shapes(source)).shapesData[0].data as
             | PreparedLineData
             | PreparedAreaRangeData;
         const slider = (
@@ -274,7 +276,7 @@ test.each(['line', 'area-range'] as const)(
                 {...source, xScale: scaleBand().domain(categories).range([0, 400])},
                 source,
             )
-        ).shapesData[0] as PreparedLineData | PreparedAreaRangeData;
+        ).shapesData[0].data as PreparedLineData | PreparedAreaRangeData;
         expect(chart.markers).toHaveLength(type === 'line' ? 3 : 6);
         expect(slider.markers.map((marker) => rgb(marker.fill))).toEqual(
             chart.markers.map((marker) => rgb(marker.fill)),
@@ -298,9 +300,9 @@ test.each([
         ],
     });
     const source = reference(series);
-    const before = (await shapes(source)).shapesData[0] as PreparedLineData;
+    const before = (await shapes(source)).shapesData[0].data as PreparedLineData;
     const target = zoom(source, view);
-    const after = (await shapes(target, source)).shapesData[0] as PreparedLineData;
+    const after = (await shapes(target, source)).shapesData[0].data as PreparedLineData;
     expect(after.points.length).toBeGreaterThan(0);
     expect(fills(after.points)).toEqual(
         after.points.map((point) =>
@@ -324,9 +326,9 @@ test('area-range stroke, fill and boundary markers retain their colors after XY 
         ],
     });
     const source = reference(series);
-    const before = (await shapes(source)).shapesData[0] as PreparedAreaRangeData;
-    const after = (await shapes(zoom(source, {x: [2, 4], y: [[1, 6]]}), source))
-        .shapesData[0] as PreparedAreaRangeData;
+    const before = (await shapes(source)).shapesData[0].data as PreparedAreaRangeData;
+    const after = (await shapes(zoom(source, {x: [2, 4], y: [[1, 6]]}), source)).shapesData[0]
+        .data as PreparedAreaRangeData;
     expect(fills(after.points)).toEqual(fills(before.points.slice(2)));
     expect(fills(after.markers)).toEqual(
         fills(
@@ -410,9 +412,9 @@ test('a single-value X zoom uses the actual clipping-neighbor geometry', async (
         ),
         xAxis: {type: 'linear'} as PreparedXAxis,
     };
-    const before = (await shapes(source)).shapesData[0] as PreparedLineData;
+    const before = (await shapes(source)).shapesData[0].data as PreparedLineData;
     const target = zoom(source, {x: [2, 2]});
-    const after = (await shapes(target, source)).shapesData[0] as PreparedLineData;
+    const after = (await shapes(target, source)).shapesData[0].data as PreparedLineData;
     expect(fills(after.points)).toEqual(fills(before.points));
 });
 
@@ -578,8 +580,8 @@ test('an unzoomed main pass supplies the gradient reference without projecting p
             htmlLayout: null,
         });
         const after = await shapes(zoom(source), source);
-        expect(fills((after.shapesData[0] as PreparedLineData).points)).toEqual(
-            fills((before.shapesData[0] as PreparedLineData).points.slice(2)),
+        expect(fills((after.shapesData[0].data as PreparedLineData).points)).toEqual(
+            fills((before.shapesData[0].data as PreparedLineData).points.slice(2)),
         );
         expect(geometry).not.toHaveBeenCalled();
     } finally {

@@ -97,7 +97,7 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
         'hover-markers-bar-x',
         `hover-markers-${series[4].id}`,
     ]);
-    expect(shapesData.map((item) => item.series)).toEqual([
+    expect(shapesData.map((item) => (item.data as {series: PreparedSeries}).series)).toEqual([
         series[0],
         series[4],
         series[1],

@@ -19,7 +19,7 @@ import type {ZoomType} from '../constants';
 import type {PreparedSplit} from '../layout/split-types';
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '../scales/axis-padding';
 import type {ChartScale} from '../scales/types';
-import type {SeriesShapeData, ShapeLabels, SvgLabel, TooltipItemData} from '../shapes/types';
+import type {SeriesShapeData, ShapeLabels, SvgLabel} from '../shapes/types';
 import type {InteractionElement, InteractionElementsArgs} from '../utils/chart-interaction';
 import type {GradientGeometry} from '../utils/gradient-reference';
 import type {NearestCandidate, PrepareNearestDataArgs} from '../utils/nearest-point';
@@ -28,7 +28,12 @@ import type {FilterSeriesDataArgs, SeriesDataSelection} from '../zoom/filter-dat
 import type {ZoomState} from '../zoom/types';
 
 import type {AxisDomainValue, SeriesAxes} from './axis-contract';
-import type {PreparedLegendOptions, PreparedSeries, PreparedSeriesOptions} from './types';
+import type {
+    BasePreparedSeries,
+    PreparedLegendOptions,
+    PreparedSeries,
+    PreparedSeriesOptions,
+} from './types';
 
 export type {AxisDomainValue, DomainAxis, DomainViewport, GetAxisDataArgs} from './axis-contract';
 
@@ -58,6 +63,7 @@ export interface PluginTooltipChunk {
 
 export interface PrepareSeriesArgs<T = ChartSeries, TOptions = ChartSeriesOptions> {
     series: T[];
+    /** Raw user options; preparation resolves its fallbacks from the plugin's own defaults. */
     seriesOptions?: TOptions;
     legend: PreparedLegendOptions;
     colorScale: ScaleOrdinal<string, string>;
@@ -90,8 +96,9 @@ export interface PrepareShapeDataArgs<
     allSeries?: TAllSeries[];
 }
 
-export interface PrepareShapeDataResult<TShape = SeriesShapeData, TTooltipItem = TooltipItemData> {
+export interface PrepareShapeDataResult<TShape = SeriesShapeData, TTooltipItem = unknown> {
     renderData: TShape[];
+    /** Private lookup payloads. Core retains their plugin owner outside these objects. */
     tooltipItems: TTooltipItem[];
     /** Reuse projected paint geometry as the full-series reference when the view is unfiltered. */
     gradientGeometry?: GradientGeometry[];
@@ -148,9 +155,9 @@ export interface ValidateSeriesArgs<
 
 /** Associated pipeline types. Override these together to keep every plugin hook typed. */
 export interface SeriesPluginData<TType extends string = string> {
-    prepared: {type: TType};
+    prepared: BasePreparedSeries & {type: TType};
     shape: SeriesShapeData;
-    tooltipItem: TooltipItemData;
+    tooltipItem: unknown;
     interaction: ChartInteractionItem;
     options: object;
     preparedOptions: object;
@@ -211,7 +218,11 @@ export interface SeriesPlugin<
 
     // --- Data preparation ---
 
-    /** Transforms raw chart series config into prepared series objects used throughout the render pipeline. */
+    /**
+     * Transforms raw config into prepared series with complete core metadata, even if legend is disabled.
+     * Use prepareSeriesMetadata for common defaults. IDs must be chart-unique across all layers;
+     * preserve explicit IDs and do not derive generated IDs from a layer-local array index.
+     */
     prepareSeries(
         args: PrepareSeriesArgs<T, TData['options']>,
     ): TData['prepared'][] | Promise<TData['prepared'][]>;
@@ -271,6 +282,8 @@ export interface SeriesPlugin<
     tooltip: {
         /**
          * Returns tooltip data for a given pointer position and prepared series.
+         * Return either selected chunks or X-aligned lookup points, never both. Multiple
+         * chunks/rows are supported within the selected strategy; core does not deduplicate them.
          * When `measureDistance` is `true`, the `closest` chunk and every lookup point must set
          * `distance`: the pixel distance from the pointer to the drawn shape of its series, `0`
          * when the pointer is inside it. In mixed charts only the `closest` chunk with the

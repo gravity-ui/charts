@@ -245,7 +245,7 @@ export async function getShapes(args: Args) {
                 namespace={`hover-markers-${groupKey}`}
             />
         );
-        shapesData.splice(index, 0, ...tooltipItems);
+        shapesData.splice(index, 0, ...tooltipItems.map((data) => ({type: seriesType, data})));
         layers.push(...renderData);
         if (labels?.length) {
             layers.push({svgLabels: labels, htmlLabels: []});

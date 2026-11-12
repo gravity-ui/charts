@@ -46,7 +46,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s overlay tooltip', (type) => {
                   } as PreparedBarYData);
         });
         const chunks = getClosestPoints({
-            shapesData: shapes,
+            shapesData: shapes.map((data) => ({type: data.series.type, data})),
             position: type === 'bar-x' ? [100, 200 - pointer] : [200 + pointer, 100],
             boundsWidth: 400,
             boundsHeight: 400,
@@ -82,7 +82,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s overlay tooltip', (type) => {
             },
         ] as (PreparedBarXData | PreparedBarYData)[];
         const chunks = getClosestPoints({
-            shapesData: shapes,
+            shapesData: shapes.map((data) => ({type: data.series.type, data})),
             position: type === 'bar-x' ? [92, 150] : [250, 92],
             boundsWidth: 400,
             boundsHeight: 400,
@@ -113,7 +113,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s overlay tooltip', (type) => {
             height: type === 'bar-x' ? value : 20,
         })) as (PreparedBarXData | PreparedBarYData)[];
         const chunks = getClosestPoints({
-            shapesData: shapes,
+            shapesData: shapes.map((data) => ({type: data.series.type, data})),
             position: type === 'bar-x' ? [100, 200 - pointer] : [200 + pointer, 100],
             boundsWidth: 400,
             boundsHeight: 400,
@@ -142,7 +142,7 @@ test('bar-x selects the last painted duplicate point within a series', () => {
         [110, 100],
     ]) {
         const chunks = getClosestPoints({
-            shapesData: shapes,
+            shapesData: shapes.map((data) => ({type: data.series.type, data})),
             position: [100, pointerY],
             boundsWidth: 400,
             boundsHeight: 400,
@@ -163,7 +163,7 @@ test('bar-y includes the painted border in overlay hit testing', () => {
         borderWidth: index === 1 ? 8 : 0,
     })) as PreparedBarYData[];
     const chunks = getClosestPoints({
-        shapesData: shapes,
+        shapesData: shapes.map((data) => ({type: data.series.type, data})),
         position: [198, 100],
         boundsWidth: 400,
         boundsHeight: 400,
@@ -190,7 +190,7 @@ test('bar-y chooses the nearest category when overlay and grouped centers interl
         })),
     ) as PreparedBarYData[];
     const chunks = getClosestPoints({
-        shapesData: shapes,
+        shapesData: shapes.map((data) => ({type: data.series.type, data})),
         position: [250, 101],
         boundsWidth: 400,
         boundsHeight: 400,
@@ -241,7 +241,7 @@ test('keeps line candidates beside unequal stacks when an overlay is present', (
         ),
     ];
     const chunks = getClosestPoints({
-        shapesData: shapes,
+        shapesData: shapes.map((data) => ({type: data.series.type, data})),
         position: [100, 60],
         boundsWidth: 400,
         boundsHeight: 400,
@@ -273,7 +273,7 @@ test('overlay hit testing keeps area candidates above the bar', () => {
         } as unknown as PreparedAreaData,
     ];
     const chunks = getClosestPoints({
-        shapesData: shapes,
+        shapesData: shapes.map((data) => ({type: data.series.type, data})),
         position: [100, 75],
         boundsWidth: 400,
         boundsHeight: 400,

@@ -75,7 +75,7 @@ export function getTooltipData(
         return acc;
     }, []);
 
-    return {chunks: [], xLookupPoints};
+    return {xLookupPoints};
 }
 
 type PluginShapePoint = ShapePoint<AreaRangeTooltipChunk['data'], AreaRangeTooltipChunk['series']>;

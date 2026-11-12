@@ -27,14 +27,6 @@ interface Contender {
     layer: number;
 }
 
-function getSeriesType(shapeData: TooltipItemData) {
-    return (
-        get(shapeData, 'series.type') ||
-        get(shapeData, 'point.series.type') ||
-        get(shapeData, 'type')
-    );
-}
-
 export type {ShapePoint} from './tooltip-helpers';
 
 function getContender(
@@ -84,7 +76,7 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
     const result: TooltipCandidate[] = [];
     const contenders: Contender[] = [];
     const xLookupPoints: ShapePoint<TooltipDataChunk['data'], TooltipDataChunk['series']>[] = [];
-    const groups = groupBy(shapesData, getSeriesType);
+    const groups = groupBy(shapesData, (item) => item.type);
     // With a single series type there is nothing to arbitrate between.
     const measureDistance = Object.keys(groups).length > 1;
 
@@ -94,8 +86,8 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
         }
         const plugin = getSeriesPlugin(seriesType);
 
-        const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
-            data: list,
+        const {chunks = [], xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
+            data: list.map((item) => item.data),
             position,
             boundsWidth,
             boundsHeight,
@@ -174,13 +166,13 @@ interface GetChartClosestArgs extends GetClosestPointsArgs {
 
 export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem | null {
     if (args.mode === 'chart') {
-        const candidates = Object.entries(groupBy(args.shapesData, getSeriesType)).flatMap(
-            ([seriesType, data]) => {
+        const candidates = Object.entries(groupBy(args.shapesData, (item) => item.type)).flatMap(
+            ([seriesType, items]) => {
                 if (!hasSeriesPlugin(seriesType)) return [];
                 const plugin = getSeriesPlugin(seriesType);
                 return (
                     plugin.interaction?.prepareNearestData({
-                        data,
+                        data: items.map((item) => item.data),
                         position: args.position,
                         boundsWidth: args.boundsWidth,
                         boundsHeight: args.boundsHeight,
