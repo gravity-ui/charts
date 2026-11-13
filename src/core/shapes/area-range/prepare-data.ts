@@ -1,7 +1,7 @@
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
 import type {ChartScale} from '../../scales/types';
-import type {PreparedAreaRangeSeries} from '../../series/types';
+import type {PreparedAreaRangeSeries, PreparedSeriesOptions} from '../../series/types';
 import {getXValue, getYValue} from '../../shapes/utils';
 import {preparePointDataLabels, shouldPrepareSeriesDataLabels} from '../../utils';
 import {createGradientColorResolver} from '../../utils/gradient';
@@ -125,7 +125,7 @@ export function projectAreaRangeData(args: {
 }
 
 export async function prepareAreaRangeData(
-    args: Parameters<typeof projectAreaRangeData>[0],
+    args: Parameters<typeof projectAreaRangeData>[0] & {seriesOptions?: PreparedSeriesOptions},
 ): Promise<PreparedAreaRangeData[]> {
     const {xScale, yAxis, yScale, split, isOutsideBounds, isRangeSlider} = args;
     const xMax = Math.max(...xScale.range());
@@ -174,6 +174,7 @@ export async function prepareAreaRangeData(
             prepareAreaRangeMarkers({
                 points,
                 series: item,
+                hoverOptions: args.seriesOptions?.['area-range']?.states?.hover,
                 yAxis: seriesYAxis,
                 yScale: seriesYScale,
                 yAxisTop,

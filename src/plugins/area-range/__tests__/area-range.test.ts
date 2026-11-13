@@ -5,6 +5,7 @@ import cloneDeep from 'es-toolkit/compat/cloneDeep';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
+import {getPreparedOptions} from '~core/series/prepare-options';
 import type {
     PreparedAreaRangeSeries,
     PreparedLegend,
@@ -41,6 +42,7 @@ function createArgs(
 ) {
     return {
         series: [createSeries(data, config, seriesOptions)],
+        seriesOptions: getPreparedOptions(seriesOptions),
         xAxis: {type: 'linear'} as PreparedXAxis,
         xScale: scaleLinear().domain([0, 4]).range([0, 400]),
         yAxis: [{type: 'linear', plotIndex: 0}] as PreparedYAxis[],

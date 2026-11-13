@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
+import type {Locator} from '@playwright/test';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import type {ChartData} from '../types';
@@ -66,6 +67,121 @@ function createData(
 
 test.describe('Marker hover styles', () => {
     for (const type of ['line', 'area', 'area-range'] as const) {
+        for (const {name, normalWidth, hoverBorder} of [
+            {name: 'inherited borders', normalWidth: 3, hoverBorder: {}},
+            {name: 'zero normal width', normalWidth: 0, hoverBorder: {}},
+            {name: 'color override', normalWidth: 3, hoverBorder: {borderColor: '#008000'}},
+            {name: 'width override', normalWidth: 3, hoverBorder: {borderWidth: 0}},
+            {
+                name: 'full border override',
+                normalWidth: 3,
+                hoverBorder: {borderColor: '#008000', borderWidth: 2},
+            },
+        ]) {
+            test(`${type}: ${name} for permanent and hover-only points`, async ({mount, page}) => {
+                const data = createData(type);
+                data.series.options = {
+                    [type]: {
+                        marker: {enabled: false, radius: 5, borderColor: '#0000ff', borderWidth: 1},
+                        states: {
+                            hover: {
+                                brightness: 0,
+                                marker: {radius: 8, halo: {enabled: false}, ...hoverBorder},
+                            },
+                        },
+                    },
+                };
+                for (const series of data.series.data) {
+                    if (
+                        series.type === 'line' ||
+                        series.type === 'area' ||
+                        series.type === 'area-range'
+                    ) {
+                        series.marker = {
+                            enabled: series.name === 'B',
+                            borderColor: '#ff0000',
+                            borderWidth: normalWidth,
+                        };
+                        series.data[0].marker = {states: {normal: {enabled: true}}};
+                        series.data[2].marker = {states: {normal: {enabled: true}}};
+                    }
+                }
+                const component = await mount(<ChartTestStory data={data} />);
+                const red = component.locator('.gcharts-marker__symbol[fill="#FF3D64"]');
+                const green = component.locator('.gcharts-marker__symbol[fill="#8AD554"]');
+                const boundaryCount = type === 'area-range' ? 2 : 1;
+                const symbols = component.locator('.gcharts-marker__wrapper:visible > path');
+                await expect(symbols).toHaveCount(5 * boundaryCount);
+                const first = red.first();
+                const middle = green.nth(1);
+                const firstBox = await getLocatorBoundingBox(first);
+                const middleBox = await getLocatorBoundingBox(middle);
+                const svgBox = await getLocatorBoundingBox(component.locator('svg'));
+                const column = async (marker: Locator) => {
+                    const transform = (await marker.locator('..').getAttribute('transform')) ?? '';
+                    const prefix = transform.slice(0, transform.indexOf(',') + 1);
+                    return component.locator(
+                        `.gcharts-marker__wrapper:visible[transform^="${prefix}"] > path`,
+                    );
+                };
+                const expectedColor = hoverBorder.borderColor ?? '#ff0000';
+                const expectedWidth = String(hoverBorder.borderWidth ?? normalWidth);
+
+                await page.mouse.move(
+                    firstBox.x + firstBox.width / 2,
+                    firstBox.y + firstBox.height / 2,
+                );
+                await expect(first).toBeHidden();
+                const firstColumn = await column(first);
+                await expect(firstColumn).toHaveCount(2 * boundaryCount);
+                for (const marker of await firstColumn.all()) {
+                    await expect(marker).toHaveAttribute('stroke', expectedColor);
+                    await expect(marker).toHaveAttribute('stroke-width', expectedWidth);
+                }
+
+                await page.mouse.move(
+                    middleBox.x + middleBox.width / 2,
+                    middleBox.y + middleBox.height / 2,
+                );
+                await expect(first).toBeVisible();
+                await expect(first).toHaveAttribute('stroke', '#ff0000');
+                await expect(first).toHaveAttribute('stroke-width', String(normalWidth));
+                await expect(middle).toBeHidden();
+                const middleColumn = await column(middle);
+                const hoverOnly = middleColumn.and(component.locator('[fill="#FF3D64"]'));
+                const permanent = middleColumn.and(component.locator('[fill="#8AD554"]'));
+                await expect(hoverOnly).toHaveCount(boundaryCount);
+                await expect(permanent).toHaveCount(boundaryCount);
+                for (const marker of await hoverOnly.all()) {
+                    await expect(marker).toHaveAttribute(
+                        'stroke',
+                        hoverBorder.borderColor ?? '#ffffff',
+                    );
+                    await expect(marker).toHaveAttribute(
+                        'stroke-width',
+                        String(hoverBorder.borderWidth ?? 1),
+                    );
+                }
+                for (const marker of await permanent.all()) {
+                    await expect(marker).toHaveAttribute('stroke', expectedColor);
+                    await expect(marker).toHaveAttribute('stroke-width', expectedWidth);
+                }
+                if (name === 'inherited borders') {
+                    await expect(component.locator('svg')).toHaveScreenshot();
+                }
+
+                await page.mouse.move(svgBox.x + svgBox.width + 10, svgBox.y + svgBox.height + 10);
+                await expect(symbols).toHaveCount(5 * boundaryCount);
+                await expect(
+                    component.locator('.gcharts-marker__wrapper[visibility="hidden"]'),
+                ).toHaveCount(0);
+                for (const marker of await symbols.all()) {
+                    await expect(marker).toHaveAttribute('stroke', '#ff0000');
+                    await expect(marker).toHaveAttribute('stroke-width', String(normalWidth));
+                }
+            });
+        }
+
         test(`${type}: permanent markers use hover styles and restore on movement and exit`, async ({
             mount,
             page,

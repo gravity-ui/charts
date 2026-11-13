@@ -4,6 +4,7 @@ import get from 'es-toolkit/compat/get';
 
 import {block} from '../../utils';
 import {SymbolType} from '../constants';
+import type {BasicHoverState} from '../types';
 import {getSymbol} from '../utils';
 import {getDistanceToSymbol} from '../utils/symbol';
 
@@ -16,6 +17,23 @@ const symbolClassName = b('symbol');
 interface MarkerFillPoint {
     color?: string;
     fill?: string;
+}
+
+interface MarkerBorder {
+    borderColor: string;
+    borderWidth: number;
+}
+
+/** Resolve explicit hover overrides against the border of the marker being hovered. */
+export function getHoverMarkerBorder(
+    normal: MarkerBorder,
+    hover: Partial<MarkerBorder>,
+    hasNormal: boolean,
+): MarkerBorder {
+    return {
+        borderColor: hover.borderColor ?? (hasNormal ? normal.borderColor : '#ffffff'),
+        borderWidth: hover.borderWidth ?? (hasNormal ? normal.borderWidth : 1),
+    };
 }
 
 export function getMarkerFill(point: MarkerFillPoint, seriesColor: string): string {
@@ -230,13 +248,12 @@ interface HoverMarkerSeries {
     color: string;
     marker: {
         states: {
-            normal: {enabled: boolean; symbol: `${SymbolType}`};
+            normal: MarkerBorder & {enabled: boolean; symbol: `${SymbolType}`};
             hover: {
                 enabled: boolean;
-                enabledForNormal?: boolean;
                 radius: number;
-                borderColor: string;
-                borderWidth: number;
+                borderColor?: string;
+                borderWidth?: number;
             };
         };
     };
@@ -245,20 +262,21 @@ interface HoverMarkerSeries {
 export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
+    hoverOptions?: BasicHoverState,
     isOutsideBounds?: (x: number, y: number) => boolean,
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
-    if (!hoverState.enabled || (normalState.enabled && hoverState.enabledForNormal === false)) {
+    if (!hoverState.enabled || (normalState.enabled && hoverOptions?.enabled === false)) {
         return () => [];
     }
 
+    const hoverBorder = getHoverMarkerBorder(normalState, hoverState, false);
+    const normalHoverBorder = getHoverMarkerBorder(normalState, hoverState, true);
+
     const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
-        if (
-            hoverState.enabledForNormal === false &&
-            get(p.data, 'marker.states.normal.enabled', false)
-        ) {
+        if (hoverOptions?.enabled === false && get(p.data, 'marker.states.normal.enabled', false)) {
             continue;
         }
         if (p.x !== null && p.y !== null && !p.hiddenInLine && !isOutsideBounds?.(p.x, p.y)) {
@@ -281,14 +299,17 @@ export function buildHoverMarkerGetter(
                 ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
                 : dataPoints?.[dataPoints.length - 1];
             if (!point || point.x === null || point.y === null) continue;
+            const hasNormal =
+                normalState.enabled || get(point.data, 'marker.states.normal.enabled', false);
+            const border = hasNormal ? normalHoverBorder : hoverBorder;
             items.push({
                 cx: point.x,
                 cy: point.y,
                 radius: hoverState.radius,
                 symbolType: normalState.symbol,
                 fill: getMarkerFill(point, series.color),
-                stroke: hoverState.borderColor,
-                strokeWidth: hoverState.borderWidth,
+                stroke: border.borderColor,
+                strokeWidth: border.borderWidth,
                 opacity: 1,
                 active: true,
                 clipped: false,

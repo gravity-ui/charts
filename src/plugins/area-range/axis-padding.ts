@@ -21,5 +21,6 @@ export function getAreaRangeAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddi
                     {x: p.x, y: p.y1, data: p.data},
                 ]),
         })),
+        args.seriesOptions?.['area-range']?.states?.hover,
     );
 }
