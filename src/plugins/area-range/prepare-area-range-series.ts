@@ -59,7 +59,7 @@ export function prepareAreaRangeSeries(
                 radius: marker.radius,
                 borderWidth: 1,
                 borderColor: '#ffffff',
-                halo: {...DEFAULT_HALO_OPTIONS},
+                halo: {...DEFAULT_HALO_OPTIONS, enabled: false},
             },
             seriesOptions?.['area-range']?.states?.hover?.marker,
         );

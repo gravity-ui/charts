@@ -174,7 +174,13 @@ describe('area-range plugin', () => {
                 {x: 4, y0: 50, y1: 60},
                 {x: 5, y0: 10, y1: 20},
             ];
-            const args = createArgs(points, {marker: {enabled: true}});
+            const args = createArgs(
+                points,
+                {marker: {enabled: true}},
+                {
+                    'area-range': {states: {hover: {marker: {halo: {enabled: true}}}}},
+                },
+            );
             Object.assign(args.yAxis[0], {min: 0, max: 40});
             args.yScale[0].clamp(true);
             const [normal] = await prepareAreaRangeData(args);
@@ -185,16 +191,13 @@ describe('area-range plugin', () => {
             ]);
             args.series[0].marker.states.normal.enabled = false;
             const [hover] = await prepareAreaRangeData(args);
-            expect(
-                hover
-                    .getHoverMarkers(points.map((data) => ({data})))
-                    .map(({cx, cy}) => [cx, cy])
-                    .sort((a, b) => a[0] - b[0]),
-            ).toEqual([
+            const markers = hover.getHoverMarkers(points.map((data) => ({data})));
+            expect(markers.map(({cx, cy}) => [cx, cy]).sort((a, b) => a[0] - b[0])).toEqual([
                 [100, 100],
                 [200, 75],
                 [300, 150],
             ]);
+            expect(markers.every(({halo}) => Boolean(halo))).toBe(true);
         });
 
         test('uses each boundary gradient color and preserves explicit point colors', async () => {

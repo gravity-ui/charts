@@ -10,6 +10,68 @@ import {AreaRangeEventsTestStory} from './components/AreaRangeEventsTestStory';
 import {getLocatorBoundingBox} from './utils';
 
 test.describe('Area range series', () => {
+    test('hover halos follow both boundaries in both marker modes', async ({mount, page}) => {
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    tooltip: {enabled: false},
+                    xAxis: {min: -0.25, max: 1.25},
+                    yAxis: [{min: 0, max: 10}],
+                    series: {
+                        options: {
+                            'area-range': {
+                                states: {
+                                    hover: {marker: {halo: {enabled: true, size: 9, opacity: 0.6}}},
+                                },
+                            },
+                        },
+                        data: [
+                            {
+                                type: 'area-range',
+                                name: 'Always visible',
+                                marker: {enabled: true},
+                                data: [
+                                    {x: 0, y0: 6, y1: 8, marker: {color: '#e8590c'}},
+                                    {x: 1, y0: 6, y1: 8},
+                                ],
+                            },
+                            {
+                                type: 'area-range',
+                                name: 'On hover',
+                                marker: {enabled: false, symbol: 'square'},
+                                data: [
+                                    {x: 0, y0: 2, y1: 4, color: '#7048e8'},
+                                    {x: 1, y0: 2, y1: 4},
+                                ],
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+        const symbols = component.locator('.gcharts-marker__symbol:visible');
+        await expect(symbols).toHaveCount(4);
+        const first = await getLocatorBoundingBox(symbols.first());
+        const last = await getLocatorBoundingBox(symbols.last());
+        const halos = component.locator('.gcharts-marker__halo');
+
+        await page.mouse.move(first.x + first.width / 2, first.y + first.height / 2);
+        await expect(halos).toHaveCount(4);
+        await expect(component.locator('.gcharts-marker__halo[fill="#e8590c"]')).toHaveCount(2);
+        await expect(
+            component.locator('.gcharts-marker__halo[fill="#7048e8"]').first(),
+        ).toHaveAttribute('opacity', '0.6');
+        await expect(symbols).toHaveCount(6);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        await page.mouse.move(last.x + last.width / 2, last.y + last.height / 2);
+        await expect(halos).toHaveCount(4);
+        await expect(component.locator('.gcharts-marker__halo[fill="#e8590c"]')).toHaveCount(0);
+        await page.mouse.move(500, 400);
+        await expect(halos).toHaveCount(0);
+        await expect(symbols).toHaveCount(4);
+    });
+
     test('forecast line stays above the band and both series appear in the tooltip', async ({
         mount,
         page,
@@ -38,6 +100,7 @@ test.describe('Area range series', () => {
         await expect(
             tooltip.getByRole('row').filter({hasText: 'Forecast'}).getByRole('cell').last(),
         ).toHaveText('21');
+        await expect(component.locator('.gcharts-marker__halo')).toHaveCount(0);
     });
 
     for (const permanent of [false, true]) {
