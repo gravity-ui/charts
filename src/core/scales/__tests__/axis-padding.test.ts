@@ -157,6 +157,26 @@ describe('axis padding', () => {
         expect(args.xScale(2)).toBeCloseTo(574);
     });
 
+    test('reserves inherited hover borders only for permanent markers', async () => {
+        const args = await prepare(
+            [
+                {
+                    ...line,
+                    marker: {enabled: false, radius: 2, borderWidth: 6},
+                    data: [
+                        {x: 0, y: 0, marker: {states: {normal: {enabled: true}}}},
+                        {x: 2, y: 100},
+                    ],
+                },
+            ],
+            {line: {states: {hover: {marker: {radius: 20}}}}},
+        );
+        args.xAxis.padding = allAuto;
+        applyAxisPadding(args);
+        expect(args.xScale(0)).toBeCloseTo(29);
+        expect(args.xScale(2)).toBeCloseTo(578.5);
+    });
+
     test('does not reserve disabled normal or hover markers', async () => {
         const args = await prepare([{...line, marker: {enabled: false}}], {
             line: {states: {hover: {marker: {enabled: false}}}},
@@ -214,7 +234,7 @@ describe('axis padding', () => {
         args.yScale.push(args.yScale[0].copy());
         applyAxisPadding(args);
         expect(args.yScale[0](100)).toBeCloseTo(13);
-        expect(args.yScale[1](100)).toBeGreaterThanOrEqual(30);
+        expect(args.yScale[1](100)).toBeCloseTo(30);
     });
 
     test.each(['datetime', 'logarithmic'] as const)(

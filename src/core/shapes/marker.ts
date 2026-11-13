@@ -234,6 +234,7 @@ interface HoverMarkerSeries {
             hover: {
                 enabled: boolean;
                 enabledForNormal?: boolean;
+                borderForNormal?: {borderColor: string; borderWidth: number};
                 radius: number;
                 borderColor: string;
                 borderWidth: number;
@@ -281,14 +282,17 @@ export function buildHoverMarkerGetter(
                 ? dataPoints?.find((p) => p.x === hovered.x && p.y === hovered.y1)
                 : dataPoints?.[dataPoints.length - 1];
             if (!point || point.x === null || point.y === null) continue;
+            const hasNormal =
+                normalState.enabled || get(point.data, 'marker.states.normal.enabled', false);
+            const border = hasNormal ? (hoverState.borderForNormal ?? hoverState) : hoverState;
             items.push({
                 cx: point.x,
                 cy: point.y,
                 radius: hoverState.radius,
                 symbolType: normalState.symbol,
                 fill: getMarkerFill(point, series.color),
-                stroke: hoverState.borderColor,
-                strokeWidth: hoverState.borderWidth,
+                stroke: border.borderColor,
+                strokeWidth: border.borderWidth,
                 opacity: 1,
                 active: true,
                 clipped: false,

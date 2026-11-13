@@ -27,17 +27,19 @@ function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
         });
     const normalBounds = bounds(normal);
     const hoverBounds = bounds(hover);
+    const normalHoverBounds = bounds({...hover, ...hover.borderForNormal});
     return (pointNormal?: boolean) => {
         const hasNormal = normal.enabled || pointNormal;
         const hasHover = hover.enabled && (!hasNormal || hover.enabledForNormal !== false);
         if (!hasNormal && !hasHover) return undefined;
+        const hoveredBounds = hasNormal ? normalHoverBounds : hoverBounds;
         return {
-            left: Math.max(hasNormal ? normalBounds.left : 0, hasHover ? hoverBounds.left : 0),
-            right: Math.max(hasNormal ? normalBounds.right : 0, hasHover ? hoverBounds.right : 0),
-            top: Math.max(hasNormal ? normalBounds.top : 0, hasHover ? hoverBounds.top : 0),
+            left: Math.max(hasNormal ? normalBounds.left : 0, hasHover ? hoveredBounds.left : 0),
+            right: Math.max(hasNormal ? normalBounds.right : 0, hasHover ? hoveredBounds.right : 0),
+            top: Math.max(hasNormal ? normalBounds.top : 0, hasHover ? hoveredBounds.top : 0),
             bottom: Math.max(
                 hasNormal ? normalBounds.bottom : 0,
-                hasHover ? hoverBounds.bottom : 0,
+                hasHover ? hoveredBounds.bottom : 0,
             ),
         };
     };
