@@ -1,6 +1,7 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedLineSeries} from '~core/series/types';
+import {getHoverMarkerBorder} from '~core/shapes/marker';
 import {getSymbolBounds} from '~core/utils/symbol';
 
 interface MarkerPaddingPoint {
@@ -18,7 +19,7 @@ interface ProjectedMarkerSeries {
 /** Cache normal/hover symbol geometry once per series, outside point projection. */
 function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
     const {normal, hover} = marker.states;
-    const bounds = (state: typeof normal | typeof hover) =>
+    const bounds = (state: {radius: number; borderWidth: number}) =>
         getSymbolBounds({
             symbolType: normal.symbol,
             // The renderer adds borderWidth to radius before stroking the path.
@@ -26,8 +27,8 @@ function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
             strokeWidth: state.borderWidth,
         });
     const normalBounds = bounds(normal);
-    const hoverBounds = bounds(hover);
-    const normalHoverBounds = bounds({...hover, ...hover.borderForNormal});
+    const hoverBounds = bounds({...hover, ...getHoverMarkerBorder(normal, hover, false)});
+    const normalHoverBounds = bounds({...hover, ...getHoverMarkerBorder(normal, hover, true)});
     return (pointNormal?: boolean) => {
         const hasNormal = normal.enabled || pointNormal;
         const hasHover = hover.enabled && (!hasNormal || hover.enabledForNormal !== false);

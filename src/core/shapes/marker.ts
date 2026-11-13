@@ -18,6 +18,23 @@ interface MarkerFillPoint {
     fill?: string;
 }
 
+interface MarkerBorder {
+    borderColor: string;
+    borderWidth: number;
+}
+
+/** Resolve explicit hover overrides against the border of the marker being hovered. */
+export function getHoverMarkerBorder(
+    normal: MarkerBorder,
+    hover: Partial<MarkerBorder>,
+    hasNormal: boolean,
+): MarkerBorder {
+    return {
+        borderColor: hover.borderColor ?? (hasNormal ? normal.borderColor : '#ffffff'),
+        borderWidth: hover.borderWidth ?? (hasNormal ? normal.borderWidth : 1),
+    };
+}
+
 export function getMarkerFill(point: MarkerFillPoint, seriesColor: string): string {
     return point.fill ?? point.color ?? seriesColor;
 }
@@ -230,14 +247,13 @@ interface HoverMarkerSeries {
     color: string;
     marker: {
         states: {
-            normal: {enabled: boolean; symbol: `${SymbolType}`};
+            normal: MarkerBorder & {enabled: boolean; symbol: `${SymbolType}`};
             hover: {
                 enabled: boolean;
                 enabledForNormal?: boolean;
-                borderForNormal?: {borderColor: string; borderWidth: number};
                 radius: number;
-                borderColor: string;
-                borderWidth: number;
+                borderColor?: string;
+                borderWidth?: number;
             };
         };
     };
@@ -253,6 +269,9 @@ export function buildHoverMarkerGetter(
     if (!hoverState.enabled || (normalState.enabled && hoverState.enabledForNormal === false)) {
         return () => [];
     }
+
+    const hoverBorder = getHoverMarkerBorder(normalState, hoverState, false);
+    const normalHoverBorder = getHoverMarkerBorder(normalState, hoverState, true);
 
     const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
@@ -284,7 +303,7 @@ export function buildHoverMarkerGetter(
             if (!point || point.x === null || point.y === null) continue;
             const hasNormal =
                 normalState.enabled || get(point.data, 'marker.states.normal.enabled', false);
-            const border = hasNormal ? (hoverState.borderForNormal ?? hoverState) : hoverState;
+            const border = hasNormal ? normalHoverBorder : hoverBorder;
             items.push({
                 cx: point.x,
                 cy: point.y,

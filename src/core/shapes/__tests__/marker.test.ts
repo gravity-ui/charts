@@ -10,7 +10,12 @@ describe('buildHoverMarkerGetter', () => {
             color: 'black',
             marker: {
                 states: {
-                    normal: {enabled: true, symbol: SymbolType.Circle},
+                    normal: {
+                        enabled: true,
+                        symbol: SymbolType.Circle,
+                        borderColor: '',
+                        borderWidth: 0,
+                    },
                     hover: {
                         enabled: true,
                         radius: 4,
@@ -35,7 +40,12 @@ describe('buildHoverMarkerGetter', () => {
             color: 'black',
             marker: {
                 states: {
-                    normal: {enabled: false, symbol: SymbolType.Circle},
+                    normal: {
+                        enabled: false,
+                        symbol: SymbolType.Circle,
+                        borderColor: '',
+                        borderWidth: 0,
+                    },
                     hover: {
                         enabled: true,
                         radius: 4,

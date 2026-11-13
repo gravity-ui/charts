@@ -408,11 +408,9 @@ export type PreparedLineSeries = {
                 enabled: boolean;
                 /** Whether permanent markers can use hover styles. Defaults to true. */
                 enabledForNormal?: boolean;
-                /** Resolved hover border for permanent markers. */
-                borderForNormal?: {borderColor: string; borderWidth: number};
                 radius: number;
-                borderWidth: number;
-                borderColor: string;
+                borderWidth?: number;
+                borderColor?: string;
                 halo: PreparedHaloOptions;
             };
         };
@@ -462,11 +460,9 @@ export type PreparedAreaSeries = {
                 enabled: boolean;
                 /** Whether permanent markers can use hover styles. Defaults to true. */
                 enabledForNormal?: boolean;
-                /** Resolved hover border for permanent markers. */
-                borderForNormal?: {borderColor: string; borderWidth: number};
                 radius: number;
-                borderWidth: number;
-                borderColor: string;
+                borderWidth?: number;
+                borderColor?: string;
                 halo: PreparedHaloOptions;
             };
         };

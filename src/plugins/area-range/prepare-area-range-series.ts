@@ -52,21 +52,14 @@ export function prepareAreaRangeSeries(
             seriesOptions?.['area-range']?.marker,
             series.marker,
         );
-        const hoverMarkerOptions = seriesOptions?.['area-range']?.states?.hover?.marker;
         const hoverMarker = merge(
             {
                 enabled: true,
                 enabledForNormal: seriesOptions?.['area-range']?.states?.hover?.enabled !== false,
                 radius: marker.radius,
-                borderWidth: 1,
-                borderColor: '#ffffff',
-                borderForNormal: {
-                    borderColor: hoverMarkerOptions?.borderColor ?? marker.borderColor,
-                    borderWidth: hoverMarkerOptions?.borderWidth ?? marker.borderWidth,
-                },
                 halo: {...DEFAULT_HALO_OPTIONS},
             },
-            hoverMarkerOptions,
+            seriesOptions?.['area-range']?.states?.hover?.marker,
         );
 
         return {
