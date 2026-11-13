@@ -1191,6 +1191,104 @@ test.describe('Y-axis', () => {
             await expect(gridLine).toHaveCSS('stroke-dasharray', 'none');
         });
 
+        const gridOverlapData: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Revenue',
+                        data: [
+                            {x: 1, y: 10},
+                            {x: 2, y: 20},
+                        ],
+                    },
+                ],
+            },
+            yAxis: [
+                {
+                    min: 0,
+                    max: 20,
+                    startOnTick: false,
+                    endOnTick: false,
+                    ticks: {values: [0, 10, 20]},
+                    grid: {dashStyle: 'Dash'},
+                },
+            ],
+            chart: {margin: CHART_MARGIN},
+        };
+        const gridAxisOrders = [undefined, 'reverse'] as const;
+        const xAxisLineStates = [
+            {config: {lineVisible: false}, gridLineCount: 3},
+            {config: {lineVisible: true}, gridLineCount: 2},
+            {config: {visible: false}, gridLineCount: 3},
+            {config: {visible: true}, gridLineCount: 2},
+        ];
+
+        for (const order of gridAxisOrders) {
+            test(`grid dash style does not overlap the X-axis (${order ?? 'normal'})`, async ({
+                mount,
+            }) => {
+                const data = cloneDeep(gridOverlapData);
+                set(data, 'yAxis[0].order', order);
+                const component = await mount(<ChartTestStory data={data} />);
+                const gridLines = component.locator(
+                    '.gcharts-y-axis__tick > path:not(.gcharts-y-axis__mark)',
+                );
+                const axisLine = component.locator('.gcharts-x-axis__domain');
+
+                await expect(gridLines).toHaveCount(2);
+                await expect(axisLine).toBeAttached();
+                const axisLineTop = await axisLine.evaluate(
+                    (element) => element.getBoundingClientRect().top,
+                );
+                const gridLineTops = await gridLines.evaluateAll((elements) =>
+                    elements.map((element) => element.getBoundingClientRect().top),
+                );
+                expect(gridLineTops).not.toContain(axisLineTop);
+
+                for (const {config, gridLineCount} of xAxisLineStates) {
+                    const updatedData = cloneDeep(data);
+                    updatedData.xAxis = config;
+                    await component.update(<ChartTestStory data={updatedData} />);
+                    await expect(gridLines).toHaveCount(gridLineCount);
+                }
+
+                const solidData = cloneDeep(data);
+                set(solidData, 'yAxis[0].grid.dashStyle', 'Solid');
+                await component.update(<ChartTestStory data={solidData} />);
+                await expect(gridLines).toHaveCount(3);
+            });
+        }
+
+        test('grid dash style preserves bottom grid lines in upper split plots', async ({
+            mount,
+        }) => {
+            const data = cloneDeep(gridOverlapData);
+            const secondSeries = {...cloneDeep(data.series.data[0]), name: 'Second plot', yAxis: 1};
+            data.series.data.push(secondSeries);
+            set(data, 'yAxis[1]', {...data.yAxis?.[0], plotIndex: 1});
+            data.split = {enable: true, plots: [{}, {}]};
+
+            const component = await mount(<ChartTestStory data={data} />);
+            const axes = component.locator('.gcharts-y-axis');
+            const gridLineSelector = '.gcharts-y-axis__tick > path:not(.gcharts-y-axis__mark)';
+
+            await expect(axes).toHaveCount(2);
+            await expect(axes.nth(0).locator(gridLineSelector)).toHaveCount(3);
+            await expect(axes.nth(1).locator(gridLineSelector)).toHaveCount(2);
+
+            const axisLineTop = await component
+                .locator('.gcharts-x-axis__domain')
+                .evaluate((element) => element.getBoundingClientRect().top);
+            const bottomPlotGridLineTops = await axes
+                .nth(1)
+                .locator(gridLineSelector)
+                .evaluateAll((elements) =>
+                    elements.map((element) => element.getBoundingClientRect().top),
+                );
+            expect(bottomPlotGridLineTops).not.toContain(axisLineTop);
+        });
+
         test('grid dash style does not enable a disabled grid', async ({mount}) => {
             const data = cloneDeep(baseTickMarksData);
             set(data, 'yAxis[0].grid', {enabled: false, dashStyle: 'Dash'});

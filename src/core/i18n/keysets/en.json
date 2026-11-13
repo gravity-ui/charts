@@ -1,5 +1,6 @@
 {
   "error": {
+    "label_invalid-axis-grid-dash-style": "Invalid grid.dashStyle for axis \"{{key}}\". Available styles: [{{values}}].",
     "label_invalid-axis-padding-type": "axis.padding must be an object",
     "label_invalid-axis-padding-size": "axis.padding.{{side}} must be auto or a finite nonnegative pixel or percentage size",
     "label_inconsistent-stack-grouping": "Series \"{{firstSeries}}\" and \"{{secondSeries}}\" in the same stack must use the same grouping value. Omitted grouping is true.",

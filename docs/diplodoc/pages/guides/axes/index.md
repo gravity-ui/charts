@@ -90,7 +90,7 @@ yAxis: [{
 }],
 ```
 
-The default is `'Solid'`. All `DashStyle` values are supported: `'Solid'`, `'Dash'`, `'Dot'`, `'DashDot'`, `'LongDash'`, `'LongDashDot'`, `'LongDashDotDot'`, `'ShortDash'`, `'ShortDashDot'`, `'ShortDashDotDot'`, and `'ShortDot'`.
+The default is `'Solid'`. Use `'Dash'` for dashed grid lines or `'Dot'` for dotted grid lines. Any `DashStyle` value is supported.
 
 ## Labels
 

@@ -2,6 +2,7 @@ import {getUniqId} from '@gravity-ui/uikit';
 import type {AxisDomain, AxisScale} from 'd3-axis';
 import {select} from 'd3-selection';
 
+import {DASH_STYLE} from '~core/constants';
 import {
     calculateCos,
     calculateNumericProperty,
@@ -16,7 +17,13 @@ import {
 } from '~core/utils';
 import {hideOverlappingTickLabels} from '~core/utils/axis/label-collision';
 
-import type {ChartScale, PreparedAxis, PreparedSeries, PreparedSplit} from '../../hooks';
+import type {
+    ChartScale,
+    PreparedAxis,
+    PreparedSeries,
+    PreparedSplit,
+    PreparedXAxis,
+} from '../../hooks';
 import type {HtmlItem} from '../../types';
 
 import {prepareHtmlYAxisTitle, prepareSvgYAxisTitle} from './prepare-axis-title';
@@ -189,6 +196,7 @@ async function getSvgAxisLabel({
 
 export async function prepareYAxisData({
     axis,
+    xAxis,
     split,
     scale,
     top: topOffset,
@@ -197,6 +205,7 @@ export async function prepareYAxisData({
     series,
 }: {
     axis: PreparedAxis;
+    xAxis: PreparedXAxis | null;
     split: PreparedSplit | undefined;
     scale: ChartScale;
     top: number;
@@ -206,6 +215,16 @@ export async function prepareYAxisData({
 }): Promise<AxisYData> {
     const axisPlotTopPosition = split?.plots[axis.plotIndex]?.top || 0;
     const axisHeight = split?.plots[axis.plotIndex]?.height || height;
+    const bottomPlot = split?.plots[split.plots.length - 1];
+
+    // Keep legacy solid-grid blending while preventing dashed grids from covering the X axis.
+    const xDomainPosition =
+        axis.grid.dashStyle !== DASH_STYLE.Solid &&
+        xAxis?.visible &&
+        xAxis.lineVisible !== false &&
+        bottomPlot
+            ? bottomPlot.top + bottomPlot.height
+            : null;
 
     const domainX = axis.position === 'left' ? 0 : width;
     let domain: AxisDomainData | null = null;
@@ -280,14 +299,15 @@ export async function prepareYAxisData({
             }
         }
 
-        const tickLine: AxisTickLine | null = axis.grid.enabled
-            ? {
-                  points: [
-                      [0, y],
-                      [width, y],
-                  ],
-              }
-            : null;
+        const tickLine: AxisTickLine | null =
+            axis.grid.enabled && y !== xDomainPosition
+                ? {
+                      points: [
+                          [0, y],
+                          [width, y],
+                      ],
+                  }
+                : null;
 
         let mark: AxisTickMarkData | null = null;
         if (axis.tickMarks.enabled) {
