@@ -4,6 +4,7 @@ import get from 'es-toolkit/compat/get';
 
 import {block} from '../../utils';
 import {SymbolType} from '../constants';
+import type {BasicHoverState} from '../types';
 import {getSymbol} from '../utils';
 import {getDistanceToSymbol} from '../utils/symbol';
 
@@ -250,7 +251,6 @@ interface HoverMarkerSeries {
             normal: MarkerBorder & {enabled: boolean; symbol: `${SymbolType}`};
             hover: {
                 enabled: boolean;
-                enabledForNormal?: boolean;
                 radius: number;
                 borderColor?: string;
                 borderWidth?: number;
@@ -262,11 +262,12 @@ interface HoverMarkerSeries {
 export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
+    hoverOptions?: BasicHoverState,
     isOutsideBounds?: (x: number, y: number) => boolean,
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
-    if (!hoverState.enabled || (normalState.enabled && hoverState.enabledForNormal === false)) {
+    if (!hoverState.enabled || (normalState.enabled && hoverOptions?.enabled === false)) {
         return () => [];
     }
 
@@ -275,10 +276,7 @@ export function buildHoverMarkerGetter(
 
     const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
-        if (
-            hoverState.enabledForNormal === false &&
-            get(p.data, 'marker.states.normal.enabled', false)
-        ) {
+        if (hoverOptions?.enabled === false && get(p.data, 'marker.states.normal.enabled', false)) {
             continue;
         }
         if (p.x !== null && p.y !== null && !p.hiddenInLine && !isOutsideBounds?.(p.x, p.y)) {

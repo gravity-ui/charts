@@ -116,6 +116,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
     prepareShapeData: async (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> => {
         const {
             series,
+            seriesOptions,
             xAxis,
             xScale,
             yAxis,
@@ -132,6 +133,7 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
 
         const data = await prepareAreaRangeData({
             series: series as PreparedAreaRangeSeries[],
+            seriesOptions,
             xAxis,
             xScale,
             yAxis: yAxis ?? [],

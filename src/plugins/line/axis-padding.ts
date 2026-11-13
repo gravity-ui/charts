@@ -10,5 +10,5 @@ export function getLineAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoi
         series: args.series as PreparedLineSeries[],
         isOutsideBounds: () => false,
     });
-    return collectMarkerPadding(args, projected);
+    return collectMarkerPadding(args, projected, args.seriesOptions?.line?.states?.hover);
 }

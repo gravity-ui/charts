@@ -35,7 +35,6 @@ function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
     );
     const hoveredMarkerDefaultOptions = {
         enabled: true,
-        enabledForNormal: seriesHoverState?.enabled !== false,
         radius: markerNormalState.radius,
         halo: {...DEFAULT_HALO_OPTIONS},
     };

@@ -1,4 +1,4 @@
-import type {AreaRangeSeriesData} from '../../../types';
+import type {AreaRangeSeriesData, BasicHoverState} from '../../../types';
 import type {PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {PreparedAreaRangeSeries} from '../../series/types';
@@ -18,6 +18,7 @@ interface BoundaryPoint {
 export function prepareAreaRangeMarkers(args: {
     points: AreaRangePointData[];
     series: PreparedAreaRangeSeries;
+    hoverOptions?: BasicHoverState;
     yAxis: PreparedYAxis;
     yScale: ChartScale;
     yAxisTop: number;
@@ -85,7 +86,7 @@ export function prepareAreaRangeMarkers(args: {
                 });
             }
         }
-        getters.push(buildHoverMarkerGetter(boundaryPoints, series));
+        getters.push(buildHoverMarkerGetter(boundaryPoints, series, args.hoverOptions));
     }
 
     return {

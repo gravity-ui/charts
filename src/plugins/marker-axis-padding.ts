@@ -2,6 +2,7 @@ import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-p
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedLineSeries} from '~core/series/types';
 import {getHoverMarkerBorder} from '~core/shapes/marker';
+import type {BasicHoverState} from '~core/types';
 import {getSymbolBounds} from '~core/utils/symbol';
 
 interface MarkerPaddingPoint {
@@ -17,7 +18,10 @@ interface ProjectedMarkerSeries {
 }
 
 /** Cache normal/hover symbol geometry once per series, outside point projection. */
-function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
+function createMarkerPaddingGetter(
+    marker: PreparedLineSeries['marker'],
+    hoverOptions?: BasicHoverState,
+) {
     const {normal, hover} = marker.states;
     const bounds = (state: {radius: number; borderWidth: number}) =>
         getSymbolBounds({
@@ -31,7 +35,7 @@ function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
     const normalHoverBounds = bounds({...hover, ...getHoverMarkerBorder(normal, hover, true)});
     return (pointNormal?: boolean) => {
         const hasNormal = normal.enabled || pointNormal;
-        const hasHover = hover.enabled && (!hasNormal || hover.enabledForNormal !== false);
+        const hasHover = hover.enabled && (!hasNormal || hoverOptions?.enabled !== false);
         if (!hasNormal && !hasHover) return undefined;
         const hoveredBounds = hasNormal ? normalHoverBounds : hoverBounds;
         return {
@@ -65,13 +69,14 @@ export function createPaddingPointFilter(xScale: ChartScale, yScale: ChartScale)
 function appendMarkerPadding(args: {
     points: MarkerPaddingPoint[];
     marker: PreparedLineSeries['marker'];
+    hoverOptions?: BasicHoverState;
     xScale: ChartScale;
     yScale: ChartScale;
     top: number;
     yAxis: number;
     result: AxisPaddingPoint[];
 }) {
-    const getBounds = createMarkerPaddingGetter(args.marker);
+    const getBounds = createMarkerPaddingGetter(args.marker, args.hoverOptions);
     const inRange = createPaddingPointFilter(args.xScale, args.yScale);
     for (const p of args.points) {
         const y = p.y === null ? null : p.y - args.top;
@@ -85,6 +90,7 @@ function appendMarkerPadding(args: {
 export function collectMarkerPadding(
     args: PrepareAxisPaddingArgs,
     projected: ProjectedMarkerSeries[],
+    hoverOptions?: BasicHoverState,
 ): AxisPaddingPoint[] {
     const points: AxisPaddingPoint[] = [];
     for (const item of projected) {
@@ -93,6 +99,7 @@ export function collectMarkerPadding(
         appendMarkerPadding({
             points: item.points,
             marker: item.series.marker,
+            hoverOptions,
             xScale: args.xScale,
             yScale,
             top: args.split.plots[args.yAxis[item.series.yAxis].plotIndex]?.top ?? 0,

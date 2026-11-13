@@ -55,7 +55,6 @@ export function prepareAreaRangeSeries(
         const hoverMarker = merge(
             {
                 enabled: true,
-                enabledForNormal: seriesOptions?.['area-range']?.states?.hover?.enabled !== false,
                 radius: marker.radius,
                 halo: {...DEFAULT_HALO_OPTIONS},
             },
