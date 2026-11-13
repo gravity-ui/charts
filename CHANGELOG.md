@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.1.0](https://github.com/gravity-ui/charts/compare/v2.0.0...v2.1.0) (2026-11-13)
+
+
+### Features
+
+* add step interpolation for line series ([#831](https://github.com/gravity-ui/charts/issues/831)) ([826607f](https://github.com/gravity-ui/charts/commit/826607f5523ba8557fb9bfe32c630850dc59b7e5))
+* support axis grid dash styles ([#844](https://github.com/gravity-ui/charts/issues/844)) ([5aa46b0](https://github.com/gravity-ui/charts/commit/5aa46b076cf1d7dc20941f090214499260a571b6))
+
+
+### Bug Fixes
+
+* allow all marker symbols for area series ([#843](https://github.com/gravity-ui/charts/issues/843)) ([9a7a660](https://github.com/gravity-ui/charts/commit/9a7a660c2db3e35d3855760c1527bfdaac19ae01))
+* preserve zoomed geometry and delegate axis policies to plugins ([#836](https://github.com/gravity-ui/charts/issues/836)) ([bfd16e2](https://github.com/gravity-ui/charts/commit/bfd16e225ef0a89a9b92a689b98d752b04d66ed4))
+* prioritize stack totals over segment labels ([#833](https://github.com/gravity-ui/charts/issues/833)) ([a96d282](https://github.com/gravity-ui/charts/commit/a96d282539ae9ce4e5c89f69b3ad9ceaa7d0288a))
+
 ## [2.0.0](https://github.com/gravity-ui/charts/compare/v1.73.0...v2.0.0) (2026-11-05)
 
 
