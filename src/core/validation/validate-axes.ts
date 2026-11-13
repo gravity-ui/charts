@@ -1,10 +1,25 @@
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import {AXIS_TYPE} from '../constants';
+import {AXIS_TYPE, DASH_STYLE} from '../constants';
 import {i18n} from '../i18n';
 import type {ChartAxis, ChartXAxis, ChartYAxis} from '../types';
 import {parseNonNegativeSize} from '../utils/math';
 
 const AVAILABLE_AXIS_TYPES = Object.values(AXIS_TYPE);
+const AVAILABLE_DASH_STYLES = Object.values(DASH_STYLE);
+
+function validateGridDashStyle({axis, key}: {axis: ChartAxis; key: 'x' | 'y'}) {
+    const dashStyle = axis.grid?.dashStyle;
+
+    if (dashStyle !== undefined && !AVAILABLE_DASH_STYLES.includes(dashStyle)) {
+        throw new ChartError({
+            code: CHART_ERROR_CODE.INVALID_DATA,
+            message: i18n('error', 'label_invalid-axis-grid-dash-style', {
+                key,
+                values: AVAILABLE_DASH_STYLES,
+            }),
+        });
+    }
+}
 
 function validatePadding(axis: ChartAxis) {
     const padding = axis.padding;
@@ -140,6 +155,7 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     if (xAxis) {
         validatePadding(xAxis);
         validateAxisType({axis: xAxis, key: 'x'});
+        validateGridDashStyle({axis: xAxis, key: 'x'});
         validateLabelsHtmlOptions({axis: xAxis});
 
         if (xAxis?.type === 'category') {
@@ -157,6 +173,7 @@ export function validateAxes(args: {xAxis?: ChartXAxis; yAxis?: ChartYAxis[]}) {
     yAxis.forEach((axis, axisIndex) => {
         validatePadding(axis);
         validateAxisType({axis, key: 'y'});
+        validateGridDashStyle({axis, key: 'y'});
 
         if (axis.type === 'category') {
             validateCategories(axis);

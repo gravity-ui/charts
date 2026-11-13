@@ -108,13 +108,17 @@ export const AxisY = (props: Props) => {
             .join('g')
             .attr('class', tickClassName);
 
+        const gridDashArray = getLineDashArray(preparedAxisData.gridDashStyle, 1);
         const labelClassName = b('label');
         ticks.each(function () {
             const tickSelection = select(this);
             const tickData = tickSelection.datum() as AxisTickData;
 
             if (tickData.line) {
-                tickSelection.append('path').attr('d', lineGenerator(tickData.line.points));
+                tickSelection
+                    .append('path')
+                    .attr('d', lineGenerator(tickData.line.points))
+                    .attr('stroke-dasharray', gridDashArray);
             }
 
             if (tickData.mark) {

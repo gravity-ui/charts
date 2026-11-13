@@ -101,6 +101,7 @@ export type AxisDomainData = {
 export type AxisYData = {
     id: string;
     gridEnabled: boolean;
+    gridDashStyle: DashStyle;
     title: HtmlAxisTitleData | SvgAxisTitleData | null;
     domain: AxisDomainData | null;
     ticks: AxisTickData[];
