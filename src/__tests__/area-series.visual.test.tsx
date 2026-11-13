@@ -30,6 +30,69 @@ interface TooltipColorCase {
 }
 
 test.describe('Area series', () => {
+    test('hover halos support permanent and hover-only markers', async ({mount, page}) => {
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    tooltip: {enabled: false},
+                    xAxis: {min: -0.25, max: 1.25},
+                    yAxis: [{min: 0, max: 10}],
+                    series: {
+                        options: {
+                            area: {
+                                states: {
+                                    hover: {marker: {halo: {enabled: true, size: 9, opacity: 0.6}}},
+                                },
+                            },
+                        },
+                        data: [
+                            {
+                                type: 'area',
+                                name: 'Always visible',
+                                marker: {enabled: true},
+                                data: [
+                                    {x: 0, y: 7, marker: {color: '#e8590c'}},
+                                    {x: 1, y: 7},
+                                ],
+                            },
+                            {
+                                type: 'area',
+                                name: 'On hover',
+                                marker: {enabled: false, symbol: 'square'},
+                                data: [
+                                    {x: 0, y: 3, color: '#7048e8'},
+                                    {x: 1, y: 3},
+                                ],
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+        const symbols = component.locator('.gcharts-marker__symbol:visible');
+        await expect(symbols).toHaveCount(2);
+        const first = await getLocatorBoundingBox(symbols.first());
+        const last = await getLocatorBoundingBox(symbols.last());
+        const halos = component.locator('.gcharts-marker__halo');
+
+        await page.mouse.move(first.x + first.width / 2, first.y + first.height / 2);
+        await expect(halos).toHaveCount(2);
+        await expect(component.locator('.gcharts-marker__halo[fill="#e8590c"]')).toBeVisible();
+        await expect(component.locator('.gcharts-marker__halo[fill="#7048e8"]')).toHaveAttribute(
+            'opacity',
+            '0.6',
+        );
+        await expect(symbols).toHaveCount(3);
+        await expect(component.locator('svg')).toHaveScreenshot();
+
+        await page.mouse.move(last.x + last.width / 2, last.y + last.height / 2);
+        await expect(halos).toHaveCount(2);
+        await expect(component.locator('.gcharts-marker__halo[fill="#e8590c"]')).toHaveCount(0);
+        await page.mouse.move(500, 400);
+        await expect(halos).toHaveCount(0);
+        await expect(symbols).toHaveCount(2);
+    });
+
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={areaBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
@@ -79,6 +142,7 @@ test.describe('Area series', () => {
             'fill',
             'rgb(128, 0, 128)',
         );
+        await expect(component.locator('.gcharts-marker__halo')).toHaveCount(0);
         expect(await line.getAttribute('stroke')).not.toBe(normalStroke);
         expect(await region.getAttribute('fill')).not.toBe(normalFill);
     });

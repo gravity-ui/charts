@@ -47,8 +47,6 @@ The halo uses the marker's symbol and fill color, including point overrides.
 
 Hover styles apply to both marker modes and reset when hover moves to another point or leaves the chart. Set `states.hover.marker.enabled: false` to disable marker hover styles and hover-only markers. Set `states.hover.enabled: false` to keep always-visible markers unchanged while retaining hover-only markers.
 
-Area and area-range series support the same radius, border, and marker visibility settings under their respective series keys.
-
 Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
 
 ### Line interpolation

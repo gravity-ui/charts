@@ -39,7 +39,7 @@ function prepareMarker(series: AreaSeries, seriesOptions?: ChartSeriesOptions) {
         radius: markerNormalState.radius,
         borderWidth: 1,
         borderColor: '#ffffff',
-        halo: {...DEFAULT_HALO_OPTIONS},
+        halo: {...DEFAULT_HALO_OPTIONS, enabled: false},
     };
     const hoverMarker = merge(hoveredMarkerDefaultOptions, seriesHoverState?.marker);
 

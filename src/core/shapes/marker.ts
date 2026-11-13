@@ -249,6 +249,7 @@ interface HoverMarkerSeries {
                 radius: number;
                 borderColor: string;
                 borderWidth: number;
+                halo?: PreparedHaloOptions;
             };
         };
     };
@@ -258,7 +259,6 @@ export function buildHoverMarkerGetter(
     points: HoverMarkerPoint[],
     series: HoverMarkerSeries,
     isOutsideBounds?: (x: number, y: number) => boolean,
-    halo?: PreparedHaloOptions,
 ): (hoveredData: HoveredShapeData[]) => MarkerItem[] {
     const {normal: normalState, hover: hoverState} = series.marker.states;
 
@@ -266,6 +266,7 @@ export function buildHoverMarkerGetter(
         return () => [];
     }
 
+    const {halo} = hoverState;
     const markerHalo = halo?.enabled
         ? {radius: hoverState.radius + halo.size, opacity: halo.opacity}
         : undefined;

@@ -24,6 +24,8 @@ Set `stacking: 'normal'` to show cumulative values or `stacking: 'percent'` to s
 
 Set `marker.enabled: true` to show points. Configure hover markers through `series.options.area.states.hover.marker`; see [Markers](line.md#markers).
 
+Halos are disabled by default. Set `halo.enabled: true` in those hover marker options to show a halo around hovered points, with or without always-visible markers.
+
 Use [axis padding](../axes/index.md#axis-padding) to fit markers at free axis limits.
 
 ## Colors
