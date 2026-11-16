@@ -100,6 +100,7 @@ type PreparedBaseAxis = Omit<
     min?: number;
     grid: {
         enabled: boolean;
+        dashStyle: DashStyle;
     };
     ticks: {
         pixelInterval?: number;

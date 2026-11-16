@@ -33,6 +33,17 @@ function createMarkerPaddingGetter(
     const normalBounds = bounds(normal);
     const hoverBounds = bounds({...hover, ...getHoverMarkerBorder(normal, hover, false)});
     const normalHoverBounds = bounds({...hover, ...getHoverMarkerBorder(normal, hover, true)});
+    if (hover.halo.enabled && hover.halo.opacity > 0) {
+        const haloBounds = getSymbolBounds({
+            symbolType: normal.symbol,
+            radius: hover.radius + hover.halo.size,
+            strokeWidth: 0,
+        });
+        for (const side of ['left', 'right', 'top', 'bottom'] as const) {
+            hoverBounds[side] = Math.max(hoverBounds[side], haloBounds[side]);
+            normalHoverBounds[side] = Math.max(normalHoverBounds[side], haloBounds[side]);
+        }
+    }
     return (pointNormal?: boolean) => {
         const hasNormal = normal.enabled || pointNormal;
         const hasHover = hover.enabled && (!hasNormal || hoverOptions?.enabled !== false);

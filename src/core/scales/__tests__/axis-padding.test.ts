@@ -158,11 +158,14 @@ describe('axis padding', () => {
     });
 
     test.each([
-        {enabled: true, inset: 29},
-        {enabled: false, inset: 11},
+        {enabled: true, inset: 29, hoverOnlyInset: 21.5},
+        {enabled: false, inset: 11, hoverOnlyInset: 21.5},
+        {enabled: true, haloSize: 4, inset: 29, hoverOnlyInset: 24},
+        {enabled: true, haloSize: 40, inset: 60, hoverOnlyInset: 60},
+        {enabled: false, haloSize: 40, inset: 11, hoverOnlyInset: 60},
     ])(
-        'reserves inherited hover borders only for permanent markers (hover enabled: $enabled)',
-        async ({enabled, inset}) => {
+        'reserves inherited hover borders and halos (hover enabled: $enabled, halo size: $haloSize)',
+        async ({enabled, haloSize, inset, hoverOnlyInset}) => {
             const args = await prepare(
                 [
                     {
@@ -174,12 +177,27 @@ describe('axis padding', () => {
                         ],
                     },
                 ],
-                {line: {states: {hover: {enabled, marker: {radius: 20}}}}},
+                {
+                    line: {
+                        states: {
+                            hover: {
+                                enabled,
+                                marker: {
+                                    radius: 20,
+                                    halo:
+                                        haloSize === undefined
+                                            ? undefined
+                                            : {enabled: true, size: haloSize},
+                                },
+                            },
+                        },
+                    },
+                },
             );
             args.xAxis.padding = allAuto;
             applyAxisPadding(args);
             expect(args.xScale(0)).toBeCloseTo(inset);
-            expect(args.xScale(2)).toBeCloseTo(578.5);
+            expect(args.xScale(2)).toBeCloseTo(600 - hoverOnlyInset);
         },
     );
 
@@ -190,6 +208,21 @@ describe('axis padding', () => {
         args.xAxis.padding = allAuto;
         applyAxisPadding(args);
         expect(args.xScale.domain()).toEqual([0, 2]);
+    });
+
+    test.each([
+        {name: 'disabled halos', marker: {halo: {enabled: false, size: 40}}},
+        {name: 'transparent halos', marker: {halo: {enabled: true, size: 40, opacity: 0}}},
+        {
+            name: 'disabled hover markers',
+            marker: {enabled: false, halo: {enabled: true, size: 40}},
+        },
+    ])('does not reserve halo space for $name', async ({marker}) => {
+        const args = await prepare(undefined, {line: {states: {hover: {marker}}}});
+        args.xAxis.padding = allAuto;
+        applyAxisPadding(args);
+        expect(args.xScale(0)).toBeCloseTo(13);
+        expect(args.xScale(2)).toBeCloseTo(587);
     });
 
     test('fits scatter hover halos and per-point radii', async () => {

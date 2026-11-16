@@ -152,13 +152,29 @@ test.describe('Axis padding', () => {
         });
     }
 
-    for (const type of ['line', 'area', 'area-range', 'scatter'] as const) {
-        test(`${type} fits markers with a continuous axis and stable hover`, async ({
+    for (const [type, haloEnabled] of [
+        ['line', false],
+        ['area', false],
+        ['area-range', false],
+        ['scatter', false],
+        ['line', true],
+        ['area', true],
+        ['area-range', true],
+    ] as const) {
+        test(`${type} fits ${haloEnabled ? 'markers and halos' : 'markers'} with a continuous axis and stable hover`, async ({
             mount,
             page,
         }) => {
+            const data = dataFor(type);
+            if (haloEnabled) {
+                // Tick rounding must not provide spare space that hides missing halo padding.
+                data.xAxis = {...data.xAxis, startOnTick: false, endOnTick: false};
+                data.series.options = {
+                    [type]: {states: {hover: {marker: {halo: {enabled: true, size: 24}}}}},
+                };
+            }
             const component = await mount(
-                <ChartTestStory data={dataFor(type)} styles={{width: 600, height: 300}} />,
+                <ChartTestStory data={data} styles={{width: 600, height: 300}} />,
             );
             const svg = component.locator('svg');
             const markers = component.locator('.gcharts-marker__symbol[d]');
@@ -176,12 +192,31 @@ test.describe('Axis padding', () => {
                 nodes.map((node) => node.getBoundingClientRect().toJSON()),
             );
             const right = boxes.reduce((a, b) => (a.right > b.right ? a : b));
-            await page.mouse.move(right.x + right.width / 2, right.y + right.height / 2);
-            await expect(page.locator('.gcharts-tooltip')).toBeVisible();
-            await expectPaintInsidePlot(
-                plot,
-                component.locator('.gcharts-marker__symbol[d], .gcharts-marker__halo[d]'),
-            );
+            const targets = haloEnabled
+                ? [
+                      boxes.reduce((a, b) => (a.left < b.left ? a : b)),
+                      boxes.reduce((a, b) => (a.top < b.top ? a : b)),
+                      right,
+                  ]
+                : [right];
+            for (const target of targets) {
+                await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2);
+                await expect(page.locator('.gcharts-tooltip')).toBeVisible();
+                if (haloEnabled) {
+                    const halos = component.locator('.gcharts-marker__halo[d]');
+                    await expect(halos).toHaveCount(type === 'area-range' ? 2 : 1);
+                    await expect
+                        .poll(async () => {
+                            const halo = await getLocatorBoundingBox(halos.first());
+                            return halo.x + halo.width / 2;
+                        })
+                        .toBeCloseTo(target.x + target.width / 2, 1);
+                }
+                await expectPaintInsidePlot(
+                    plot,
+                    component.locator('.gcharts-marker__symbol[d], .gcharts-marker__halo[d]'),
+                );
+            }
             if (type === 'scatter') {
                 await expect(
                     component.locator('.gcharts-marker__halo[visibility=""]'),
@@ -193,7 +228,7 @@ test.describe('Axis padding', () => {
                 ),
             ).toEqual(before);
             await page.mouse.move(700, 500);
-            await expect(svg).toHaveScreenshot();
+            if (!haloEnabled) await expect(svg).toHaveScreenshot();
         });
     }
 

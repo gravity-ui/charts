@@ -4,6 +4,7 @@ import get from 'es-toolkit/compat/get';
 
 import {block} from '../../utils';
 import {SymbolType} from '../constants';
+import type {PreparedHaloOptions} from '../series/types';
 import type {BasicHoverState} from '../types';
 import {getSymbol} from '../utils';
 import {getDistanceToSymbol} from '../utils/symbol';
@@ -222,12 +223,23 @@ export function renderHoverMarkers(
 
     if (hoverMarkers.length === 0) return;
 
-    container
+    const selection = container
         .selectAll<SVGGElement, MarkerItem>('g')
         .data(hoverMarkers)
         .join('g')
         .attr('class', b('wrapper'))
-        .attr('transform', (d) => `translate(${d.cx},${d.cy})`)
+        .attr('transform', (d) => `translate(${d.cx},${d.cy})`);
+
+    selection
+        .selectAll('path')
+        .data((d) => (d.halo ? [{...d.halo, symbolType: d.symbolType, fill: d.fill}] : []))
+        .join('path')
+        .attr('class', haloClassName)
+        .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius))
+        .attr('fill', (d) => d.fill)
+        .attr('opacity', (d) => d.opacity);
+
+    selection
         .append('path')
         .attr('class', b('symbol'))
         .attr('d', (d) => getMarkerSymbol(d.symbolType, d.radius + d.strokeWidth))
@@ -254,6 +266,7 @@ interface HoverMarkerSeries {
                 radius: number;
                 borderColor?: string;
                 borderWidth?: number;
+                halo?: PreparedHaloOptions;
             };
         };
     };
@@ -274,6 +287,10 @@ export function buildHoverMarkerGetter(
     const hoverBorder = getHoverMarkerBorder(normalState, hoverState, false);
     const normalHoverBorder = getHoverMarkerBorder(normalState, hoverState, true);
 
+    const {halo} = hoverState;
+    const markerHalo = halo?.enabled
+        ? {radius: hoverState.radius + halo.size, opacity: halo.opacity}
+        : undefined;
     const pointsByData = new Map<unknown, HoverMarkerPoint[]>();
     for (const p of points) {
         if (hoverOptions?.enabled === false && get(p.data, 'marker.states.normal.enabled', false)) {
@@ -313,6 +330,7 @@ export function buildHoverMarkerGetter(
                 opacity: 1,
                 active: true,
                 clipped: false,
+                ...(markerHalo && {halo: markerHalo}),
                 series: {id: series.id},
                 data: hovered.data,
             });
