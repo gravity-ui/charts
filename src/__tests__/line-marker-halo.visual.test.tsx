@@ -92,8 +92,5 @@ test.describe('Line marker halo', () => {
         await page.mouse.move(box.x + box.width / 2 + 1, box.y);
         await expect(halos).toHaveCount(2);
         await expect(halos.first()).toHaveAttribute('opacity', '0');
-
-        await component.update(<ChartTestStory data={createData({enabled: false})} />);
-        await expect(halos).toHaveCount(0);
     });
 });

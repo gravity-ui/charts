@@ -28,7 +28,7 @@ Set `min`, `max`, or both inside `padding`. They refer to the minimum and maximu
 
 ### Choosing a size
 
-- **Automatic** — use `'auto'` to fit markers, their borders, enabled hover sizes, and visible scatter halos. It reuses space already available in the range. Space is reserved before hovering, so hovering does not move the axes.
+- **Automatic** — use `'auto'` to fit markers, their borders, enabled hover sizes, and visible halos. It reuses space already available in the range. Space is reserved before hovering, so hovering does not move the axes.
 - **Pixels** — use a nonnegative number or pixel string, such as `12` or `'12px'`.
 - **Percentages** — extend the chosen boundary by a share of the axis value range before padding. Both sides use the same range, taken from the data extent and any explicit limits.
 
