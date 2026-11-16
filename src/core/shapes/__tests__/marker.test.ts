@@ -2,6 +2,82 @@ import {SymbolType} from '../../constants';
 import {buildHoverMarkerGetter} from '../marker';
 
 describe('buildHoverMarkerGetter', () => {
+    test.each([
+        {
+            name: 'inherited borders',
+            normalWidth: 3,
+            hover: {},
+            expected: [
+                {stroke: 'red', strokeWidth: 3},
+                {stroke: '#ffffff', strokeWidth: 1},
+            ],
+        },
+        {
+            name: 'zero normal width',
+            normalWidth: 0,
+            hover: {},
+            expected: [
+                {stroke: 'red', strokeWidth: 0},
+                {stroke: '#ffffff', strokeWidth: 1},
+            ],
+        },
+        {
+            name: 'color override',
+            normalWidth: 3,
+            hover: {borderColor: 'green'},
+            expected: [
+                {stroke: 'green', strokeWidth: 3},
+                {stroke: 'green', strokeWidth: 1},
+            ],
+        },
+        {
+            name: 'width override',
+            normalWidth: 3,
+            hover: {borderWidth: 0},
+            expected: [
+                {stroke: 'red', strokeWidth: 0},
+                {stroke: '#ffffff', strokeWidth: 0},
+            ],
+        },
+        {
+            name: 'full border override',
+            normalWidth: 3,
+            hover: {borderColor: 'green', borderWidth: 2},
+            expected: [
+                {stroke: 'green', strokeWidth: 2},
+                {stroke: 'green', strokeWidth: 2},
+            ],
+        },
+    ])('$name for permanent and hover-only points', ({normalWidth, hover, expected}) => {
+        const data = [
+            {x: 0, y: 10, marker: {states: {normal: {enabled: true}}}},
+            {x: 1, y: 20},
+        ];
+        const series = {
+            id: 'line-1',
+            color: 'black',
+            marker: {
+                states: {
+                    normal: {
+                        enabled: false,
+                        symbol: SymbolType.Circle,
+                        borderColor: 'red',
+                        borderWidth: normalWidth,
+                    },
+                    hover: {enabled: true, radius: 4, ...hover},
+                },
+            },
+        };
+        const getHoverMarkers = buildHoverMarkerGetter(
+            data.map((point) => ({x: point.x, y: point.y, data: point})),
+            series,
+        );
+
+        expect(getHoverMarkers(data.map((point) => ({data: point})))).toEqual(
+            expected.map((border) => expect.objectContaining(border)),
+        );
+    });
+
     test('preserves the resolved fill for permanent markers without overwriting the configured color', () => {
         const data = {x: 1, y: 20};
         const point = {data, x: 10, y: 20, color: 'red', fill: 'purple'};
