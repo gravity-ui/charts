@@ -27,6 +27,16 @@ function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
         });
     const normalBounds = bounds(normal);
     const hoverBounds = bounds(hover);
+    if (hover.halo.enabled && hover.halo.opacity > 0) {
+        const haloBounds = getSymbolBounds({
+            symbolType: normal.symbol,
+            radius: hover.radius + hover.halo.size,
+            strokeWidth: 0,
+        });
+        for (const side of ['left', 'right', 'top', 'bottom'] as const) {
+            hoverBounds[side] = Math.max(hoverBounds[side], haloBounds[side]);
+        }
+    }
     return (pointNormal?: boolean) => {
         const hasNormal = normal.enabled || pointNormal;
         const hasHover = hover.enabled && (!hasNormal || hover.enabledForNormal !== false);

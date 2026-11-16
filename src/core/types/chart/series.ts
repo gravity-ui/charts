@@ -308,7 +308,7 @@ export interface ChartSeriesOptions<T = MeaningfulAny> {
         states?: {
             hover?: BasicHoverState & {
                 marker?: PointMarkerOptions & {
-                    /** Options for the halo appearing around the hovered point */
+                    /** Halo around the hovered marker. Disabled by default. */
                     halo?: Halo;
                 };
             };
@@ -346,7 +346,7 @@ export interface ChartSeriesOptions<T = MeaningfulAny> {
         states?: {
             hover?: BasicHoverState & {
                 marker?: PointMarkerOptions & {
-                    /** Options for the halo appearing around the hovered point */
+                    /** Halo around the hovered marker. Disabled by default. */
                     halo?: Halo;
                 };
             };
@@ -367,7 +367,10 @@ export interface ChartSeriesOptions<T = MeaningfulAny> {
         states?: {
             hover?: BasicHoverState & {
                 /** Marker appearance on both hovered boundaries. */
-                marker?: PointMarkerOptions & {halo?: Halo};
+                marker?: PointMarkerOptions & {
+                    /** Halo around each hovered boundary marker. Disabled by default. */
+                    halo?: Halo;
+                };
             };
             inactive?: BasicInactiveState;
         };

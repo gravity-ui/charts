@@ -32,6 +32,7 @@ export interface MarkerItem {
     opacity: number;
     active: boolean;
     clipped: boolean;
+    halo?: {radius: number; opacity: number};
     series: {id: string};
     data: unknown;
 }

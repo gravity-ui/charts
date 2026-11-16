@@ -166,6 +166,21 @@ describe('axis padding', () => {
         expect(args.xScale.domain()).toEqual([0, 2]);
     });
 
+    test.each([
+        {name: 'disabled halos', marker: {halo: {enabled: false, size: 40}}},
+        {name: 'transparent halos', marker: {halo: {enabled: true, size: 40, opacity: 0}}},
+        {
+            name: 'disabled hover markers',
+            marker: {enabled: false, halo: {enabled: true, size: 40}},
+        },
+    ])('does not reserve halo space for $name', async ({marker}) => {
+        const args = await prepare(undefined, {line: {states: {hover: {marker}}}});
+        args.xAxis.padding = allAuto;
+        applyAxisPadding(args);
+        expect(args.xScale(0)).toBeCloseTo(13);
+        expect(args.xScale(2)).toBeCloseTo(587);
+    });
+
     test('fits scatter hover halos and per-point radii', async () => {
         const args = await prepare([
             {
