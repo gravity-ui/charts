@@ -91,6 +91,7 @@ export type AxisDomainData = {
 export type AxisXData = {
     id: string;
     gridEnabled: boolean;
+    gridDashStyle: DashStyle;
     title: AxisTitleData | null;
     domain: AxisDomainData | null;
     ticks: AxisTickData[];

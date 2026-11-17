@@ -260,6 +260,11 @@ export interface ChartAxis {
          * @default true
          */
         enabled?: boolean;
+        /**
+         * The dash style of grid lines.
+         * @default 'Solid'
+         */
+        dashStyle?: DashStyle;
     };
     ticks?: ChartAxisTicks;
     /** Extend free domain boundaries without shrinking the pixel range or changing raw data. */

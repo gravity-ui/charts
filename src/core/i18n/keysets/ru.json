@@ -1,5 +1,6 @@
 {
   "error": {
+    "label_invalid-axis-grid-dash-style": "Некорректный grid.dashStyle для оси \"{{key}}\". Доступные стили: [{{values}}].",
     "label_invalid-axis-padding-type": "axis.padding должен быть объектом",
     "label_invalid-axis-padding-size": "axis.padding.{{side}} должен быть auto или конечным неотрицательным размером в пикселях или процентах",
     "label_inconsistent-stack-grouping": "У серий «{{firstSeries}}» и «{{secondSeries}}» одного стека должно совпадать значение grouping. Если grouping не указан, используется true.",

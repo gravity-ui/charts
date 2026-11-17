@@ -1,10 +1,40 @@
 import type {ChartError} from '../../../libs';
 import {CHART_ERROR_CODE} from '../../../libs';
+import {DASH_STYLE} from '../../constants';
 import {validateAxes} from '../validate-axes';
 
 type Args = Parameters<typeof validateAxes>[0];
 
 describe('validation/validateAxes', () => {
+    const validGridDashStyles = [undefined, ...Object.values(DASH_STYLE)];
+    const invalidGridDashStyles = [null, 'dashed', '', 1, false, {}];
+
+    test.each(validGridDashStyles)('accepts grid dash style %s on X and Y axes', (dashStyle) => {
+        expect(() =>
+            validateAxes({
+                xAxis: {grid: {dashStyle}},
+                yAxis: [{grid: {dashStyle}}, {grid: {dashStyle}}],
+            }),
+        ).not.toThrow();
+    });
+
+    test.each(invalidGridDashStyles)(
+        'rejects invalid grid dash style %j on every axis',
+        (dashStyle) => {
+            const invalidAxes = [
+                {xAxis: {grid: {dashStyle}}},
+                {yAxis: [{grid: {dashStyle}}]},
+                {yAxis: [{}, {grid: {enabled: false, dashStyle}}]},
+            ];
+
+            for (const args of invalidAxes) {
+                expect(() => validateAxes(args as Args)).toThrow(
+                    expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+                );
+            }
+        },
+    );
+
     test.each([{xAxis: {type: 'unknown'}}, {yAxis: [{type: 'unknown'}]}])(
         'validateAxes should throw an error in case of invalid axis type (data: %j)',
         (data) => {

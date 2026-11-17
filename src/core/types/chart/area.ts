@@ -1,4 +1,4 @@
-import type {SERIES_TYPE} from '../../constants';
+import type {SERIES_TYPE, SymbolType} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
 import type {ChartPointAnnotation} from './annotation';
@@ -56,7 +56,7 @@ export interface AreaSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
     annotation?: ChartPointAnnotation;
 }
 
-export type AreaMarkerSymbol = 'circle' | 'square';
+export type AreaMarkerSymbol = `${SymbolType}`;
 
 export interface AreaMarkerOptions extends PointMarkerOptions {
     symbol?: AreaMarkerSymbol;

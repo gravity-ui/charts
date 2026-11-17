@@ -1186,6 +1186,41 @@ describe('chart config artifacts', () => {
         ).toBe(0);
     });
 
+    test('area and area-range support all point marker symbols in declarations and schema', () => {
+        const symbols = ['circle', 'diamond', 'square', 'triangle', 'triangle-down'];
+        const types = ['area', 'area-range'];
+        const config = {
+            series: {
+                data: types.flatMap((type) =>
+                    symbols.map((symbol) => ({
+                        type,
+                        name: symbol,
+                        data: [],
+                        marker: {enabled: true, symbol},
+                    })),
+                ),
+            },
+        };
+        expect(() =>
+            validateDeclaration(
+                path.resolve(__dirname, 'area-marker-symbols-usage.ts'),
+                declaration + `\nexport const config: ChartConfig = ${JSON.stringify(config)};`,
+            ),
+        ).not.toThrow();
+
+        const validate = createSchemaValidator().compile(schema);
+        expect(validate(config)).toBe(true);
+        for (const type of types) {
+            for (const symbol of ['star', null, 0]) {
+                expect(
+                    validate({
+                        series: {data: [{type, name: 'Area', data: [], marker: {symbol}}]},
+                    }),
+                ).toBe(false);
+            }
+        }
+    });
+
     test('area-range marker options are exposed in the standalone declaration and schema', () => {
         const options = {
             marker: {enabled: true, radius: 5, symbol: 'square', color: '#ff0000'},

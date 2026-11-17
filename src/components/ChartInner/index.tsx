@@ -324,6 +324,7 @@ function ChartInnerComponent(
             if (scale) {
                 const axisData = await prepareYAxisData({
                     axis,
+                    xAxis,
                     scale,
                     top: boundsOffsetTop,
                     width: boundsWidth,
@@ -342,7 +343,16 @@ function ChartInnerComponent(
             }
         }
         return items;
-    }, [boundsHeight, boundsOffsetTop, boundsWidth, preparedSeries, preparedSplit, yAxis, yScale]);
+    }, [
+        boundsHeight,
+        boundsOffsetTop,
+        boundsWidth,
+        preparedSeries,
+        preparedSplit,
+        xAxis,
+        yAxis,
+        yScale,
+    ]);
     // Gate axis data computation until the legend has been computed at least once.
     // Using legendConfig (undefined → value, never reverts) avoids false→true toggling
     // on every zoom/range-slider interaction that would otherwise stall axis rendering.

@@ -9,6 +9,7 @@ import {
     lineExplicitTickValuesData,
     lineGradientData,
     lineHtmlLabelsData,
+    lineMarkerHaloData,
     linePlaygroundData,
     lineSplitData,
     lineTwoYAxisData,
@@ -36,6 +37,13 @@ export const LineGradient = {
     name: 'Gradient',
     args: {
         data: lineGradientData,
+    },
+} satisfies Story;
+
+export const LineMarkerHalo = {
+    name: 'Marker halo on hover',
+    args: {
+        data: lineMarkerHaloData,
     },
 } satisfies Story;
 

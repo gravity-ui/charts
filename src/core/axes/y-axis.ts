@@ -242,6 +242,7 @@ export const getPreparedYAxis = ({
                 endOnTick: get(axisItem, 'endOnTick'),
                 grid: {
                     enabled: gridEnabled,
+                    dashStyle: get(axisItem, 'grid.dashStyle', DASH_STYLE.Solid),
                 },
                 ticks: {
                     pixelInterval: axisItem.ticks?.interval

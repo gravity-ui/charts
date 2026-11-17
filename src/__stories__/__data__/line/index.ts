@@ -5,6 +5,7 @@ export * from './data-labels-placement';
 export * from './explicit-tick-values';
 export * from './gradient';
 export * from './html-labels';
+export * from './marker-halo';
 export * from './markers';
 export * from './null-modes';
 export * from './playground';

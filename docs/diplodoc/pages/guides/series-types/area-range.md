@@ -40,10 +40,9 @@ Configure hover markers through `series.options['area-range'].states.hover.marke
 series: {
   options: {
     'area-range': {
-      marker: {enabled: false, radius: 4},
       states: {
         hover: {
-          marker: {enabled: true, radius: 6},
+          marker: {halo: {enabled: true}},
         },
       },
     },
@@ -60,6 +59,8 @@ series: {
   ],
 }
 ```
+
+Halos are disabled by default. Set `halo.enabled: true` to highlight both visible boundary markers. Coincident boundaries share one halo. See [Markers](line.md#markers) for size and opacity options.
 
 ### Zoom and range slider
 

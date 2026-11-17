@@ -28,7 +28,7 @@ Set `min`, `max`, or both inside `padding`. They refer to the minimum and maximu
 
 ### Choosing a size
 
-- **Automatic** — use `'auto'` to fit markers, their borders, enabled hover sizes, and visible scatter halos. It reuses space already available in the range. Space is reserved before hovering, so hovering does not move the axes.
+- **Automatic** — use `'auto'` to fit markers, their borders, enabled hover sizes, and visible halos. It reuses space already available in the range. Space is reserved before hovering, so hovering does not move the axes.
 - **Pixels** — use a nonnegative number or pixel string, such as `12` or `'12px'`.
 - **Percentages** — extend the chosen boundary by a share of the axis value range before padding. Both sides use the same range, taken from the data extent and any explicit limits.
 
@@ -72,6 +72,25 @@ Automatic padding measures markers in line, area, area-range, and scatter series
 See [Migrating from v1 to v2](../../migration/v2.md) for automatic conversion and the corrected zoom and logarithmic behavior.
 
 {% endnote %}
+
+## Grid lines {#grid-lines}
+
+Set `grid.dashStyle` on `xAxis` for vertical grid lines and on each `yAxis` item for horizontal grid lines.
+
+The pattern applies only to grid lines. Axis lines and tick marks (the short marks next to axis labels) remain solid.
+
+<div data-chart-example="layout/grid-dash-style"></div>
+
+```ts
+xAxis: {
+    grid: {dashStyle: 'Dot'},
+},
+yAxis: [{
+    grid: {dashStyle: 'ShortDash'},
+}],
+```
+
+The default is `'Solid'`. Use `'Dash'` for dashed grid lines or `'Dot'` for dotted grid lines. Any `DashStyle` value is supported.
 
 ## Labels
 
