@@ -32,8 +32,8 @@ import {getAreaAxisData} from './domain';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {
+    createAreaCategoryXProjector,
     createAreaGeometryPreparer,
-    createAreaXProjector,
     projectInterpolatedAreaData,
 } from './projection';
 import {getAreaStackLabelAnchors} from './stack-labels';
@@ -116,7 +116,11 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             split,
             isOutsideBounds: isOutsideBounds ?? (() => false),
             isRangeSlider,
-            projectX: createAreaXProjector({series: series as PreparedAreaSeries[], xAxis, xScale}),
+            projectX: createAreaCategoryXProjector({
+                series: series as PreparedAreaSeries[],
+                xAxis,
+                xScale,
+            }),
             prepareGeometry: createAreaGeometryPreparer({
                 series: series as PreparedAreaSeries[],
                 yAxis: yAxis ?? [],

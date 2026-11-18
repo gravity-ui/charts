@@ -5,7 +5,10 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaSeries, ChartSeries, SeriesInterpolation} from '../../types';
 import {validateInterpolation} from '../interpolation/validation';
 
-function getInterpolationKey(interpolation?: SeriesInterpolation) {
+/**
+ * Returns a normalized key for checking that interpolation settings match within an area stack.
+ */
+function getNormalizedInterpolationKey(interpolation?: SeriesInterpolation) {
     switch (interpolation?.type) {
         case 'cardinal':
             return `cardinal:${interpolation.tension ?? 0}`;
@@ -21,7 +24,7 @@ export function validateAreaInterpolation(series: AreaSeries, allSeries: ChartSe
     if (!series.stacking && !series.stackId) return;
 
     const stackId = getSeriesStackId(series);
-    const interpolation = getInterpolationKey(series.interpolation);
+    const interpolation = getNormalizedInterpolationKey(series.interpolation);
     for (const other of allSeries) {
         if (
             other.type !== 'area' ||
@@ -31,7 +34,7 @@ export function validateAreaInterpolation(series: AreaSeries, allSeries: ChartSe
             continue;
         }
         validateInterpolation({series: other});
-        if (getInterpolationKey(other.interpolation) !== interpolation) {
+        if (getNormalizedInterpolationKey(other.interpolation) !== interpolation) {
             throw new ChartError({
                 code: CHART_ERROR_CODE.INVALID_DATA,
                 message: i18n('error', 'label_invalid-series-property', {

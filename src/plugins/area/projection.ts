@@ -10,7 +10,11 @@ import type {PreparedGeometryOptions} from './geometry';
 
 type ProjectionArgs = Parameters<typeof projectAreaData>[0];
 
-export function createAreaXProjector(
+/**
+ * Creates a function that maps a point's X value to its chart coordinate in pixels.
+ * Supports interpolation on categorical axes during zoom by projecting offscreen categories.
+ */
+export function createAreaCategoryXProjector(
     args: Pick<ProjectionArgs, 'series' | 'xAxis' | 'xScale'>,
 ): ProjectionArgs['projectX'] {
     const {xAxis, xScale} = args;
@@ -99,7 +103,7 @@ export function createAreaGeometryPreparer(
 export function projectInterpolatedAreaData(args: ProjectionArgs) {
     return projectAreaData({
         ...args,
-        projectX: createAreaXProjector(args),
+        projectX: createAreaCategoryXProjector(args),
         prepareGeometry: createAreaGeometryPreparer(args),
     });
 }
