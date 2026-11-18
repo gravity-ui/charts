@@ -2,7 +2,7 @@ import type {DomainViewport} from '~core/series/axis-contract';
 import {getLineSegments, segmentIntersectsRect} from '~core/shapes/line/auto-placement';
 
 import type {LineSeries} from '../../../types';
-import * as interpolation from '../interpolation';
+import * as interpolation from '../../interpolation';
 import {filterLineData} from '../zoom';
 
 afterEach(() => jest.restoreAllMocks());

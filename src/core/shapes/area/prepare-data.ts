@@ -57,7 +57,12 @@ function getSyntheticPoint(series: PreparedAreaSeries, key: string): AreaSeriesD
     return point;
 }
 
-function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: ChartScale) {
+function getXValues(
+    series: PreparedAreaSeries[],
+    xAxis: PreparedXAxis,
+    xScale: ChartScale,
+    projectX?: (point: AreaSeriesData, series: PreparedAreaSeries) => number | null,
+) {
     const categories = xAxis.categories || [];
     const xValues = series.reduce<Map<string, number>>((acc, s) => {
         s.data.forEach((d) => {
@@ -66,7 +71,9 @@ function getXValues(series: PreparedAreaSeries[], xAxis: PreparedXAxis, xScale: 
                     ? getDataCategoryValue({axisDirection: 'x', categories, data: d})
                     : d.x,
             );
-            const xValue = getXValue({point: d, points: s.data, xAxis, xScale});
+            const xValue = projectX
+                ? projectX(d, s)
+                : getXValue({point: d, points: s.data, xAxis, xScale});
             if (!acc.has(key) && xValue !== null) {
                 acc.set(key, xValue);
             }
@@ -98,6 +105,9 @@ export const projectAreaData = (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
+    boundsWidth?: number;
+    prepareGeometry?: (data: PreparedAreaData[]) => void;
+    projectX?: (point: AreaSeriesData, series: PreparedAreaSeries) => number | null;
 }): PreparedAreaData[] => {
     const {series, xAxis, xScale, yAxis, yScale, split} = args;
 
@@ -122,7 +132,7 @@ export const projectAreaData = (args: {
         for (let i = 0; i < list.length; i++) {
             const [_stackId, seriesStack] = list[i];
 
-            const xValues = getXValues(seriesStack, xAxis, xScale);
+            const xValues = getXValues(seriesStack, xAxis, xScale, args.projectX);
 
             const seriesDataMaps = new Map(
                 seriesStack.map((s) => [
@@ -304,6 +314,7 @@ export const projectAreaData = (args: {
                         ? Math.max(offsets.prev, offsets.next)
                         : offsets.prev;
                     const point = {
+                        stackValue: yDataValue,
                         y0: roundCoordinate(getStackY(null, offsets.prev)),
                         x: xValue,
                         y: roundCoordinate(getStackY(yDataValue, topOffset)),
@@ -354,6 +365,7 @@ export const projectAreaData = (args: {
         }
     }
 
+    args.prepareGeometry?.(result);
     return result;
 };
 

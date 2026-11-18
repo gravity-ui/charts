@@ -22,9 +22,11 @@ const geometryCache = new WeakMap<PreparedAreaData, AreaGeometry>();
 function getAreaGeometry(item: PreparedAreaData): AreaGeometry {
     let geometry = geometryCache.get(item);
     if (!geometry) {
-        const columns = item.points.map<BandColumn>((p) =>
-            p.y === null || p.hiddenInLine ? null : {x: p.x, y0: p.y0, y1: p.y},
-        );
+        const columns =
+            item.geometry?.columns ??
+            item.points.map<BandColumn>((p) =>
+                p.y === null || p.hiddenInLine ? null : {x: p.x, y0: p.y0, y1: p.y},
+            );
         geometry = {columns, upper: getBandBoundaries(columns).upper};
         geometryCache.set(item, geometry);
     }

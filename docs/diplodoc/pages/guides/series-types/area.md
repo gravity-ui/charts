@@ -20,6 +20,43 @@ Set `type: 'area'`. Each point contains `x` and `y`. For a category axis, use a 
 
 Set `stacking: 'normal'` to show cumulative values or `stacking: 'percent'` to show shares. Use `stackId` to separate stacks. Enable `stackLabels` to show [stack totals](../data-labels.md#stack-total-labels).
 
+### Interpolation
+
+Use `interpolation` to smooth an area's boundary or show values that change in discrete steps. The same options work for unstacked, normal and percent-stacked areas.
+
+<div data-chart-example="area-interpolation/smooth"></div>
+
+```javascript
+{
+  type: 'area',
+  stacking: 'normal',
+  interpolation: {type: 'monotone'},
+}
+```
+
+Choose the shape between observations:
+
+- `linear`: Straight segments (default).
+- `monotone`: A smooth monotone-X curve through the observations without adding extrema.
+- `cardinal`: A cardinal spline with `tension` from `0` (default, loose) to `1` (straight segments).
+- `step`: Horizontal and vertical segments. `position: 'after'` (default) holds the value until the next observation; `'before'` changes it at the current observation, and `'middle'` changes halfway between them.
+
+Markers and tooltip values stay attached to the original observations. Percentages are calculated from the original values before interpolation. Null values retain the configured `nullMode` behavior; `connect` is available only without stacking.
+
+#### Smoothing stacked areas
+
+Set identical interpolation options on every series in a stack. Omitted settings use their defaults: for example, `{type: 'step'}` and `{type: 'step', position: 'after'}` are compatible. Conflicting settings are rejected with `INVALID_DATA`.
+
+Smooth stacks preserve the outer contour where possible and adjust internal thicknesses so layers share boundaries without overlapping. An interval that is zero in a layer stays empty. Percent stacks retain their 100% outer boundary where totals are positive and do not invent shares for zero-total intervals.
+
+{% note info %}
+
+Safety adjustments can flatten an internal boundary or introduce a local corner, especially with `cardinal`. Its X tangents are constrained to keep stack sections ordered, and an outer contour that crosses its baseline is clipped to that baseline. Unstacked cardinal curves can overshoot observations, as in [line series](line.md#line-interpolation).
+
+On intervals where a layer changes sign, positive and negative contributions are stacked separately along the selected curve; the outer contour can change there too.
+
+{% endnote %}
+
 ### Markers
 
 Set `marker.enabled: true` to show points. Configure hover markers through `series.options.area.states.hover.marker`; see [Markers](line.md#markers).

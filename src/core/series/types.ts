@@ -439,6 +439,7 @@ export type PreparedAreaSeries = {
     lineWidth: number;
     opacity: number;
     nullMode: AreaSeries['nullMode'];
+    interpolation?: AreaSeries['interpolation'];
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;

@@ -13,9 +13,8 @@ import {filterPoints} from '~core/zoom/filter-data';
 import type {FilterSeriesDataArgs} from '~core/zoom/filter-data';
 
 import type {LineSeries} from '../../types';
+import {getCurveFactory} from '../interpolation';
 import {getVisiblePathYValues} from '../path-domain';
-
-import {getCurveFactory} from './interpolation';
 
 interface PathRun {
     start: number;

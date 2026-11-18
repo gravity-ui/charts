@@ -12,6 +12,7 @@ import type {
     ValueFormat,
 } from './base';
 import type {SeriesColor} from './gradient';
+import type {SeriesInterpolation} from './interpolation';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
 import type {ChartSeriesRangeSliderOptions, StackLabelsOptions} from './series';
@@ -131,6 +132,14 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
      * @default 'skip'
      */
     nullMode?: 'connect' | 'zero' | 'skip';
+    /**
+     * Interpolation between observations. Defaults to straight segments.
+     * Markers and tooltip values remain attached to original observations.
+     * All series in a stack must use identical resolved interpolation settings.
+     * Smooth stacks preserve the outer contour where possible and adjust inner
+     * boundaries to prevent overlaps and keep zero-valued layers empty.
+     */
+    interpolation?: SeriesInterpolation;
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */

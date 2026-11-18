@@ -10,6 +10,7 @@ import {
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '../../utils';
+import {evaluateCubicBezier} from '../../utils/bezier';
 import {getSymbolBounds} from '../../utils/symbol';
 import type {SymbolBounds} from '../../utils/symbol';
 import type {ShapeLabels} from '../types';
@@ -173,12 +174,10 @@ class SegmentCollector {
         const {x: x0, y: y0} = this;
         for (let i = 1; i <= CURVE_STEPS; i++) {
             const t = i / CURVE_STEPS;
-            const mt = 1 - t;
-            const a = mt * mt * mt;
-            const b = 3 * mt * mt * t;
-            const c = 3 * mt * t * t;
-            const d = t * t * t;
-            this.append(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
+            this.append(
+                evaluateCubicBezier(x0, cp1x, cp2x, x, t),
+                evaluateCubicBezier(y0, cp1y, cp2y, y, t),
+            );
         }
         this.setPointIndices(start, x, y);
     }

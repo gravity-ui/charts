@@ -1,7 +1,7 @@
 import {line} from 'd3-shape';
 
 import type {LineSeriesInterpolation} from '../../../types';
-import {getCurveFactory} from '../interpolation';
+import {getCurveFactory} from '../../interpolation';
 
 describe('line interpolation', () => {
     test.each<{interpolation?: LineSeriesInterpolation; path: string}>([
