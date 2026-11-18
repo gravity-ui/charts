@@ -3,7 +3,7 @@ import React from 'react';
 import {Col, Container, Row} from '@gravity-ui/uikit';
 import type {StoryObj} from '@storybook/react';
 
-import type {ChartData, SeriesInterpolation} from '../../types';
+import type {AreaSeries, ChartData, SeriesInterpolation} from '../../types';
 import {ChartStory} from '../ChartStory';
 
 interface InterpolationVariant {
@@ -20,19 +20,26 @@ const variants: InterpolationVariant[] = [
     {title: 'Step (after)', interpolation: {type: 'step', position: 'after'}},
 ];
 
+const seriesData = [
+    [10, 60, 20, 80, 30, 70, 40],
+    [30, 15, 35, 20, 45, 25, 30],
+    [20, 30, 15, 25, 15, 30, 20],
+];
+
 const charts = variants.map(
     ({title, interpolation}): ChartData => ({
         title: {text: title},
         series: {
-            data: [
-                {
+            data: seriesData.map(
+                (values, index): AreaSeries => ({
                     type: 'area',
-                    name: 'Series',
+                    name: `Series ${index + 1}`,
+                    stacking: 'normal',
                     interpolation,
-                    data: [10, 60, 20, 80, 30, 70, 40].map((y, x) => ({x, y})),
+                    data: values.map((y, x) => ({x, y})),
                     marker: {enabled: true},
-                },
-            ],
+                }),
+            ),
         },
         xAxis: {type: 'linear'},
     }),
