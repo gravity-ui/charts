@@ -1,4 +1,4 @@
-/** Interpolation settings shared by line and area series. */
+/** Shape between consecutive observations. */
 export type SeriesInterpolation =
     | {type: 'linear'}
     | {type: 'monotone'}

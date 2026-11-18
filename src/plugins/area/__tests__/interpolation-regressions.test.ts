@@ -7,7 +7,8 @@ import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import type {AreaGeometry} from '~core/shapes/area/types';
 
 import type {AreaSeries} from '../../../types';
-import {collectSections, evaluateAtX} from '../curves';
+import {evaluateAtX} from '../../interpolation/curves';
+import {collectSections} from '../curves';
 import {getAreaAxisData} from '../domain';
 import {buildAreaGeometry} from '../geometry';
 import {prepareAreaSeries} from '../prepare-area-series';
@@ -115,6 +116,31 @@ test('X zoom uses the visible smooth boundary for Y bounds', () => {
         },
     });
     expect(Math.max(...result.domainValues.map(Number))).toBeCloseTo(6.544, 3);
+});
+
+test('smooth Y bounds preserve an interior extremum across data scales and timestamps', () => {
+    for (const [scale, offset] of [
+        [1, 0],
+        [1e-8, 1.7e12],
+        [1e8, 0],
+    ]) {
+        const series = area(
+            [0, 10, 10, 0].map((y) => y * scale),
+            {
+                interpolation: {type: 'cardinal'},
+            },
+        );
+        series.data = series.data.map((point, i) => ({...point, x: offset + i * 1000}));
+        const result = getAreaAxisData({
+            series: [series],
+            axis: 'y',
+            viewport: {
+                x: {type: 'datetime', range: [offset + 1000, offset + 2000]},
+                y: {type: 'linear'},
+            },
+        });
+        expect(Math.max(...result.domainValues.map(Number)) / scale).toBeCloseTo(11.25, 5);
+    }
 });
 
 test('category zoom preserves the cardinal curve with offscreen tangent anchors', () => {

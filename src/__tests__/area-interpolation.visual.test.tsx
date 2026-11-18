@@ -143,8 +143,25 @@ test('smooth percent stacks recompute after hiding a series and retain range-sli
     await expect(regions).toHaveCount(3);
     const preview = component.locator('.gcharts-range-slider .gcharts-area__line');
     await expect(preview).toHaveCount(3);
-    // Sampling has more than the five observed vertices even in the preview.
     expect(((await preview.first().getAttribute('d')) ?? '').split('L').length).toBeGreaterThan(5);
+    const originalPreview = await preview.evaluateAll((paths) =>
+        paths.map((path) => path.getAttribute('d')),
+    );
+    const beforeRangeChange = await regions.last().getAttribute('d');
+    await dragElementByCalculatedPosition({
+        component,
+        page,
+        selector: '.gcharts-range-slider .gcharts-brush .handle--w',
+        getDragOptions: ({boundingBox}) => {
+            const x = boundingBox.x + boundingBox.width / 2;
+            const y = boundingBox.y + boundingBox.height / 2;
+            return {from: [x, y], to: [x + 80, y]};
+        },
+    });
+    await expect(regions.last()).not.toHaveAttribute('d', beforeRangeChange ?? '');
+    await expect
+        .poll(() => preview.evaluateAll((paths) => paths.map((path) => path.getAttribute('d'))))
+        .toEqual(originalPreview);
     const previous = await regions.last().getAttribute('d');
     await component
         .locator('.gcharts-legend__item')

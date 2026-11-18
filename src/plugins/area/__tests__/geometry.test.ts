@@ -60,57 +60,29 @@ function columns(data: ReturnType<typeof project>[number]) {
     return getGeometry(data).columns.filter((column): column is Column => column !== null);
 }
 
-test.each(['monotone', 'cardinal'] as const)(
-    '%s stack has common boundaries and keeps a zero interval empty',
-    (type) => {
-        const result = project(
-            [
-                [10, 25, 15, 30],
-                [40, 0, 0, 50],
-            ],
-            {interpolation: {type}},
-        );
-        const bottom = columns(result[0]);
-        const top = columns(result[1]);
-        expect(bottom.length).toBeGreaterThan(4);
-        expect(bottom.map((column) => column.x)).toEqual(top.map((column) => column.x));
-        for (let i = 0; i < bottom.length; i++) {
-            expect(bottom[i].y1).toBe(top[i].y0);
-            expect(top[i].y1).toBeLessThanOrEqual(top[i].y0);
-            expect(bottom[i].y1).toBeLessThanOrEqual(bottom[i].y0);
-            if (bottom[i].x >= 200 && bottom[i].x <= 400) {
-                expect(bottom[i].y1).toBe(bottom[i].y0);
-            }
+test('cardinal percent stack preserves the 100% envelope and original shares', () => {
+    const result = project(
+        [
+            [1, 200, 0, 80],
+            [90, 0, 15, 2],
+        ],
+        {
+            interpolation: {type: 'cardinal'},
+            stacking: 'percent',
+        },
+    );
+    expect(columns(result[1]).every((column) => column.y1 === 0)).toBe(true);
+    for (const item of result) {
+        for (const column of columns(item)) {
+            expect(column.y1).toBeGreaterThanOrEqual(0);
+            expect(column.y0).toBeLessThanOrEqual(200);
+            expect(column.y1).toBeLessThanOrEqual(column.y0);
         }
-    },
-);
-
-test.each(['monotone', 'cardinal'] as const)(
-    '%s percent stack preserves the 100%% envelope and original shares',
-    (type) => {
-        const result = project(
-            [
-                [1, 200, 0, 80],
-                [90, 0, 15, 2],
-            ],
-            {
-                interpolation: {type},
-                stacking: 'percent',
-            },
-        );
-        expect(columns(result[1]).every((column) => column.y1 === 0)).toBe(true);
-        for (const item of result) {
-            for (const column of columns(item)) {
-                expect(column.y1).toBeGreaterThanOrEqual(0);
-                expect(column.y0).toBeLessThanOrEqual(200);
-                expect(column.y1).toBeLessThanOrEqual(column.y0);
-            }
-        }
-        const top = result[1].points;
-        expect(top.map((point) => point.data.y)).toEqual([1, 200, 0, 80]);
-        expect(top.map((point) => point.percentage)).toEqual([1 / 91, 1, 0, 80 / 82]);
-    },
-);
+    }
+    const top = result[1].points;
+    expect(top.map((point) => point.data.y)).toEqual([1, 200, 0, 80]);
+    expect(top.map((point) => point.percentage)).toEqual([1 / 91, 1, 0, 80 / 82]);
+});
 
 test('percent cardinal does not invent shares inside a zero-total interval', () => {
     const result = project(

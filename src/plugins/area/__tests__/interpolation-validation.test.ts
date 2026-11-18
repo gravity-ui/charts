@@ -44,18 +44,8 @@ test('allows different interpolation in separate stacks, axes and unstacked area
     }
 });
 
-test.each([
-    null,
-    [],
-    {},
-    {type: 'spline'},
-    {type: 'cardinal', tension: -0.1},
-    {type: 'cardinal', tension: 1.1},
-    {type: 'cardinal', tension: NaN},
-    {type: 'cardinal', tension: Infinity},
-    {type: 'step', position: 'start'},
-])('rejects invalid interpolation: %p', (interpolation) => {
-    const series = area(interpolation as SeriesInterpolation);
+test('area options are checked by the shared interpolation validator', () => {
+    const series = area({type: 'cardinal', tension: NaN});
     expect(() => validateAreaInterpolation(series, [series])).toThrow(
         expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
     );

@@ -11,35 +11,44 @@ import type {PreparedGeometryOptions} from './geometry';
 type ProjectionArgs = Parameters<typeof projectAreaData>[0];
 
 export function createAreaXProjector(
-    args: Pick<ProjectionArgs, 'xAxis' | 'xScale'>,
-): NonNullable<ProjectionArgs['projectX']> {
+    args: Pick<ProjectionArgs, 'series' | 'xAxis' | 'xScale'>,
+): ProjectionArgs['projectX'] {
     const {xAxis, xScale} = args;
+    if (
+        xAxis.type !== 'category' ||
+        !args.series.some(
+            (series) => series.interpolation && series.interpolation.type !== 'linear',
+        )
+    )
+        return undefined;
     const categories = xAxis.categories ?? [];
     const indices = new Map(categories.map((name, index) => [name, index]));
     const domain = xScale.domain();
     const first = String(domain[0]);
     const origin = getXValue({point: {x: first}, xAxis, xScale}) ?? 0;
     const step = 'step' in xScale ? xScale.step() : 0;
-    const range = xScale.range().map(Number);
+    const direction = Math.sign(Number(xScale.range()[1]) - Number(xScale.range()[0]));
+    const start = indices.get(first);
     return (point, series) => {
-        if (
-            xAxis.type !== 'category' ||
-            !series.interpolation ||
-            series.interpolation.type === 'linear'
-        ) {
+        if (!series.interpolation || series.interpolation.type === 'linear') {
             return getXValue({point, points: series.data, xAxis, xScale});
         }
         const category = getDataCategoryValue({axisDirection: 'x', categories, data: point});
         const index = indices.get(category);
-        const start = indices.get(first);
         if (index === undefined || start === undefined) return null;
-        return origin + (index - start) * step * Math.sign(range[1] - range[0]);
+        return origin + (index - start) * step * direction;
     };
 }
 
 export function createAreaGeometryPreparer(
-    args: Pick<ProjectionArgs, 'yAxis' | 'yScale' | 'split' | 'xScale' | 'boundsWidth'>,
+    args: Pick<ProjectionArgs, 'series' | 'yAxis' | 'yScale' | 'split' | 'xScale' | 'boundsWidth'>,
 ) {
+    if (
+        !args.series.some(
+            (series) => series.interpolation && series.interpolation.type !== 'linear',
+        )
+    )
+        return undefined;
     return (data: ReturnType<typeof projectAreaData>) => {
         const projections = new Map<number, PreparedGeometryOptions>();
         prepareAreaGeometry(data, (series) => {
@@ -62,9 +71,10 @@ export function createAreaGeometryPreparer(
                     const step = 'step' in scale ? scale.step() : 1;
                     return baseline + value * step * Math.sign(range[1] - range[0]);
                 }
-                const y = value;
                 return round(
-                    top + (getYValue({point: {y}, yAxis: axis, yScale: scale}) ?? baseline - top),
+                    top +
+                        (getYValue({point: {y: value}, yAxis: axis, yScale: scale}) ??
+                            baseline - top),
                     2,
                 );
             };

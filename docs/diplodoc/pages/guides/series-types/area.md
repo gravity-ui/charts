@@ -41,19 +41,17 @@ Choose the shape between observations:
 - `cardinal`: A cardinal spline with `tension` from `0` (default, loose) to `1` (straight segments).
 - `step`: Horizontal and vertical segments. `position: 'after'` (default) holds the value until the next observation; `'before'` changes it at the current observation, and `'middle'` changes halfway between them.
 
-Markers and tooltip values stay attached to the original observations. Percentages are calculated from the original values before interpolation. Null values retain the configured `nullMode` behavior; `connect` is available only without stacking.
+Markers and tooltip values stay attached to the original observations. Interpolation preserves the configured `nullMode` behavior.
 
 #### Smoothing stacked areas
 
-Set identical interpolation options on every series in a stack. Omitted settings use their defaults: for example, `{type: 'step'}` and `{type: 'step', position: 'after'}` are compatible. Conflicting settings are rejected with `INVALID_DATA`.
+Use identical interpolation settings on every series in a stack, including their defaults. Conflicting settings are rejected with `INVALID_DATA`.
 
-Smooth stacks preserve the outer contour where possible and adjust internal thicknesses so layers share boundaries without overlapping. An interval that is zero in a layer stays empty. Percent stacks retain their 100% outer boundary where totals are positive and do not invent shares for zero-total intervals.
+Layers share boundaries without overlapping, and zero-valued intervals stay empty. Percent stacks interpolate the original shares and retain a 100% outer boundary where totals are positive.
 
 {% note info %}
 
-Safety adjustments can flatten an internal boundary or introduce a local corner, especially with `cardinal`. Its X tangents are constrained to keep stack sections ordered, and an outer contour that crosses its baseline is clipped to that baseline. Unstacked cardinal curves can overshoot observations, as in [line series](line.md#line-interpolation).
-
-On intervals where a layer changes sign, positive and negative contributions are stacked separately along the selected curve; the outer contour can change there too.
+Preventing overlaps can flatten or introduce corners in stacked curves, especially with `cardinal` or sign changes. Unstacked cardinal curves can overshoot observations, as in [line series](line.md#line-interpolation).
 
 {% endnote %}
 

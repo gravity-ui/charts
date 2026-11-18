@@ -98,8 +98,7 @@ export function filterAreaData({series, viewport}: FilterSeriesDataArgs<AreaPath
         return {...selection, shapeData: []};
     const retained = new Set<number>();
     const retain = (from: number, to: number) => {
-        // One more neighbor on each side of an interval supplies the cardinal
-        // and monotone tangents. Alignment may add columns from other stack series.
+        // Retain one tangent neighbor on each side of a visible section.
         for (let i = Math.max(0, from - 1); i <= Math.min(index.nodes.length - 1, to + 1); i++)
             retained.add(i);
     };

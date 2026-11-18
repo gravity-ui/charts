@@ -1,10 +1,10 @@
 import {line} from 'd3-shape';
 
-import type {LineSeriesInterpolation} from '../../../types';
-import {getCurveFactory} from '../../interpolation';
+import {getCurveFactory} from '..';
+import type {SeriesInterpolation} from '../../../types';
 
-describe('line interpolation', () => {
-    test.each<{interpolation?: LineSeriesInterpolation; path: string}>([
+describe('interpolation', () => {
+    test.each<{interpolation?: SeriesInterpolation; path: string}>([
         {path: 'M0,10L10,30'},
         {interpolation: {type: 'linear'}, path: 'M0,10L10,30'},
         {interpolation: {type: 'step'}, path: 'M0,10L10,10L10,30'},

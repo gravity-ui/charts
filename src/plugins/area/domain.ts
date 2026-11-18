@@ -17,9 +17,8 @@ import {getVisiblePathYValues} from '../path-domain';
 import {buildAreaGeometry} from './geometry';
 import {getAreaGeometryBreaks} from './zoom';
 
-// Normalize time/log-X coordinates before sampling so their magnitude does not
-// determine subdivision accuracy. Y remains in axis coordinates for domain fitting.
-const DOMAIN_X_SPAN = 1000;
+// Target one millionth of each visible interval's Y range, independently of pixels.
+const DOMAIN_RELATIVE_TOLERANCE = 1e-6;
 
 interface AreaDomainSeries extends Pick<
     AreaSeries,
@@ -65,12 +64,16 @@ function getVisibleStackValues(series: readonly AreaDomainSeries[], viewport: Do
     const minX = transformX(limits[0]);
     const width = transformX(limits[1]) - minX;
     if (smooth && !(width > 0)) return getSampleDomain(series, viewport);
-    const projectX = (value: number) => ((transformX(value) - minX) / width) * DOMAIN_X_SPAN;
-    const positive = series
-        .flatMap((item) => item.data.map((point) => Number(point.y)))
-        .filter((value) => value > 0);
-    const base = positive.reduce((minimum, value) => Math.min(minimum, value), Infinity) / 10;
-    const positiveBase = Number.isFinite(base) ? base : 1;
+    const projectX = (value: number) => (transformX(value) - minX) / width;
+    let positiveBase = 1;
+    if (smooth && viewport.y.type === 'logarithmic') {
+        let minimum = Infinity;
+        for (const item of series)
+            for (const point of item.data)
+                if (typeof point.y === 'number' && point.y > 0)
+                    minimum = Math.min(minimum, point.y);
+        if (Number.isFinite(minimum)) positiveBase = minimum / 10;
+    }
     const projectY =
         viewport.y.type === 'logarithmic'
             ? (value: number) => Math.log(value > 0 ? value : positiveBase)
@@ -79,6 +82,7 @@ function getVisibleStackValues(series: readonly AreaDomainSeries[], viewport: Do
     const geometry: Parameters<typeof buildAreaGeometry>[0] = [];
     for (let index = series.length - 1; index >= 0; index--) {
         const item = series[index];
+        const breaks = smooth ? getAreaGeometryBreaks(item.data) : undefined;
         const upper: {x: number; y: number | null; stackValue?: number}[] = [];
         const lower: typeof upper = [];
         for (const key of orderedKeys) {
@@ -104,7 +108,7 @@ function getVisibleStackValues(series: readonly AreaDomainSeries[], viewport: Do
                 next: getAreaNeighborPoint(context.dataMaps[index], neighbors?.next),
                 nullMode: item.nullMode,
             });
-            if (getAreaGeometryBreaks(item.data)?.has(point as AreaSeriesData)) {
+            if (breaks?.has(point as AreaSeriesData)) {
                 upper.push({x, y: null});
                 lower.push({x, y: null});
             }
@@ -139,7 +143,8 @@ function getVisibleStackValues(series: readonly AreaDomainSeries[], viewport: Do
     if (smooth) {
         for (const shape of buildAreaGeometry(geometry, projectY(0), 1, false, {
             projection: {project: projectY, invert: invertY},
-            xRange: [0, DOMAIN_X_SPAN],
+            xRange: [0, 1],
+            relativeYTolerance: DOMAIN_RELATIVE_TOLERANCE,
         })) {
             for (const column of shape.columns) {
                 if (column) values.push(invertY(column.y0), invertY(column.y1));

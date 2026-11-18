@@ -116,8 +116,9 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             split,
             isOutsideBounds: isOutsideBounds ?? (() => false),
             isRangeSlider,
-            projectX: createAreaXProjector({xAxis, xScale}),
+            projectX: createAreaXProjector({series: series as PreparedAreaSeries[], xAxis, xScale}),
             prepareGeometry: createAreaGeometryPreparer({
+                series: series as PreparedAreaSeries[],
                 yAxis: yAxis ?? [],
                 yScale,
                 split,

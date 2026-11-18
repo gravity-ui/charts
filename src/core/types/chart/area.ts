@@ -133,11 +133,8 @@ export interface AreaSeries<T = MeaningfulAny> extends BaseSeries {
      */
     nullMode?: 'connect' | 'zero' | 'skip';
     /**
-     * Interpolation between observations. Defaults to straight segments.
-     * Markers and tooltip values remain attached to original observations.
-     * All series in a stack must use identical resolved interpolation settings.
-     * Smooth stacks preserve the outer contour where possible and adjust inner
-     * boundaries to prevent overlaps and keep zero-valued layers empty.
+     * Shape between observations; straight segments by default.
+     * Use identical interpolation settings within a stack.
      */
     interpolation?: SeriesInterpolation;
     /**

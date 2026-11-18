@@ -7,16 +7,15 @@ import type {AreaGeometry, PointData, PreparedAreaData} from '~core/shapes/area/
 import {getGradientBBox} from '~core/utils/gradient';
 
 import type {AreaSeries, SeriesInterpolation} from '../../types';
-
 import {
-    collectSections,
     evaluateAtX,
     evaluateSection,
     getZeroFractions,
     getZeroParameters,
-    intervalKey,
-} from './curves';
-import type {CurvePoint, CurveSection} from './curves';
+} from '../interpolation/curves';
+import type {CurvePoint, CurveSection} from '../interpolation/curves';
+
+import {collectSections, intervalKey} from './curves';
 import {getAreaGeometryBreaks} from './zoom';
 
 type Column = NonNullable<BandColumn>;
@@ -30,6 +29,8 @@ export interface AreaGeometryOptions {
     projection?: {project: (value: number) => number; invert: (coordinate: number) => number};
     xRange?: readonly [number, number];
     yRange?: readonly [number, number];
+    /** Sample only Y, relative to each clipped interval's range. */
+    relativeYTolerance?: number;
 }
 
 export interface PreparedGeometryOptions extends AreaGeometryOptions {
@@ -43,23 +44,50 @@ export interface PreparedGeometryOptions extends AreaGeometryOptions {
 const MESH_TOLERANCE = 0.1;
 const MAX_SUBDIVISIONS = 12;
 
-function sampleInterval(evaluate: (t: number) => Column[], start = 0, end = 1) {
+function sampleInterval(
+    evaluate: (t: number) => Column[],
+    start = 0,
+    end = 1,
+    relativeYTolerance?: number,
+) {
     const first = evaluate(start);
     const last = evaluate(end);
     const samples = [first];
+    let tolerance = MESH_TOLERANCE;
+    const keys: (keyof Column)[] =
+        relativeYTolerance === undefined ? ['x', 'y0', 'y1'] : ['y0', 'y1'];
+    if (relativeYTolerance !== undefined) {
+        let min = Infinity;
+        let max = -Infinity;
+        const probes = [
+            first,
+            last,
+            ...[0.25, 0.5, 0.75].map((t) => evaluate(start + (end - start) * t)),
+        ];
+        for (const columns of probes) {
+            for (const column of columns) {
+                min = Math.min(min, column.y0, column.y1);
+                max = Math.max(max, column.y0, column.y1);
+            }
+        }
+        tolerance = Math.max(
+            (max - min) * relativeYTolerance,
+            Number.EPSILON * Math.max(Math.abs(min), Math.abs(max)),
+        );
+    }
     const subdivide = (a: number, b: number, left: Column[], right: Column[], depth: number) => {
         const middle = (a + b) / 2;
         const center = evaluate(middle);
         const needsSubdivision = [0.25, 0.5, 0.75].some((fraction) => {
             const actual = fraction === 0.5 ? center : evaluate(a + (b - a) * fraction);
             return actual.some((column, index) =>
-                (['x', 'y0', 'y1'] as const).some(
+                keys.some(
                     (key) =>
                         Math.abs(
                             column[key] -
                                 (left[index][key] +
                                     (right[index][key] - left[index][key]) * fraction),
-                        ) > MESH_TOLERANCE,
+                        ) > tolerance,
                 ),
             );
         });
@@ -78,8 +106,7 @@ function append(columns: BandColumn[], column: Column) {
     const previous = columns[columns.length - 1];
     if (previous && previous.x === column.x) {
         if (previous.y0 === column.y0 && previous.y1 === column.y1) return;
-        // A signed layer ends at one stack offset and starts at the opposite
-        // offset with zero thickness. Connecting those ends would cut across layers.
+        // Keep opposite stack offsets disconnected at a signed root.
         if (previous.y0 === previous.y1 && column.y0 === column.y1) columns.push(null);
     }
     columns.push(column);
@@ -136,7 +163,6 @@ interface StackInterval {
     percent: boolean;
 }
 
-/** Reconstruct each side cumulatively so adjacent layers share identical coordinates. */
 function stackColumns(
     interval: StackInterval,
     t: number,
@@ -160,15 +186,13 @@ function stackColumns(
         );
         const linearTotal = linear.reduce((sum, value) => sum + value, 0);
         const envelope = sign === 1 ? positive : negative;
-        // Signed crossings must reach zero at the selected curve's root. Summing
-        // its signed parts preserves that root without a discontinuous rescaling.
+        // Signed roots must reach zero without envelope rescaling.
         let extent = 0;
         if (changingSign) extent = total;
         else if (linearTotal && envelope)
             extent = Math.max(0, sign * projection.invert(evaluateAtX(envelope, t)));
         if (percent) extent = Math.min(100, extent);
-        // Cardinal can overshoot every eligible thickness below zero. Restore the
-        // envelope using endpoint weights; a zero interval has no weight to restore.
+        // Restore endpoint weights if all cardinal weights overshoot below zero.
         const deficit = Math.max(0, extent - total);
         if (deficit && linearTotal) {
             weights.forEach((weight, index) => {
@@ -185,8 +209,7 @@ function stackColumns(
             if (!curve) continue;
             const direction = directions[index];
             if (direction !== sign) continue;
-            // Use the exact outer endpoint for the last nonempty layer, and keep
-            // every intermediate boundary inside the remaining nonnegative extent.
+            // Assign the remainder to the last layer to avoid rounding gaps.
             const thickness =
                 index === last
                     ? remaining
@@ -356,7 +379,14 @@ export function buildAreaGeometry(
                     ? from + middle * (to - from)
                     : evaluate(middle, directions)[0]?.x;
                 if (options.xRange && (x < options.xRange[0] || x > options.xRange[1])) continue;
-                samples.push(...sampleInterval((t) => evaluate(t, directions), start, end));
+                samples.push(
+                    ...sampleInterval(
+                        (t) => evaluate(t, directions),
+                        start,
+                        end,
+                        options.relativeYTolerance,
+                    ),
+                );
             }
         }
         output.forEach((columns, index) => {
@@ -367,8 +397,7 @@ export function buildAreaGeometry(
             for (const sample of samples) append(columns, sample[index]);
         });
     }
-    // Keep isolated observations, including signed zero endpoints, available to
-    // the outline without making them contribute to any neighboring filled interval.
+    // Isolated observations contribute an outline point, never a filled interval.
     output.forEach((columns, index) => {
         const key = (column: Column) => `${column.x}:${column.y1.toFixed(6)}`;
         const present = new Set(
@@ -413,10 +442,7 @@ function filterVisibleColumns(columns: BandColumn[], range?: readonly [number, n
     return result;
 }
 
-/**
- * Original anchors of a drawn run remain available even when a curve enters Y
- * bounds between two offscreen observations. Empty runs keep their original flags.
- */
+/** Keep tooltip anchors when only the curve between offscreen samples enters the viewport. */
 function revealDrawnAnchors(item: PreparedAreaData) {
     const ranges: [number, number][] = [];
     let current: [number, number] | undefined;
