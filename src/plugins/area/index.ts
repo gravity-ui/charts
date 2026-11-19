@@ -1,8 +1,8 @@
 import {i18n} from '~core/i18n';
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -46,7 +46,35 @@ function isAreaPointDefined(point: AreaSeriesData) {
 
 export const areaPlugin = {
     type: 'area',
-    defaults: areaDefaults,
+    series: {
+        optionsDefaults: areaDefaults,
+        validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+            validateStackLabelsOptions({
+                series,
+                allSeries,
+                options: seriesOptions?.area?.stackLabels,
+            });
+            validateAxisPlotValues({series, xAxis, yAxis});
+            validateSeriesColor({color: series.color, seriesName: series.name});
+            validateSeriesColor({color: series.fillColor, seriesName: series.name});
+            validateXYSeries({series, xAxis, yAxis});
+            validateStacking({series});
+            validatePercentStackingValues({
+                series,
+                valueKey: 'y',
+                valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
+            });
+
+            const isStacking = ['normal', 'percent'].includes(series.stacking as string);
+            if (isStacking && series.nullMode === 'connect') {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: i18n('error', 'label_stacking-area-connect-null-mode'),
+                });
+            }
+        },
+        prepare: prepareAreaSeries,
+    },
     axes: {
         x: {singleValueDomain: 'center'},
         y: {
@@ -55,8 +83,89 @@ export const areaPlugin = {
             getFixedDomain: getPercentStackDomain,
             getData: getAreaAxisData,
         },
+        padding: {getPaintExtents: getAreaAxisPadding},
     },
-    axisPadding: {getPaintExtents: getAreaAxisPadding},
+    colorScale: {
+        getValue: (d) => d.y,
+    },
+    layers: {
+        prepareData: async function (
+            args: PrepareLayerArgs<PreparedAreaSeries, PreparedSeriesOptions, PreparedSeries>,
+        ): Promise<PrepareLayerResult<PreparedAreaData, PreparedAreaData>> {
+            const {
+                series,
+                seriesOptions,
+                xAxis,
+                xScale,
+                yAxis,
+                yScale,
+                split,
+                isOutsideBounds,
+                isRangeSlider,
+                otherLabelLayouts = [],
+            } = args;
+
+            if (!xAxis || !xScale || !yScale?.length || !split) {
+                return {renderData: [], lookupItems: []};
+            }
+
+            const data = await prepareAreaData({
+                series: series,
+                seriesOptions,
+                xAxis,
+                xScale,
+                yAxis: yAxis ?? [],
+                yScale,
+                split,
+                isOutsideBounds: isOutsideBounds ?? (() => false),
+                isRangeSlider,
+            });
+
+            const svgLabels = await prepareStackLabels({
+                ...args,
+                anchors: isRangeSlider ? [] : getAreaStackLabelAnchors(data, args),
+                otherLabelLayouts,
+            });
+            const filteredData = filterLayerLabels(data, [
+                ...otherLabelLayouts,
+                {svgLabels: svgLabels, htmlLabels: []},
+            ]);
+            return {
+                renderData: filteredData,
+                markers: filteredData.flatMap((item) => item.markers),
+                annotations: filteredData.flatMap((item) => item.annotations),
+                htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+                getHoverMarkers: (hovered) =>
+                    filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
+                labelLayout: filteredData,
+                lookupItems: filteredData,
+                svgLabels,
+                gradientGeometry: getGradientGeometry(filteredData),
+            };
+        },
+        prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
+            includeSolidSeries: true,
+        }),
+        render: function ({
+            plot,
+            labelsPlot,
+            renderData,
+            seriesOptions,
+            dispatcher,
+            svgLabels,
+        }: RenderLayerArgs<PreparedAreaData, PreparedSeriesOptions>) {
+            const allowOverlap = renderData.some((d) => d.series.dataLabels.allowOverlap);
+            const cleanup = renderArea(
+                {plot, labelsPlot},
+                renderData,
+                seriesOptions,
+                allowOverlap,
+                dispatcher,
+            );
+            renderStackLabels(labelsPlot, svgLabels);
+            return cleanup;
+        },
+    },
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
@@ -72,110 +181,6 @@ export const areaPlugin = {
                     isDefined: isAreaPointDefined,
                 },
             ),
-    },
-    prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
-        includeSolidSeries: true,
-    }),
-    prepareSeries: prepareAreaSeries,
-    validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
-        validateStackLabelsOptions({
-            series,
-            allSeries,
-            options: seriesOptions?.area?.stackLabels,
-        });
-        validateAxisPlotValues({series, xAxis, yAxis});
-        validateSeriesColor({color: series.color, seriesName: series.name});
-        validateSeriesColor({color: series.fillColor, seriesName: series.name});
-        validateXYSeries({series, xAxis, yAxis});
-        validateStacking({series});
-        validatePercentStackingValues({
-            series,
-            valueKey: 'y',
-            valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
-        });
-
-        const isStacking = ['normal', 'percent'].includes(series.stacking as string);
-        if (isStacking && series.nullMode === 'connect') {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: i18n('error', 'label_stacking-area-connect-null-mode'),
-            });
-        }
-    },
-    getColorValue: (d) => d.y,
-    prepareShapeData: async function (
-        args: PrepareShapeDataArgs<PreparedAreaSeries, PreparedSeriesOptions, PreparedSeries>,
-    ): Promise<PrepareShapeDataResult<PreparedAreaData, PreparedAreaData>> {
-        const {
-            series,
-            seriesOptions,
-            xAxis,
-            xScale,
-            yAxis,
-            yScale,
-            split,
-            isOutsideBounds,
-            isRangeSlider,
-            otherLayers = [],
-        } = args;
-
-        if (!xAxis || !xScale || !yScale?.length || !split) {
-            return {renderData: [], tooltipItems: []};
-        }
-
-        const data = await prepareAreaData({
-            series: series,
-            seriesOptions,
-            xAxis,
-            xScale,
-            yAxis: yAxis ?? [],
-            yScale,
-            split,
-            isOutsideBounds: isOutsideBounds ?? (() => false),
-            isRangeSlider,
-        });
-
-        const labels = await prepareStackLabels({
-            ...args,
-            anchors: isRangeSlider ? [] : getAreaStackLabelAnchors(data, args),
-            otherLayers,
-        });
-        const filteredData = filterLayerLabels(data, [
-            ...otherLayers,
-            {svgLabels: labels, htmlLabels: []},
-        ]);
-        return {
-            renderData: filteredData,
-            markers: filteredData.flatMap((item) => item.markers),
-            annotations: filteredData.flatMap((item) => item.annotations),
-            htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
-            getHoverMarkers: (hovered) =>
-                filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
-            layoutData: filteredData,
-            tooltipItems: filteredData,
-            labels,
-            gradientGeometry: getGradientGeometry(filteredData),
-        };
-    },
-    renderShapes: function ({
-        plot,
-        labelsPlot,
-        preparedData,
-        seriesOptions,
-        dispatcher,
-        labels,
-    }: RenderShapesArgs<PreparedAreaData, PreparedSeriesOptions>) {
-        const data = preparedData;
-        const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        const cleanup = renderArea(
-            {plot, labelsPlot},
-            data,
-            seriesOptions,
-            allowOverlap,
-            dispatcher,
-        );
-        renderStackLabels(labelsPlot, labels);
-        return cleanup;
     },
     interaction: {
         prepareNearestData,

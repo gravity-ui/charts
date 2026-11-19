@@ -1,4 +1,5 @@
 import type {ChartSeries, ChartSeriesData, ChartTooltip, ChartXAxis, ChartYAxis} from '../../types';
+import type {SeriesPluginTooltipHeader} from '../series/plugin';
 import {getSeriesPlugin} from '../series/seriesRegistry';
 import {getMinSpaceBetween} from '../utils/array';
 import {isPointTooltipEnabled} from '../utils/tooltip-helpers';
@@ -35,9 +36,7 @@ export function getTooltipHeader<T extends TooltipHeaderItem>(items: T[]) {
     let selected:
         | {
               item: T;
-              header: NonNullable<
-                  NonNullable<ReturnType<typeof getSeriesPlugin>['tooltip']>['header']
-              >;
+              header: SeriesPluginTooltipHeader;
           }
         | undefined;
     for (const item of items) {

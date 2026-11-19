@@ -8,7 +8,7 @@ import type {PreparedSeriesOptions} from './types';
 export const getPreparedOptions = (options?: ChartSeriesOptions): PreparedSeriesOptions => {
     const defaults = Object.fromEntries(
         getRegisteredSeriesTypes().flatMap((type) => {
-            const defaults = getSeriesPlugin(type).defaults;
+            const defaults = getSeriesPlugin(type).series.optionsDefaults;
             return defaults ? [[type, defaults]] : [];
         }),
     );

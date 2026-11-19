@@ -1,8 +1,8 @@
 import {DEFAULT_AXIS_TYPE} from '~core/constants';
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -28,9 +28,9 @@ import type {PreparedScatterData, PreparedScatterShapeData, ScatterTooltipChunk}
 
 import './styles.scss';
 
-async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedScatterSeries, PreparedSeriesOptions, PreparedSeries>,
-): Promise<PrepareShapeDataResult<PreparedScatterShapeData, PreparedScatterData>> {
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedScatterSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<PreparedScatterShapeData, PreparedScatterData>> {
     const {
         series,
         xAxis,
@@ -45,7 +45,7 @@ async function prepareShapeData(
     } = args;
 
     if (!xAxis || !xScale || !yScale?.length || !split) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareScatterData({
@@ -65,93 +65,103 @@ async function prepareShapeData(
     return {
         renderData: [data],
         htmlLabels: data.htmlLabels,
-        layoutData: [data],
-        tooltipItems: data.scatterData,
+        labelLayout: [data],
+        lookupItems: data.scatterData,
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedScatterShapeData, PreparedSeriesOptions>) {
-    return renderScatter({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedScatterShapeData, PreparedSeriesOptions>) {
+    return renderScatter({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
 }
 
 export const scatterPlugin = {
     type: 'scatter',
-    defaults: scatterDefaults,
-    axes: {x: {singleValueDomain: 'center'}, y: {singleValueDomain: 'center'}},
-    axisPadding: {getPaintExtents: getScatterAxisPadding},
-    getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
-    zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
-    prepareSeries: prepareScatterSeries,
-    validate: ({series, xAxis, yAxis}) => {
-        validateAxisPlotValues({series, xAxis, yAxis});
-        validateXYSeries({series, xAxis, yAxis});
-        if (!series.cluster?.enabled) {
-            return;
-        }
+    series: {
+        optionsDefaults: scatterDefaults,
+        validate: ({series, xAxis, yAxis}) => {
+            validateAxisPlotValues({series, xAxis, yAxis});
+            validateXYSeries({series, xAxis, yAxis});
+            if (!series.cluster?.enabled) {
+                return;
+            }
 
-        const xType = xAxis?.type ?? DEFAULT_AXIS_TYPE;
-        const yType = yAxis?.[series.yAxis ?? 0]?.type ?? DEFAULT_AXIS_TYPE;
-        if ((xType !== 'linear' && xType !== 'datetime') || yType !== 'linear') {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Scatter clustering supports linear X/Y and datetime X with linear Y',
-            });
-        }
+            const xType = xAxis?.type ?? DEFAULT_AXIS_TYPE;
+            const yType = yAxis?.[series.yAxis ?? 0]?.type ?? DEFAULT_AXIS_TYPE;
+            if ((xType !== 'linear' && xType !== 'datetime') || yType !== 'linear') {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: 'Scatter clustering supports linear X/Y and datetime X with linear Y',
+                });
+            }
 
-        const {layoutAlgorithm, overlapMode, minimumClusterSize, marker} = series.cluster;
-        if (layoutAlgorithm?.type !== undefined && layoutAlgorithm.type !== 'grid') {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Scatter clustering supports only the grid layout algorithm',
+            const {layoutAlgorithm, overlapMode, minimumClusterSize, marker} = series.cluster;
+            if (layoutAlgorithm?.type !== undefined && layoutAlgorithm.type !== 'grid') {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: 'Scatter clustering supports only the grid layout algorithm',
+                });
+            }
+            const size = calculateNumericProperty({
+                value: layoutAlgorithm?.gridSize ?? 50,
+                base: 100,
             });
-        }
-        const size = calculateNumericProperty({
-            value: layoutAlgorithm?.gridSize ?? 50,
-            base: 100,
-        });
-        if (!Number.isFinite(size) || !size || size <= 0) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Scatter cluster gridSize must be a positive pixel or percentage value',
-            });
-        }
-        if (overlapMode !== undefined && overlapMode !== 'allow' && overlapMode !== 'shift') {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Scatter cluster overlapMode must be allow or shift',
-            });
-        }
-        if (
-            minimumClusterSize !== undefined &&
-            (!Number.isInteger(minimumClusterSize) || minimumClusterSize < 2)
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Scatter cluster minimumClusterSize must be an integer of at least 2',
-            });
-        }
-        if (
-            (marker?.radius !== undefined &&
-                (!Number.isFinite(marker.radius) || marker.radius <= 0)) ||
-            (marker?.borderWidth !== undefined &&
-                (!Number.isFinite(marker.borderWidth) || marker.borderWidth < 0))
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message:
-                    'Scatter cluster marker radius must be positive and borderWidth nonnegative',
-            });
-        }
+            if (!Number.isFinite(size) || !size || size <= 0) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'Scatter cluster gridSize must be a positive pixel or percentage value',
+                });
+            }
+            if (overlapMode !== undefined && overlapMode !== 'allow' && overlapMode !== 'shift') {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: 'Scatter cluster overlapMode must be allow or shift',
+                });
+            }
+            if (
+                minimumClusterSize !== undefined &&
+                (!Number.isInteger(minimumClusterSize) || minimumClusterSize < 2)
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: 'Scatter cluster minimumClusterSize must be an integer of at least 2',
+                });
+            }
+            if (
+                (marker?.radius !== undefined &&
+                    (!Number.isFinite(marker.radius) || marker.radius <= 0)) ||
+                (marker?.borderWidth !== undefined &&
+                    (!Number.isFinite(marker.borderWidth) || marker.borderWidth < 0))
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'Scatter cluster marker radius must be positive and borderWidth nonnegative',
+                });
+            }
+        },
+        prepare: prepareScatterSeries,
     },
-    getColorValue: (d) => d.y,
-    prepareShapeData,
-    renderShapes,
+    axes: {
+        x: {singleValueDomain: 'center'},
+        y: {singleValueDomain: 'center'},
+        padding: {getPaintExtents: getScatterAxisPadding},
+    },
+    colorScale: {
+        getValue: (d) => d.y,
+    },
+    layers: {
+        getClipMode: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
+    zoom: {types: ['x', 'xy', 'y'], defaultType: 'xy'},
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -204,7 +214,7 @@ export const scatterPlugin = {
     options: ChartSeriesOptions;
     tooltipChunk: ScatterTooltipChunk;
     interaction: ScatterInteractionItem;
-    tooltipItem: PreparedScatterData;
+    lookupItem: PreparedScatterData;
     allRaw: ChartSeries;
     allPrepared: PreparedSeries;
 }>;

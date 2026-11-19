@@ -1,7 +1,7 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
@@ -40,13 +40,13 @@ import type {BarYShapesArgs, BarYTooltipChunk, PreparedBarYData} from './types';
 
 import './styles.scss';
 
-async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedBarYSeries, PreparedSeriesOptions, PreparedSeries>,
-): Promise<PrepareShapeDataResult<BarYShapesArgs, PreparedBarYData>> {
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedBarYSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<BarYShapesArgs, PreparedBarYData>> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale, boundsHeight, boundsWidth} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareBarYData({
@@ -60,7 +60,7 @@ async function prepareShapeData(
         yScale,
     });
 
-    const labels = await prepareStackLabels({
+    const svgLabels = await prepareStackLabels({
         ...args,
         anchors: args.isRangeSlider
             ? []
@@ -73,35 +73,58 @@ async function prepareShapeData(
     });
 
     const filteredData = filterBarYDataLabels(data, [
-        ...(args.otherLayers ?? []),
-        {svgLabels: labels, htmlLabels: []},
+        ...(args.otherLabelLayouts ?? []),
+        {svgLabels: svgLabels, htmlLabels: []},
     ]);
 
     return {
         renderData: [filteredData],
         htmlLabels: filteredData.htmlLabels,
-        layoutData: [filteredData],
-        tooltipItems: data.shapes,
-        labels,
+        labelLayout: [filteredData],
+        lookupItems: data.shapes,
+        svgLabels,
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-    labels,
-}: RenderShapesArgs<BarYShapesArgs, PreparedSeriesOptions>) {
-    const cleanup = renderBarY({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
-    renderStackLabels(labelsPlot, labels);
+    svgLabels,
+}: RenderLayerArgs<BarYShapesArgs, PreparedSeriesOptions>) {
+    const cleanup = renderBarY({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
+    renderStackLabels(labelsPlot, svgLabels);
     return cleanup;
 }
 
 export const barYPlugin = {
     type: 'bar-y',
-    defaults: barYDefaults,
+    series: {
+        optionsDefaults: barYDefaults,
+        validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+            validateBarLabelPlacement(series.dataLabels);
+            validateBarPadding(series.barPadding);
+            validateBarMaxWidth(series.barMaxWidth);
+            validateBarOpacity(series.opacity, 'opacity');
+            validateBarOpacity(seriesOptions?.['bar-y']?.opacity, 'series.options.bar-y.opacity');
+            series.data.forEach((point, index) => {
+                validateBarOpacity(point.opacity, `data[${index}].opacity`);
+            });
+            validateStackLabelsOptions({
+                series,
+                allSeries,
+                options: seriesOptions?.['bar-y']?.stackLabels,
+            });
+            validateAxisPlotValues({series, xAxis, yAxis});
+            validateXYSeries({series, xAxis, yAxis});
+            validateStacking({series});
+            validateBarGrouping({series, allSeries});
+            validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
+        },
+        prepare: prepareBarYSeries,
+    },
     axes: {
         x: {
             baseline: 0,
@@ -122,6 +145,21 @@ export const barYPlugin = {
                     ? {values: values as readonly number[]}
                     : {count: Math.min(count ?? values.length, values.length)},
         },
+        padding: {
+            getXDomainReserve: ({dataLabels, stacking}) =>
+                stacking !== 'percent' &&
+                (hasOutsideOnlyPlacement(dataLabels.placement) ||
+                    (dataLabels.placement === undefined && !dataLabels.inside))
+                    ? dataLabels.maxWidth + dataLabels.padding
+                    : 0,
+        },
+    },
+    colorScale: {
+        getValue: (d) => d.x,
+    },
+    layers: {
+        prepareData: prepareLayer,
+        render: renderLayer,
     },
     zoom: {
         types: ['y', 'xy'],
@@ -129,38 +167,6 @@ export const barYPlugin = {
         filterData: ({series, viewport}) =>
             filterPoints(series.data, viewport, {axes: series.stacking ? 'y' : 'xy'}),
     },
-    prepareSeries: prepareBarYSeries,
-    validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
-        validateBarLabelPlacement(series.dataLabels);
-        validateBarPadding(series.barPadding);
-        validateBarMaxWidth(series.barMaxWidth);
-        validateBarOpacity(series.opacity, 'opacity');
-        validateBarOpacity(seriesOptions?.['bar-y']?.opacity, 'series.options.bar-y.opacity');
-        series.data.forEach((point, index) => {
-            validateBarOpacity(point.opacity, `data[${index}].opacity`);
-        });
-        validateStackLabelsOptions({
-            series,
-            allSeries,
-            options: seriesOptions?.['bar-y']?.stackLabels,
-        });
-        validateAxisPlotValues({series, xAxis, yAxis});
-        validateXYSeries({series, xAxis, yAxis});
-        validateStacking({series});
-        validateBarGrouping({series, allSeries});
-        validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
-    },
-    axisPadding: {
-        getXDomainReserve: ({dataLabels, stacking}) =>
-            stacking !== 'percent' &&
-            (hasOutsideOnlyPlacement(dataLabels.placement) ||
-                (dataLabels.placement === undefined && !dataLabels.inside))
-                ? dataLabels.maxWidth + dataLabels.padding
-                : 0,
-    },
-    getColorValue: (d) => d.x,
-    prepareShapeData,
-    renderShapes,
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -202,7 +208,7 @@ export const barYPlugin = {
     tooltipChunk: BarYTooltipChunk;
     interaction: BarYInteractionItem;
     formatContext: BarYFormatContext;
-    tooltipItem: PreparedBarYData;
+    lookupItem: PreparedBarYData;
     allRaw: ChartSeries;
     allPrepared: PreparedSeries;
 }>;

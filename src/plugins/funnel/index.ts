@@ -1,7 +1,7 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -22,12 +22,12 @@ import type {FunnelTooltipChunk, PreparedFunnelData} from './types';
 
 import './styles.scss';
 
-async function prepareShapeData({
+async function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedFunnelSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
-    PrepareShapeDataResult<PreparedFunnelData, PreparedFunnelData>
+}: PrepareLayerArgs<PreparedFunnelSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareLayerResult<PreparedFunnelData, PreparedFunnelData>
 > {
     const data = await prepareFunnelData({
         series: series,
@@ -37,30 +37,36 @@ async function prepareShapeData({
     return {
         renderData: [data],
         htmlLabels: data.htmlLabels,
-        layoutData: [data],
-        tooltipItems: [data],
+        labelLayout: [data],
+        lookupItems: [data],
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedFunnelData, PreparedSeriesOptions>) {
-    return renderFunnel({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedFunnelData, PreparedSeriesOptions>) {
+    return renderFunnel({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
 }
 
 export const funnelPlugin = {
     type: 'funnel',
-    defaults: funnelDefaults,
-    getClipPath: () => false,
-    prepareSeries: ({series, seriesOptions, legend, colors}) =>
-        prepareFunnelSeries({series: series as FunnelSeries[], seriesOptions, legend, colors}),
-    getColorValue: (d) => d.value,
-    prepareShapeData,
-    renderShapes,
+    series: {
+        optionsDefaults: funnelDefaults,
+        prepare: ({series, seriesOptions, legend, colors}) =>
+            prepareFunnelSeries({series: series as FunnelSeries[], seriesOptions, legend, colors}),
+    },
+    colorScale: {
+        getValue: (d) => d.value,
+    },
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,

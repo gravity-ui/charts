@@ -31,7 +31,7 @@ interface RenderLineElements {
 
 export function renderLine(
     elements: RenderLineElements,
-    preparedData: PreparedLineData[],
+    renderData: PreparedLineData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -46,7 +46,7 @@ export function renderLine(
     plotSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
     const bounds = new Map(
-        preparedData.map((data) => [
+        renderData.map((data) => [
             data,
             data.gradientBBox === undefined ? getGradientBBox(data.points) : data.gradientBBox,
         ]),
@@ -67,7 +67,7 @@ export function renderLine(
     };
     const lineSelection = plotSvgElement
         .selectAll('path')
-        .data(preparedData)
+        .data(renderData)
         .join('path')
         .attr('d', (d) => line.curve(elements.getCurveFactory(d.interpolation))(d.points))
         .attr('fill', 'none')
@@ -79,7 +79,7 @@ export function renderLine(
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
 
-    const dataLabels = preparedData.flatMap((d) => d.svgLabels);
+    const dataLabels = renderData.flatMap((d) => d.svgLabels);
 
     const labelsSelection = renderDataLabels({
         container: select(elements.labelsPlot),
@@ -141,7 +141,7 @@ export function renderLine(
         });
     }
 
-    const eventName = `hover-shape.line-${preparedData[0]?.id ?? 'unknown'}`;
+    const eventName = `hover-shape.line-${renderData[0]?.id ?? 'unknown'}`;
     dispatcher?.on(eventName, handleShapeHover);
 
     return () => {

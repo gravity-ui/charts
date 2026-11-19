@@ -1,18 +1,13 @@
 import {i18n} from '~core/i18n';
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
-import type {
-    ChartSeries,
-    ChartSeriesOptions,
-    PieFormatContext,
-    TooltipDataChunkPie,
-} from '~core/types';
+import type {ChartSeries, ChartSeriesOptions, PieFormatContext} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {PieSeries} from '../../types';
@@ -25,16 +20,16 @@ import {preparePieData} from './prepare-data';
 import {preparePieSeries} from './prepare-pie-series';
 import type {PreparedPieSeries} from './prepared-series';
 import {renderPie} from './renderer';
-import type {PreparedPieData} from './types';
+import type {PieTooltipChunk, PreparedPieData} from './types';
 
 import './styles.scss';
 
-async function prepareShapeData({
+async function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedPieSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
-    PrepareShapeDataResult<PreparedPieData, PreparedPieData>
+}: PrepareLayerArgs<PreparedPieSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareLayerResult<PreparedPieData, PreparedPieData>
 > {
     const data = await preparePieData({
         series: series,
@@ -44,23 +39,23 @@ async function prepareShapeData({
     return {
         renderData: data,
         htmlLabels: data.flatMap((item) => item.htmlLabels),
-        layoutData: data,
-        tooltipItems: data,
+        labelLayout: data,
+        lookupItems: data,
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
     registerCompletion,
     signal,
-}: RenderShapesArgs<PreparedPieData, PreparedSeriesOptions>) {
+}: RenderLayerArgs<PreparedPieData, PreparedSeriesOptions>) {
     return renderPie(
         {plot, labelsPlot},
-        preparedData,
+        renderData,
         seriesOptions,
         dispatcher,
         registerCompletion,
@@ -70,23 +65,29 @@ function renderShapes({
 
 export const piePlugin = {
     type: 'pie',
-    defaults: pieDefaults,
-    getClipPath: () => false,
-    prepareSeries: ({series, seriesOptions, legend, colors}) =>
-        preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
-    validate: ({series}) => {
-        series.data.forEach(({value}) => {
-            if (typeof value !== 'number' && value !== null) {
-                throw new ChartError({
-                    code: CHART_ERROR_CODE.INVALID_DATA,
-                    message: i18n('error', 'label_invalid-pie-data-value'),
-                });
-            }
-        });
+    series: {
+        optionsDefaults: pieDefaults,
+        validate: ({series}) => {
+            series.data.forEach(({value}) => {
+                if (typeof value !== 'number' && value !== null) {
+                    throw new ChartError({
+                        code: CHART_ERROR_CODE.INVALID_DATA,
+                        message: i18n('error', 'label_invalid-pie-data-value'),
+                    });
+                }
+            });
+        },
+        prepare: ({series, seriesOptions, legend, colors}) =>
+            preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),
     },
-    getColorValue: (d) => d.value,
-    prepareShapeData,
-    renderShapes,
+    colorScale: {
+        getValue: (d) => d.value,
+    },
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -94,7 +95,7 @@ export const piePlugin = {
     tooltip: {
         prepareData: getTooltipData,
         getValue: getTooltipScalarValue,
-        getValueFormatContext: (item: TooltipDataChunkPie) => {
+        getValueFormatContext: (item) => {
             return {
                 percentage: item.percentage,
                 name: item.data.name,
@@ -125,7 +126,7 @@ export const piePlugin = {
     prepared: PreparedPieSeries;
     shape: PreparedPieData;
     options: ChartSeriesOptions;
-    tooltipChunk: TooltipDataChunkPie;
+    tooltipChunk: PieTooltipChunk;
     interaction: PieInteractionItem;
     formatContext: PieFormatContext;
     allRaw: ChartSeries;

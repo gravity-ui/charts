@@ -35,7 +35,7 @@ export const getPreparedSeries = async ({
     const ids = new Set<string>();
     for (const layer of layers) {
         const plugin = getSeriesPlugin(layer.series[0].type);
-        const prepared = await plugin.prepareSeries({
+        const prepared = await plugin.series.prepare({
             series: layer.series,
             seriesOptions,
             legend: preparedLegend,

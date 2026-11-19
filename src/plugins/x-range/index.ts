@@ -1,8 +1,8 @@
 import {isValueInAxisRange} from '~core/series/domain-points';
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -23,13 +23,13 @@ import type {PreparedXRangeSeries} from './prepared-series';
 import {renderXRange} from './renderer';
 import type {PreparedXRangeData, XRangeTooltipChunk} from './types';
 
-async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedXRangeSeries, PreparedSeriesOptions, PreparedSeries>,
-): Promise<PrepareShapeDataResult<PreparedXRangeData, PreparedXRangeData>> {
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedXRangeSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<PreparedXRangeData, PreparedXRangeData>> {
     const {series, xAxis, xScale, yAxis, yScale, boundsWidth, isRangeSlider} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareXRangeData({
@@ -45,19 +45,19 @@ async function prepareShapeData(
     return {
         renderData: data,
         htmlLabels: data.flatMap((item) => item.htmlLabels),
-        layoutData: data,
-        tooltipItems: data,
+        labelLayout: data,
+        lookupItems: data,
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedXRangeData, PreparedSeriesOptions>) {
-    return renderXRange({plot, labelsPlot}, preparedData, seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedXRangeData, PreparedSeriesOptions>) {
+    return renderXRange({plot, labelsPlot}, renderData, seriesOptions, dispatcher);
 }
 
 function getXRangeWidth(data: XRangeSeriesData) {
@@ -66,7 +66,10 @@ function getXRangeWidth(data: XRangeSeriesData) {
 
 export const xRangePlugin = {
     type: 'x-range',
-    defaults: xRangeDefaults,
+    series: {
+        optionsDefaults: xRangeDefaults,
+        prepare: prepareXRangeSeries,
+    },
     axes: {
         x: {
             getData: ({series}) => ({
@@ -81,6 +84,13 @@ export const xRangePlugin = {
             }),
         },
     },
+    colorScale: {
+        getValue: getXRangeWidth,
+    },
+    layers: {
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     zoom: {
         types: ['x'],
         defaultType: 'x',
@@ -90,12 +100,6 @@ export const xRangePlugin = {
                     isValueInAxisRange(point.x0, axis) || isValueInAxisRange(point.x1, axis),
             }),
     },
-    prepareSeries: prepareXRangeSeries,
-    // Use bar duration (x1 - x0) as the color value so that longer bars can be
-    // visually distinguished by color intensity.
-    getColorValue: getXRangeWidth,
-    prepareShapeData,
-    renderShapes,
     interaction: {
         prepareNearestData,
         getTargetElements,

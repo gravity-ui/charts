@@ -7,8 +7,9 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {getSeriesLayers} from '~core/series/layers';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
-import type {ShapeLabels, TooltipItemData} from '~core/shapes/types';
+import type {SeriesLookupItem, ShapeLabels} from '~core/shapes/types';
 import {getClipPathIdByBounds} from '~core/shapes/utils';
 import {getOnlyVisibleSeries} from '~core/utils';
 import {hasGradient} from '~core/utils/gradient';
@@ -21,7 +22,7 @@ import type {PreparedXAxis, PreparedYAxis} from '../useAxis/types';
 import {SeriesShapes} from './SeriesShapes';
 import type {GradientLayoutReference} from './types';
 
-export type {TooltipItemData};
+export type {SeriesLookupItem};
 
 interface Args {
     signal?: AbortSignal;
@@ -55,7 +56,7 @@ function captureGradientStates(reference: GradientLayoutReference, geometry: Gra
     for (const item of getOnlyVisibleSeries(reference.series)) {
         if (
             !hasGradient(item) ||
-            !getSeriesPlugin(item.type).prepareGradientGeometry ||
+            !getSeriesPlugin(item.type).layers.prepareGradientGeometry ||
             !('yAxis' in item) ||
             !reference.xScale
         )
@@ -95,9 +96,9 @@ function getGradientStates(
             const series = getOnlyVisibleSeries(reference.series);
             for (const [type, items] of group(series, (item) => item.type)) {
                 const plugin = getSeriesPlugin(type);
-                if (!items.some(hasGradient) || !plugin.prepareGradientGeometry) continue;
+                if (!items.some(hasGradient) || !plugin.layers.prepareGradientGeometry) continue;
                 geometry.push(
-                    ...(await plugin.prepareGradientGeometry({
+                    ...(await plugin.layers.prepareGradientGeometry({
                         ...reference,
                         series: items,
                         allSeries: series,
@@ -117,7 +118,7 @@ function IS_OUTSIDE_BOUNDS() {
 }
 
 function resolveClipPathId(args: {
-    plugin: ReturnType<typeof getSeriesPlugin>;
+    plugin: RegisteredSeriesPlugin;
     clipPathId: string;
     isRangeSlider?: boolean;
     yAxis: PreparedYAxis[];
@@ -125,7 +126,8 @@ function resolveClipPathId(args: {
 }) {
     const {plugin, clipPathId, isRangeSlider, yAxis, zoomState} = args;
     const clip =
-        plugin.getClipPath?.({isRangeSlider: Boolean(isRangeSlider), yAxis, zoomState}) ?? 'bounds';
+        plugin.layers.getClipMode?.({isRangeSlider: Boolean(isRangeSlider), yAxis, zoomState}) ??
+        'bounds';
     return clip === false
         ? undefined
         : getClipPathIdByBounds({clipPathId, bounds: clip === 'horizontal' ? clip : undefined});
@@ -178,7 +180,7 @@ export async function getShapes(args: Args) {
     );
 
     const rendering: Promise<void>[] = [];
-    const shapesData: TooltipItemData[] = [];
+    const shapesData: SeriesLookupItem[] = [];
     const shapes: React.ReactElement[] = [];
     const layers: ShapeLabels[] = [];
     const preparedGradientGeometry: GradientGeometry[] = [];
@@ -190,15 +192,15 @@ export async function getShapes(args: Args) {
 
         const {
             renderData,
-            tooltipItems = [],
+            lookupItems = [],
             markers = [],
             annotations = [],
             htmlLabels = [],
             getHoverMarkers,
-            layoutData = [],
-            labels,
+            labelLayout = [],
+            svgLabels,
             gradientGeometry,
-        } = await plugin.prepareShapeData({
+        } = await plugin.layers.prepareData({
             series: chartSeries,
             boundsWidth,
             boundsHeight,
@@ -210,7 +212,7 @@ export async function getShapes(args: Args) {
             split,
             isOutsideBounds,
             isRangeSlider,
-            otherLayers: layers,
+            otherLabelLayouts: layers,
             allSeries: visibleSeries,
         });
 
@@ -220,9 +222,9 @@ export async function getShapes(args: Args) {
             markers.length === 0 &&
             annotations.length === 0 &&
             htmlLabels.length === 0 &&
-            !labels?.length &&
-            layoutData.length === 0 &&
-            tooltipItems.length === 0 &&
+            !svgLabels?.length &&
+            labelLayout.length === 0 &&
+            lookupItems.length === 0 &&
             !getHoverMarkers
         ) {
             continue;
@@ -252,12 +254,12 @@ export async function getShapes(args: Args) {
                 onRenderError={onRenderError}
                 plugin={plugin}
                 isRangeSlider={isRangeSlider}
-                preparedData={renderData}
+                renderData={renderData}
                 markers={markers}
                 annotations={annotations}
                 htmlLabels={htmlLabels}
                 getHoverMarkers={getHoverMarkers ?? (() => [])}
-                labels={labels}
+                svgLabels={svgLabels}
                 boundsWidth={boundsWidth}
                 boundsHeight={boundsHeight}
                 clipPathId={resolvedClipPathId}
@@ -267,10 +269,10 @@ export async function getShapes(args: Args) {
                 namespace={`hover-markers-${groupKey}`}
             />
         );
-        shapesData.splice(index, 0, ...tooltipItems.map((data) => ({type: seriesType, data})));
-        layers.push(...layoutData);
-        if (labels?.length) {
-            layers.push({svgLabels: labels, htmlLabels: []});
+        shapesData.splice(index, 0, ...lookupItems.map((data) => ({type: seriesType, data})));
+        layers.push(...labelLayout);
+        if (svgLabels?.length) {
+            layers.push({svgLabels: svgLabels, htmlLabels: []});
         }
     }
 

@@ -64,7 +64,7 @@ interface Args {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    otherLayers?: ShapeLabels[];
+    otherLabelLayouts?: ShapeLabels[];
     allSeries?: PreparedSeries[];
     getCurveFactory?: (interpolation?: PreparedLineSeries['interpolation']) => CurveFactory;
 }
@@ -139,7 +139,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
         split,
         isOutsideBounds,
         isRangeSlider,
-        otherLayers,
+        otherLabelLayouts,
         allSeries,
         getCurveFactory,
     } = args;
@@ -274,7 +274,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
 
             if (needSimulation) {
                 obstacles = getObstacleRectsFromLayers(
-                    (otherLayers ?? []).filter((l) => !isLabeledLineLayer(l)),
+                    (otherLabelLayouts ?? []).filter((l) => !isLabeledLineLayer(l)),
                 );
                 toPlace = seriesWithPoints.filter((d) => d.series.dataLabels.enabled);
             }

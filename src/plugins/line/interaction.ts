@@ -14,9 +14,8 @@ import type {PreparedLineData} from './types';
 export function getTargetElements({
     plot,
     markers,
-    preparedData,
+    renderData,
 }: InteractionElementsArgs<PreparedLineData>): InteractionElement<LineInteractionItem>[] {
-    const shapes = preparedData;
     return [
         ...getInteractionElements<PreparedLineData, LineInteractionItem>(
             plot,
@@ -26,7 +25,7 @@ export function getTargetElements({
                 series: shape.series,
             }),
         ),
-        ...getMarkerInteractionElements<LineInteractionItem>(markers, shapes),
+        ...getMarkerInteractionElements<LineInteractionItem>(markers, renderData),
     ];
 }
 

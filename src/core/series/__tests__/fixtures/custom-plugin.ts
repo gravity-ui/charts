@@ -1,10 +1,15 @@
 import {select} from 'd3-selection';
 
 import {CHART_ERROR_CODE, ChartError} from '../../../../libs';
-import type {BaseSeries, BaseSeriesLegend} from '../../../types';
+import type {BaseSeries, BaseSeriesLegend, ChartInteractionItem} from '../../../types';
 import {getInteractionElements} from '../../../utils/chart-interaction';
 import type {GetTooltipDataResult} from '../../../utils/tooltip-helpers';
-import type {PrepareShapeDataArgs, SeriesPlugin, SeriesPluginData} from '../../plugin';
+import type {
+    PrepareLayerArgs,
+    SeriesPlugin,
+    SeriesPluginInteraction,
+    SeriesPluginTypes,
+} from '../../plugin';
 import {prepareSeriesMetadata} from '../../prepare-series-metadata';
 import {registerSeriesPlugin} from '../../seriesRegistry';
 import type {BasePreparedSeries} from '../../types';
@@ -46,15 +51,15 @@ interface SampleChunk {
     caption: string;
 }
 
-interface SampleTypes extends SeriesPluginData {
+interface SampleTypes extends SeriesPluginTypes {
     raw: SampleSeries;
     prepared: PreparedSampleSeries;
     shape: SampleShape;
     options: {sample?: {offset?: number}};
 }
 
-interface SamplePluginData extends SampleTypes {
-    tooltipItem: SampleLookup;
+interface SamplePluginTypes extends SampleTypes {
+    lookupItem: SampleLookup;
     tooltipChunk: SampleChunk;
     formatContext: {value: unknown; caption: string};
 }
@@ -62,62 +67,72 @@ interface SamplePluginData extends SampleTypes {
 /** Contract fixture using common metadata and otherwise independent plugin-owned data. */
 export const sampleShapesPlugin = {
     type: 'sample',
-    defaults: {offset: 4},
-    prepareSeries: ({series, colorScale, legend}) =>
-        series.map((s) => ({
-            ...prepareSeriesMetadata({
-                series: {...s, name: s.name ?? 'Samples'},
-                color: colorScale(s.name ?? 'Samples'),
-                legend,
-            }),
-            type: s.type,
-            data: s.data,
-        })),
-    prepareShapeData: ({series, seriesOptions}) => {
-        const offset = seriesOptions.sample?.offset ?? 0;
-        return {
-            renderData: series.map((s) => ({
-                series: s,
-                samples: s.data.map((sample) => ({
-                    sample,
-                    owner: s,
-                    x: sample.at + offset,
-                    y: sample.amount,
-                })),
+    series: {
+        optionsDefaults: {offset: 4},
+        prepare: ({series, colorScale, legend}) =>
+            series.map((s) => ({
+                ...prepareSeriesMetadata({
+                    series: {...s, name: s.name ?? 'Samples'},
+                    color: colorScale(s.name ?? 'Samples'),
+                    legend,
+                }),
+                type: s.type,
+                data: s.data,
             })),
-        };
     },
-    renderShapes: ({plot, preparedData}) => {
-        select(plot)
-            .selectAll<SVGCircleElement, SampleLookup>('circle')
-            .data(preparedData.flatMap((shape) => shape.samples))
-            .join('circle')
-            .attr('cx', (lookup) => lookup.x)
-            .attr('cy', (lookup) => lookup.y)
-            .attr('r', 1)
-            .attr('fill', (lookup) => lookup.owner.color);
-        return () => plot.replaceChildren();
+    layers: {
+        prepareData: ({series, seriesOptions}) => {
+            const offset = seriesOptions.sample?.offset ?? 0;
+            return {
+                renderData: series.map((s) => ({
+                    series: s,
+                    samples: s.data.map((sample) => ({
+                        sample,
+                        owner: s,
+                        x: sample.at + offset,
+                        y: sample.amount,
+                    })),
+                })),
+            };
+        },
+        render: ({plot, renderData}) => {
+            select(plot)
+                .selectAll<SVGCircleElement, SampleLookup>('circle')
+                .data(renderData.flatMap((shape) => shape.samples))
+                .join('circle')
+                .attr('cx', (lookup) => lookup.x)
+                .attr('cy', (lookup) => lookup.y)
+                .attr('r', 1)
+                .attr('fill', (lookup) => lookup.owner.color);
+            return () => plot.replaceChildren();
+        },
     },
 } satisfies SeriesPlugin<SampleTypes>;
 
 export const samplePlugin = {
     ...sampleShapesPlugin,
-    getLayerKey: ({seriesKey}) => seriesKey,
-    validate: ({series}) => {
-        if (
-            series.data.some(
-                (sample) => !Number.isFinite(sample.at) || !Number.isFinite(sample.amount),
-            )
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Sample positions must be finite',
-            });
-        }
+    series: {
+        ...sampleShapesPlugin.series,
+        validate: ({series}) => {
+            if (
+                series.data.some(
+                    (sample) => !Number.isFinite(sample.at) || !Number.isFinite(sample.amount),
+                )
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: 'Sample positions must be finite',
+                });
+            }
+        },
     },
-    prepareShapeData: (args) => {
-        const result = sampleShapesPlugin.prepareShapeData(args);
-        return {...result, tooltipItems: result.renderData.flatMap((shape) => shape.samples)};
+    layers: {
+        ...sampleShapesPlugin.layers,
+        getKey: ({seriesKey}) => seriesKey,
+        prepareData: (args) => {
+            const result = sampleShapesPlugin.layers.prepareData(args);
+            return {...result, lookupItems: result.renderData.flatMap((shape) => shape.samples)};
+        },
     },
     interaction: {
         prepareNearestData: ({data}) =>
@@ -170,21 +185,21 @@ export const samplePlugin = {
             },
         ],
     },
-} satisfies SeriesPlugin<SamplePluginData>;
+} satisfies SeriesPlugin<SamplePluginTypes>;
 
 // These compile-time checks must fail if a hook loses its associated payload type.
 export function checkAssociatedTypes(
     shape: SampleShape,
     lookup: SampleLookup,
-    args: Parameters<SeriesPlugin<SamplePluginData>['prepareShapeData']>[0],
-    defaultArgs: PrepareShapeDataArgs<PreparedSampleSeries>,
+    args: Parameters<SeriesPlugin<SamplePluginTypes>['layers']['prepareData']>[0],
+    defaultArgs: PrepareLayerArgs<PreparedSampleSeries>,
 ) {
     // @ts-expect-error Lookup items belong to tooltip preparation, not render-layer data.
-    const renderData: Parameters<typeof samplePlugin.renderShapes>[0]['preparedData'] = [lookup];
+    const renderData: Parameters<typeof samplePlugin.layers.render>[0]['renderData'] = [lookup];
     // @ts-expect-error A render-layer item cannot replace a tooltip lookup item.
     const tooltipData: Parameters<typeof samplePlugin.tooltip.prepareData>[0]['data'] = [shape];
     // @ts-expect-error Core requires metadata even for a plugin without a visible legend.
-    const prepared: SeriesPluginData['prepared'] = {type: 'sample'};
+    const prepared: SeriesPluginTypes['prepared'] = {type: 'sample'};
     // @ts-expect-error Returning both strategies duplicates the selected sample.
     const tooltipResult: ReturnType<typeof samplePlugin.tooltip.prepareData> = {
         chunks: [],
@@ -208,15 +223,21 @@ export function checkAssociatedTypes(
     const otherData = args.allSeries?.[0].data;
     registerSeriesPlugin({
         ...sampleShapesPlugin,
-        // @ts-expect-error Registration must enforce metadata without a separate satisfies check.
-        prepareSeries: () => [{type: 'sample'}],
+        series: {
+            ...sampleShapesPlugin.series,
+            // @ts-expect-error Registration must enforce metadata without a separate satisfies check.
+            prepare: () => [{type: 'sample'}],
+        },
     });
     registerSeriesPlugin({
         ...sampleShapesPlugin,
-        // @ts-expect-error Registration must not infer any and accept raw series as prepared output.
-        prepareSeries: ({series}) => series,
+        series: {
+            ...sampleShapesPlugin.series,
+            // @ts-expect-error Registration must not infer any and accept raw series as prepared output.
+            prepare: ({series}) => series,
+        },
     });
-    const invalidChunk: NonNullable<SeriesPluginData['tooltipChunk']> = {
+    const invalidChunk: NonNullable<SeriesPluginTypes['tooltipChunk']> = {
         data: lookup.sample,
         // @ts-expect-error Custom chunks must retain the series identity used by core.
         series: {type: 'sample'},
@@ -226,7 +247,7 @@ export function checkAssociatedTypes(
     const tooltip: NonNullable<
         SeriesPlugin<
             SampleTypes & {
-                tooltipChunk: NonNullable<SeriesPluginData['tooltipChunk']>;
+                tooltipChunk: NonNullable<SeriesPluginTypes['tooltipChunk']>;
             }
         >['tooltip']
     > = {
@@ -237,18 +258,22 @@ export function checkAssociatedTypes(
         rows: [],
     };
     // Optional capabilities retain custom series types without joining built-in unions.
-    const capabilities: Pick<
-        SeriesPlugin<SamplePluginData>,
-        'axes' | 'zoom' | 'axisPadding' | 'prepareGradientGeometry'
-    > = {
+    const capabilities = {
         axes: {
-            x: {getData: ({series}) => ({values: series.flatMap((s) => s.data.map((p) => p.at))})},
+            x: {
+                getData: ({series}) => ({
+                    values: series.flatMap((s) => s.data.map((p) => p.at)),
+                }),
+            },
+            padding: {getXDomainReserve: (series) => series.data[0]?.at ?? 0},
         },
         zoom: {types: ['x'], filterData: ({series}) => ({data: series.data})},
-        axisPadding: {getXDomainReserve: (series) => series.data[0]?.at ?? 0},
-        prepareGradientGeometry: ({series}) =>
-            series.map((s) => ({id: s.id, points: [], strokeBBox: null})),
-    };
+        layers: {
+            ...sampleShapesPlugin.layers,
+            prepareGradientGeometry: ({series}) =>
+                series.map((s) => ({id: s.id, points: [], strokeBBox: null})),
+        },
+    } satisfies Pick<SeriesPlugin<SamplePluginTypes>, 'axes' | 'zoom' | 'layers'>;
     return {
         renderData,
         tooltipData,
@@ -262,4 +287,14 @@ export function checkAssociatedTypes(
         builtinOptions,
         tooltip,
     };
+}
+
+// Without an explicit type map, interaction results still accept opaque object points.
+export function checkDefaultInteractionTypes(item: ChartInteractionItem) {
+    const interaction: SeriesPluginInteraction = {
+        prepareNearestData: () => [{position: [0, 0], item}],
+        getTargetElements: () => [],
+        getClosestItem: () => item,
+    };
+    return interaction;
 }

@@ -14,9 +14,8 @@ import type {PreparedAreaRangeData} from './types';
 export function getTargetElements({
     plot,
     markers,
-    preparedData,
+    renderData,
 }: InteractionElementsArgs<PreparedAreaRangeData>): InteractionElement<AreaRangeInteractionItem>[] {
-    const shapes = preparedData;
     return [
         ...getInteractionElements<PreparedAreaRangeData, AreaRangeInteractionItem>(
             plot,
@@ -26,7 +25,7 @@ export function getTargetElements({
                 series: shape.series,
             }),
         ),
-        ...getMarkerInteractionElements<AreaRangeInteractionItem>(markers, shapes),
+        ...getMarkerInteractionElements<AreaRangeInteractionItem>(markers, renderData),
     ];
 }
 

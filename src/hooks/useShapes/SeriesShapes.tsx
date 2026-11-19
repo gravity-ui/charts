@@ -2,7 +2,7 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 
-import type {getSeriesPlugin} from '~core/series/seriesRegistry';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import type {SeriesShapeData, SvgLabel} from '~core/shapes/types';
 import {registerInteractionLayer} from '~core/utils/chart-interaction';
@@ -20,9 +20,9 @@ interface Props extends SeriesShapeData {
     dispatcher?: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     namespace: string;
-    plugin: ReturnType<typeof getSeriesPlugin>;
-    preparedData: object[];
-    labels?: SvgLabel[];
+    plugin: RegisteredSeriesPlugin;
+    renderData: object[];
+    svgLabels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;
     isRangeSlider?: boolean;
     signal?: AbortSignal;
@@ -38,12 +38,12 @@ export const SeriesShapes = ({
     htmlLayout,
     namespace,
     plugin,
-    preparedData,
+    renderData,
     markers,
     annotations,
     htmlLabels,
     getHoverMarkers,
-    labels,
+    svgLabels,
     seriesOptions,
     isRangeSlider,
     signal,
@@ -60,11 +60,11 @@ export const SeriesShapes = ({
         let cancelled = false;
         const pending: Promise<void>[] = [];
         const plot = ref.current;
-        const cleanup = plugin.renderShapes({
+        const cleanup = plugin.layers.render({
             plot: ref.current,
             labelsPlot: labelsRef.current,
-            preparedData,
-            labels,
+            renderData,
+            svgLabels,
             seriesOptions,
             boundsWidth,
             boundsHeight,
@@ -85,7 +85,7 @@ export const SeriesShapes = ({
         const unregister =
             !isRangeSlider && markerPlot && interaction
                 ? registerInteractionLayer(plot, () =>
-                      interaction.getTargetElements({plot, markers: markerPlot, preparedData}),
+                      interaction.getTargetElements({plot, markers: markerPlot, renderData}),
                   )
                 : undefined;
         return () => {
@@ -98,8 +98,8 @@ export const SeriesShapes = ({
         boundsWidth,
         dispatcher,
         plugin,
-        preparedData,
-        labels,
+        renderData,
+        svgLabels,
         seriesOptions,
         isRangeSlider,
         onRenderComplete,

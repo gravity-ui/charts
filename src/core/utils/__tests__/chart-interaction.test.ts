@@ -41,7 +41,7 @@ test.each([heatmapTargets, treemapTargets, sankeyTargets])(
     'empty shape groups have no exact targets',
     (getTargets) => {
         const plot = document.createElementNS(svgNamespace, 'g');
-        expect(getTargets({plot, markers: plot, preparedData: []})).toEqual([]);
+        expect(getTargets({plot, markers: plot, renderData: []})).toEqual([]);
     },
 );
 
@@ -51,7 +51,7 @@ test('Sankey interaction adapters distinguish nodes from links and retain zero l
     const series: SankeySeries = {type: 'sankey', name: 'Flow', data: [source, target]};
     const getItem = sankeyPlugin.interaction?.getClosestItem;
     if (!getItem) throw new Error('Missing Sankey interaction adapter');
-    const [prepared] = sankeyPlugin.prepareSeries({
+    const [prepared] = sankeyPlugin.series.prepare({
         series: [series],
         colorScale: scaleOrdinal<string, string>().range(['black']),
         colors: ['black'],

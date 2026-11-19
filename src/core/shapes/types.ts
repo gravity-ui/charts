@@ -65,7 +65,7 @@ export interface GradientShapeData {
 }
 
 /** Core-owned lookup envelope. Only data is passed back to the owning plugin's adapters. */
-export interface TooltipItemData<T = unknown> {
+export interface SeriesLookupItem<T = unknown> {
     type: string;
     data: T;
 }

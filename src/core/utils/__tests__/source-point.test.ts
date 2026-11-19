@@ -36,7 +36,7 @@ test.each(cases)(
     '$series.type exposes original points while retaining resolved legacy data',
     async ({series, field}) => {
         const source = series.data[0];
-        const prepared = await getSeriesPlugin(series.type).prepareSeries({
+        const prepared = await getSeriesPlugin(series.type).series.prepare({
             series: [series],
             seriesOptions: {},
             colors: ['red', 'green', 'blue'],

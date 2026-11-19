@@ -418,10 +418,17 @@ test('a single-value X zoom uses the actual clipping-neighbor geometry', async (
     expect(fills(after.points)).toEqual(fills(before.points));
 });
 
-test('custom plugins keep one prepareShapeData call per render', async () => {
+test('custom plugins keep one layer preparation call per render', async () => {
     const plugin = getSeriesPlugin('line');
-    const prepareShapeData = jest.fn(plugin.prepareShapeData);
-    registerSeriesPlugin({...plugin, prepareShapeData, prepareGradientGeometry: undefined});
+    const prepareLayer = jest.fn(plugin.layers.prepareData);
+    registerSeriesPlugin({
+        ...plugin,
+        layers: {
+            ...plugin.layers,
+            prepareData: prepareLayer,
+            prepareGradientGeometry: undefined,
+        },
+    });
     try {
         const series = prepareLineSeries({
             ...options,
@@ -443,8 +450,8 @@ test('custom plugins keep one prepareShapeData call per render', async () => {
             scaleLinear().domain([0, 5]).range([200, 0]),
         );
         await shapes(source);
-        expect(prepareShapeData).toHaveBeenCalledTimes(1);
-        expect(prepareShapeData.mock.calls[0][0].isRangeSlider).toBeUndefined();
+        expect(prepareLayer).toHaveBeenCalledTimes(1);
+        expect(prepareLayer.mock.calls[0][0].isRangeSlider).toBeUndefined();
     } finally {
         registerSeriesPlugin(plugin);
     }
@@ -497,8 +504,14 @@ test.each([false, true])(
 
 test('full gradient geometry is cached across zoom and range-slider preview renders', async () => {
     const plugin = getSeriesPlugin('area');
-    const prepareGradientGeometry = jest.fn(plugin.prepareGradientGeometry);
-    registerSeriesPlugin({...plugin, prepareGradientGeometry});
+    const prepareGradientGeometry = jest.fn(plugin.layers.prepareGradientGeometry);
+    registerSeriesPlugin({
+        ...plugin,
+        layers: {
+            ...plugin.layers,
+            prepareGradientGeometry: prepareGradientGeometry,
+        },
+    });
     try {
         const series = areas([1, 2, 3, 4, 5], [0, 0, 0, 0, 0]);
         const source = reference(
@@ -570,7 +583,7 @@ test('an unzoomed main pass supplies the gradient reference without projecting p
         ],
     });
     const source = reference(series);
-    const geometry = jest.spyOn(getSeriesPlugin('line'), 'prepareGradientGeometry');
+    const geometry = jest.spyOn(getSeriesPlugin('line').layers, 'prepareGradientGeometry');
     try {
         const before = await getShapes({
             ...source,

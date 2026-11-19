@@ -55,10 +55,10 @@ export async function prepareStackLabels(args: {
     boundsWidth: number;
     boundsHeight: number;
     split?: PreparedSplit;
-    otherLayers?: ShapeLabels[];
+    otherLabelLayouts?: ShapeLabels[];
     isRangeSlider?: boolean;
 }): Promise<SvgLabel[]> {
-    const {anchors, boundsWidth, boundsHeight, split, otherLayers = [], isRangeSlider} = args;
+    const {anchors, boundsWidth, boundsHeight, split, otherLabelLayouts = [], isRangeSlider} = args;
     const defaultOptions = args.options ?? {};
     if (isRangeSlider || !anchors.length) {
         return [];
@@ -80,7 +80,7 @@ export async function prepareStackLabels(args: {
             return [options, context] as const;
         }),
     );
-    const obstacles = getLayerLabelRects(otherLayers);
+    const obstacles = getLayerLabelRects(otherLabelLayouts);
     const candidates: StackLabelCandidate[] = [];
 
     for (const anchor of anchors) {

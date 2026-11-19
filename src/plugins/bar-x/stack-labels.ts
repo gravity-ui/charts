@@ -1,6 +1,6 @@
 import {group} from 'd3-array';
 
-import type {PrepareShapeDataArgs} from '~core/series/plugin';
+import type {PrepareLayerArgs} from '~core/series/plugin';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import {getDataCategoryValue} from '~core/utils';
 import {sumDecimals} from '~core/utils/math';
@@ -13,7 +13,7 @@ import type {PreparedBarXData} from './types';
 
 export function getBarXStackLabelAnchors(
     data: PreparedBarXData[],
-    args: PrepareShapeDataArgs<unknown, PreparedSeriesOptions>,
+    args: PrepareLayerArgs<unknown, PreparedSeriesOptions>,
 ) {
     const anchors: StackLabelAnchor[] = [];
     const optionsBySeries = new Map(

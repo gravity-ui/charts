@@ -51,9 +51,8 @@ function getAreaPoints(shape: PreparedAreaData) {
 export function getTargetElements({
     plot,
     markers,
-    preparedData,
+    renderData,
 }: InteractionElementsArgs<PreparedAreaData>): InteractionElement<AreaInteractionItem>[] {
-    const shapes = preparedData;
     return [
         ...getInteractionElements<PreparedAreaData, AreaInteractionItem>(
             plot,
@@ -63,7 +62,7 @@ export function getTargetElements({
                 series: shape.series,
             }),
         ),
-        ...getMarkerInteractionElements<AreaMarkerInteractionItem>(markers, shapes).filter(
+        ...getMarkerInteractionElements<AreaMarkerInteractionItem>(markers, renderData).filter(
             ({item}) => getSourcePoints(item.series).has(item.point),
         ),
     ];

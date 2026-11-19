@@ -20,7 +20,7 @@ import type {PreparedSplit} from '../../layout/split-types';
 import {sampleShapesPlugin} from '../../series/__tests__/fixtures/custom-plugin';
 import {registerSeriesPlugin} from '../../series/seriesRegistry';
 import type {PreparedLegend} from '../../series/types';
-import type {TooltipItemData} from '../../shapes/types';
+import type {SeriesLookupItem} from '../../shapes/types';
 import {getClosestPoints} from '../get-closest-data';
 
 const getId = (item: {series: object}) => get(item.series, 'id');
@@ -182,7 +182,7 @@ function getLayers(...ids: string[]) {
 
 type TestShape = {series: {type: string}} | {point: {series: {type: string}}};
 
-function lookupData(shapes: TestShape[]): TooltipItemData[] {
+function lookupData(shapes: TestShape[]): SeriesLookupItem[] {
     return shapes.map((data) => ({
         type: 'series' in data ? data.series.type : data.point.series.type,
         data,

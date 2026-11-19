@@ -1,6 +1,6 @@
 import {group} from 'd3-array';
 
-import type {PrepareShapeDataArgs} from '~core/series/plugin';
+import type {PrepareLayerArgs} from '~core/series/plugin';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import {sumDecimals} from '~core/utils/math';
 
@@ -29,7 +29,7 @@ interface StackBoundary {
 
 export function getAreaStackLabelAnchors(
     data: PreparedAreaData[],
-    args: PrepareShapeDataArgs<unknown, PreparedSeriesOptions>,
+    args: PrepareLayerArgs<unknown, PreparedSeriesOptions>,
 ) {
     const stacks = new Map<string, Map<boolean, StackBoundary>>();
     for (const item of data) {

@@ -22,7 +22,7 @@ export function renderWaterfall(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedWaterfallData[],
+    renderData: PreparedWaterfallData[],
     seriesOptions: PreparedSeriesOptions,
     allowOverlapDataLabels: boolean,
     dispatcher?: Dispatch<object>,
@@ -34,7 +34,7 @@ export function renderWaterfall(
     svgElement.selectAll('*').remove();
     const rectSelection = svgElement
         .selectAll('allRects')
-        .data(preparedData)
+        .data(renderData)
         .join('rect')
         .attr('class', b('segment'))
         .attr('x', (d) => d.x)
@@ -45,7 +45,7 @@ export function renderWaterfall(
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
 
-    let dataLabels = preparedData.map((d) => d.label).filter(Boolean) as LabelData[];
+    let dataLabels = renderData.map((d) => d.label).filter(Boolean) as LabelData[];
     if (!allowOverlapDataLabels) {
         dataLabels = filterOverlappingLabels(dataLabels);
     }
@@ -57,15 +57,15 @@ export function renderWaterfall(
     });
 
     // Add the connector line between bars
-    if (preparedData[0]?.series.connectors.enabled) {
+    if (renderData[0]?.series.connectors.enabled) {
         const line = lineGenerator();
         svgElement
             .selectAll(connectorSelector)
-            .data(preparedData.slice(1))
+            .data(renderData.slice(1))
             .join('path')
             .attr('class', b('connector'))
             .attr('d', (d, index) => {
-                const prev = preparedData[index];
+                const prev = renderData[index];
                 const points: [number, number][] = [];
                 const connectFromTop = prev.data.total
                     ? prev.subTotal > 0

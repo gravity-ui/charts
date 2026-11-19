@@ -21,7 +21,7 @@ const b = block('area-range');
 
 export function renderAreaRange(
     elements: {plot: SVGGElement; labelsPlot: SVGGElement},
-    preparedData: PreparedAreaRangeData[],
+    renderData: PreparedAreaRangeData[],
     seriesOptions: PreparedSeriesOptions,
     allowOverlapDataLabels: boolean,
     dispatcher?: Dispatch<object>,
@@ -30,7 +30,7 @@ export function renderAreaRange(
     const hoverOptions = get(seriesOptions, 'area-range.states.hover');
     const inactiveOptions = get(seriesOptions, 'area-range.states.inactive');
     const bounds = new Map(
-        preparedData.map((data) => [
+        renderData.map((data) => [
             data,
             (data.series.gradient || data.series.fillGradient) && data.gradientBBox === undefined
                 ? getRangeBBox(data.points)
@@ -83,7 +83,7 @@ export function renderAreaRange(
     plotSvgElement.selectAll('*').remove();
     const shapeSelection = plotSvgElement
         .selectAll('shape')
-        .data(preparedData)
+        .data(renderData)
         .join('g')
         .attr('class', b('series'))
         .attr('cursor', (data) => data.series.cursor);
@@ -113,7 +113,7 @@ export function renderAreaRange(
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round');
 
-    let dataLabels = preparedData.flatMap((data) => data.svgLabels);
+    let dataLabels = renderData.flatMap((data) => data.svgLabels);
     if (!allowOverlapDataLabels) {
         dataLabels = filterOverlappingLabels(dataLabels);
     }

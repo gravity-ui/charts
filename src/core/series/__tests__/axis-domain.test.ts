@@ -27,7 +27,11 @@ it('groups contributions once per plugin, retaining series order, references and
         }));
         registry.registerSeriesPlugin({
             ...linePlugin,
-            axes: {x: {baseline: 0, getData: getValues}, y: {getData: getValues}},
+            axes: {
+                x: {baseline: 0, getData: getValues},
+                y: {getData: getValues},
+                padding: linePlugin.axes.padding,
+            },
         });
         registry.registerSeriesPlugin(xRangePlugin);
         const series: ChartSeries[] = [

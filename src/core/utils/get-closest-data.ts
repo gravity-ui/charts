@@ -3,7 +3,7 @@ import get from 'es-toolkit/compat/get';
 import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
 
 import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
-import type {TooltipItemData} from '../shapes/types';
+import type {SeriesLookupItem} from '../shapes/types';
 
 import {groupBy} from './array';
 import {toPublicInteractionItem} from './chart-interaction';
@@ -13,7 +13,7 @@ import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from '.
 
 interface GetClosestPointsArgs {
     position: [number, number];
-    shapesData: TooltipItemData[];
+    shapesData: SeriesLookupItem[];
     boundsHeight: number;
     boundsWidth: number;
     /** Render layer of each series; without it the ties are resolved by the first candidate. */

@@ -372,7 +372,7 @@ export async function prepareBarYData(
 
 export function filterBarYDataLabels(
     data: BarYShapesArgs,
-    otherLayers: ShapeLabels[],
+    otherLabelLayouts: ShapeLabels[],
 ): BarYShapesArgs {
     if (!data.svgLabels.length && !data.htmlLabels.length) {
         return data;
@@ -388,7 +388,7 @@ export function filterBarYDataLabels(
             svgLabels: svgLabelsBySeries.get(item) ?? [],
             htmlLabels: htmlLabelsBySeries.get(item) ?? [],
         })),
-        otherLayers,
+        otherLabelLayouts,
     );
 
     return {

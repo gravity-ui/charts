@@ -49,8 +49,8 @@ afterEach(() => jest.restoreAllMocks());
 
 it('preserves independent lines and one bar group across interleaved raw series', async () => {
     const original = JSON.parse(JSON.stringify(rawSeries));
-    const line = jest.spyOn(getSeriesPlugin('line'), 'prepareSeries');
-    const bars = jest.spyOn(getSeriesPlugin('bar-x'), 'prepareSeries');
+    const line = jest.spyOn(getSeriesPlugin('line').series, 'prepare');
+    const bars = jest.spyOn(getSeriesPlugin('bar-x').series, 'prepare');
     const prepared = await prepare();
 
     expect(line.mock.calls.map(([args]) => args.series.map((s) => 'name' in s && s.name))).toEqual([
@@ -69,10 +69,10 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
     const calls: {names: string[]; obstacles: string[]}[] = [];
     const shapeIds = new Map<ShapeLabels, string>();
     for (const type of ['line', 'bar-x']) {
-        jest.spyOn(getSeriesPlugin(type), 'prepareShapeData').mockImplementation(async (args) => {
+        jest.spyOn(getSeriesPlugin(type).layers, 'prepareData').mockImplementation(async (args) => {
             calls.push({
                 names: args.series.map((s) => s.name),
-                obstacles: (args.otherLayers ?? []).map((layer) => shapeIds.get(layer)!),
+                obstacles: (args.otherLabelLayouts ?? []).map((layer) => shapeIds.get(layer)!),
             });
             const renderData = args.series.map((s) => {
                 const data = createShape();
@@ -81,8 +81,8 @@ it('prepares upper layers first and preserves rendered keys, tooltip and layer o
             });
             return {
                 renderData,
-                layoutData: renderData,
-                tooltipItems: args.series.map((s) => ({series: s})),
+                labelLayout: renderData,
+                lookupItems: args.series.map((s) => ({series: s})),
             };
         });
     }
@@ -119,7 +119,7 @@ it('passes explicit layer fields independently of private geometry', async () =>
     const renderData = [Object.freeze({radius: 3})];
     const {markers, annotations, getHoverMarkers} = createShape();
     const htmlLabels = [{x: 10, y: 20, content: 'Orders', size: {width: 40, height: 16}}];
-    jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
+    jest.spyOn(getSeriesPlugin('line').layers, 'prepareData').mockResolvedValue({
         renderData,
         markers,
         annotations,
@@ -129,7 +129,7 @@ it('passes explicit layer fields independently of private geometry', async () =>
 
     const {shapes, shapesData} = await getShapes(getShapeArgs(series));
     const {props} = shapes[0];
-    expect(props.preparedData).toBe(renderData);
+    expect(props.renderData).toBe(renderData);
     expect(props.markers).toBe(markers);
     expect(props.annotations).toBe(annotations);
     expect(props.htmlLabels).toBe(htmlLabels);
@@ -140,7 +140,7 @@ it('passes explicit layer fields independently of private geometry', async () =>
 it('retains a layer that only supplies hover markers', async () => {
     const series = await prepare([rawSeries[0]]);
     const {getHoverMarkers} = createShape();
-    jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData').mockResolvedValue({
+    jest.spyOn(getSeriesPlugin('line').layers, 'prepareData').mockResolvedValue({
         renderData: [],
         getHoverMarkers,
     });
@@ -181,9 +181,9 @@ it.each<ClipCase>([
             ? {type, data: [{name: 'slice', value: 1}]}
             : {type, name: 'series', data: [{x: 0, y: 1}]},
     ]);
-    jest.spyOn(getSeriesPlugin(type), 'prepareShapeData').mockResolvedValue({
+    jest.spyOn(getSeriesPlugin(type).layers, 'prepareData').mockResolvedValue({
         renderData: [createShape()],
-        tooltipItems: [],
+        lookupItems: [],
     });
     const {shapes} = await getShapes({
         ...getShapeArgs(series),
@@ -203,8 +203,8 @@ it.each([
     'skips shape preparation without drawable space (%s × %s)',
     async (boundsWidth, boundsHeight) => {
         const series = await prepare();
-        const line = jest.spyOn(getSeriesPlugin('line'), 'prepareShapeData');
-        const bars = jest.spyOn(getSeriesPlugin('bar-x'), 'prepareShapeData');
+        const line = jest.spyOn(getSeriesPlugin('line').layers, 'prepareData');
+        const bars = jest.spyOn(getSeriesPlugin('bar-x').layers, 'prepareData');
         const result = await getShapes({
             ...getShapeArgs(series),
             boundsWidth,

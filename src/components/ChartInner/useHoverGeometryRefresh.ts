@@ -5,7 +5,7 @@ import get from 'es-toolkit/compat/get';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import type {TooltipItemData} from '~core/shapes/types';
+import type {SeriesLookupItem} from '~core/shapes/types';
 import {EventType} from '~core/utils';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
@@ -17,7 +17,7 @@ interface Props {
     resetKey: ReturnType<typeof useHoverResetKey>;
     dispatcher: Dispatch<object>;
     layerIndexes: Map<string, number>;
-    shapesData: TooltipItemData[];
+    shapesData: SeriesLookupItem[];
     boundsWidth: number;
     boundsHeight: number;
     boundsOffsetLeft: number;

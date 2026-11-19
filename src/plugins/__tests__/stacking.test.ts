@@ -4,9 +4,10 @@ import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
-import type {PrepareShapeDataArgs} from '~core/series/plugin';
+import type {PrepareLayerArgs} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getSeriesPlugin} from '~core/series/seriesRegistry';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedLegend} from '~core/series/types';
 import * as textUtils from '~core/utils/text';
 
@@ -29,9 +30,9 @@ beforeEach(() => {
 
 afterEach(() => jest.restoreAllMocks());
 
-async function prepare(plugin: ReturnType<typeof getSeriesPlugin>, raw: ChartSeries[]) {
+async function prepare(plugin: RegisteredSeriesPlugin, raw: ChartSeries[]) {
     const horizontal = plugin.type === 'bar-y';
-    const series = await plugin.prepareSeries({
+    const series = await plugin.series.prepare({
         series: raw,
         colorScale: scaleOrdinal([] as string[], ['#000']),
         colors: [],
@@ -41,7 +42,7 @@ async function prepare(plugin: ReturnType<typeof getSeriesPlugin>, raw: ChartSer
     const valueScale = scaleLinear()
         .domain([0, 100])
         .range(horizontal ? [0, 400] : [200, 0]);
-    const args: PrepareShapeDataArgs = {
+    const args: PrepareLayerArgs = {
         series,
         seriesOptions: getPreparedOptions(),
         xAxis: {type: 'linear'} as PreparedXAxis,
@@ -54,7 +55,7 @@ async function prepare(plugin: ReturnType<typeof getSeriesPlugin>, raw: ChartSer
         boundsWidth: 400,
         split: {plots: [{top: 0, height: 200}]} as PreparedSplit,
     };
-    return plugin.prepareShapeData(args);
+    return plugin.layers.prepareData(args);
 }
 
 describe.each([barXPlugin, areaPlugin])('$type stacks on different value axes', (plugin) => {

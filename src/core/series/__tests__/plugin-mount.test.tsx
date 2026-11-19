@@ -46,15 +46,22 @@ test.each([
     {mode: 'shapes only', plugin: sampleShapesPlugin, interaction: false},
     {
         mode: 'interaction without tooltip',
-        plugin: {...samplePlugin, getLayerKey: undefined, tooltip: undefined},
+        plugin: {
+            ...samplePlugin,
+            layers: {
+                ...samplePlugin.layers,
+                getKey: undefined,
+            },
+            tooltip: undefined,
+        },
         interaction: true,
     },
 ])('a custom plugin mounts and cleans up two series: $mode', async (mode) => {
     registerSeriesPlugin(mode.plugin);
-    const plots = new Map<SVGGElement, Parameters<typeof samplePlugin.renderShapes>[0]>();
+    const plots = new Map<SVGGElement, Parameters<typeof samplePlugin.layers.render>[0]>();
     // eslint-disable-next-line testing-library/render-result-naming-convention -- Preserve the plugin renderer while recording its SVG containers.
-    const drawShapes = mode.plugin.renderShapes;
-    jest.spyOn(mode.plugin, 'renderShapes').mockImplementation((args) => {
+    const drawShapes = mode.plugin.layers.render;
+    jest.spyOn(mode.plugin.layers, 'render').mockImplementation((args) => {
         plots.set(args.plot, args);
         return drawShapes(args);
     });
@@ -73,16 +80,16 @@ test.each([
         expect(api?.getClosest([14, 20])?.point).toBe(first);
         expect(api?.getClosest([64, 70])?.point).toBe(second);
         expect(api?.getClosest([14, 20])?.series.id).not.toBe(api?.getClosest([64, 70])?.series.id);
-        const targets = [...plots.values()].flatMap(({plot, preparedData}) =>
-            samplePlugin.interaction.getTargetElements({plot, markers: plot, preparedData}),
+        const targets = [...plots.values()].flatMap(({plot, renderData}) =>
+            samplePlugin.interaction.getTargetElements({plot, markers: plot, renderData}),
         );
-        const preparedData = [...plots.values()].flatMap((args) => args.preparedData);
+        const renderData = [...plots.values()].flatMap((args) => args.renderData);
         expect(targets.map(({element}) => element)).toEqual(
             Array.from(container.querySelectorAll('.gcharts-sample circle')),
         );
         targets.forEach(({item}, index) => {
             expect(item.point).toBe(series[index].data[0]);
-            expect(item.series).toBe(preparedData[index].series);
+            expect(item.series).toBe(renderData[index].series);
         });
     } else {
         expect(api?.getClosest([14, 20])).toBeNull();
@@ -105,7 +112,7 @@ test('a custom plugin follows legend, data and size updates in a mixed chart', a
         }),
     } as CanvasRenderingContext2D);
     registerSeriesPlugin(samplePlugin);
-    const validate = jest.spyOn(samplePlugin, 'validate');
+    const validate = jest.spyOn(samplePlugin.series, 'validate');
     data = {
         ...data,
         legend: {enabled: true, position: 'bottom'},
@@ -193,7 +200,7 @@ test('a custom plugin follows legend, data and size updates in a mixed chart', a
 });
 
 test('core renders HTML labels when the plugin has no private geometry', async () => {
-    jest.spyOn(sampleShapesPlugin, 'prepareShapeData').mockImplementation((args) => ({
+    jest.spyOn(sampleShapesPlugin.layers, 'prepareData').mockImplementation((args) => ({
         renderData: [],
         htmlLabels: args.series.flatMap((s) =>
             s.data.map((sample) => ({

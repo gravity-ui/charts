@@ -7,9 +7,9 @@ import type {HeatmapItem, PreparedHeatmapData} from './types';
 
 export function getTargetElements({
     plot,
-    preparedData,
+    renderData,
 }: InteractionElementsArgs<PreparedHeatmapData>): InteractionElement<HeatmapInteractionItem>[] {
-    const shape = preparedData[0];
+    const shape = renderData[0];
     if (!shape) return [];
     const {series} = shape;
     return getInteractionElements<HeatmapItem, HeatmapInteractionItem>(plot, 'rect', (datum) => ({

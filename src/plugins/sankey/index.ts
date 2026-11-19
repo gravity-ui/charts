@@ -1,7 +1,7 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -24,15 +24,15 @@ function getLinkValue({target, data: source, value}: SankeyTooltipChunk) {
     return value ?? source.links.find((link) => link.name === target?.name)?.value;
 }
 
-function prepareShapeData({
+function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<
+}: PrepareLayerArgs<
     PreparedSankeySeries,
     PreparedSeriesOptions,
     PreparedSeries
->): PrepareShapeDataResult<PreparedSankeyData, PreparedSankeyData> {
+>): PrepareLayerResult<PreparedSankeyData, PreparedSankeyData> {
     const data = prepareSankeyData({
         series: series[0],
         width: boundsWidth,
@@ -41,28 +41,37 @@ function prepareShapeData({
     return {
         renderData: [data],
         htmlLabels: data.htmlLabels,
-        layoutData: [data],
-        tooltipItems: [data],
+        labelLayout: [data],
+        lookupItems: [data],
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedSankeyData, PreparedSeriesOptions>) {
-    return renderSankey({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedSankeyData, PreparedSeriesOptions>) {
+    return renderSankey({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
 }
 
 export const sankeyPlugin = {
     type: 'sankey',
-    getClipPath: () => false,
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareSankeySeries({series: series as SankeySeries[], seriesOptions, legend, colorScale}),
-    prepareShapeData,
-    renderShapes,
+    series: {
+        prepare: ({series, seriesOptions, legend, colorScale}) =>
+            prepareSankeySeries({
+                series: series as SankeySeries[],
+                seriesOptions,
+                legend,
+                colorScale,
+            }),
+    },
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,

@@ -1,7 +1,7 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
@@ -40,9 +40,9 @@ import type {BarXTooltipChunk, PreparedBarXData} from './types';
 
 import './styles.scss';
 
-async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedBarXSeries, PreparedSeriesOptions, PreparedSeries>,
-): Promise<PrepareShapeDataResult<PreparedBarXData, PreparedBarXData>> {
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedBarXSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<PreparedBarXData, PreparedBarXData>> {
     const {
         series,
         seriesOptions,
@@ -54,11 +54,11 @@ async function prepareShapeData(
         boundsWidth,
         split,
         isRangeSlider,
-        otherLayers = [],
+        otherLabelLayouts = [],
     } = args;
 
     if (!xAxis || !xScale || !yScale?.length || !split) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareBarXData({
@@ -74,51 +74,77 @@ async function prepareShapeData(
         isRangeSlider,
     });
 
-    const labels = await prepareStackLabels({
+    const svgLabels = await prepareStackLabels({
         ...args,
         anchors: isRangeSlider ? [] : getBarXStackLabelAnchors(data, args),
-        otherLayers,
+        otherLabelLayouts,
     });
     const filteredData = filterLayerLabels(data, [
-        ...otherLayers,
-        {svgLabels: labels, htmlLabels: []},
+        ...otherLabelLayouts,
+        {svgLabels: svgLabels, htmlLabels: []},
     ]);
     return {
         renderData: filteredData,
         annotations: filteredData.flatMap((item) => item.annotations),
         htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
-        layoutData: filteredData,
-        tooltipItems: filteredData,
-        labels,
+        labelLayout: filteredData,
+        lookupItems: filteredData,
+        svgLabels,
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
-    labels,
+    renderData,
+    svgLabels,
     seriesOptions,
     boundsWidth,
     boundsHeight,
     dispatcher,
-}: RenderShapesArgs<PreparedBarXData, PreparedSeriesOptions>) {
-    const data = preparedData;
-    const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
+}: RenderLayerArgs<PreparedBarXData, PreparedSeriesOptions>) {
+    const allowOverlap = renderData.some((d) => d.series.dataLabels.allowOverlap);
     const cleanup = renderBarX(
         {plot, labelsPlot, boundsWidth, boundsHeight},
-        data,
+        renderData,
         seriesOptions,
         allowOverlap,
         dispatcher,
     );
-    renderStackLabels(labelsPlot, labels);
+    renderStackLabels(labelsPlot, svgLabels);
     return cleanup;
 }
 
 export const barXPlugin = {
     type: 'bar-x',
-    defaults: barXDefaults,
+    series: {
+        optionsDefaults: barXDefaults,
+        validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+            validateBarLabelPlacement(series.dataLabels);
+            validateBarPadding(series.barPadding);
+            validateBarMaxWidth(series.barMaxWidth);
+            validateBarOpacity(series.opacity, 'opacity');
+            validateBarOpacity(seriesOptions?.['bar-x']?.opacity, 'series.options.bar-x.opacity');
+            series.data.forEach((point, index) => {
+                validateBarOpacity(point.opacity, `data[${index}].opacity`);
+            });
+            validateStackLabelsOptions({
+                series,
+                allSeries,
+                options: seriesOptions?.['bar-x']?.stackLabels,
+            });
+            validateAxisPlotValues({series, xAxis, yAxis});
+            validateXYSeries({series, xAxis, yAxis});
+            validateStacking({series});
+            validateBarGrouping({series, allSeries});
+            validatePercentStackingValues({
+                series,
+                valueKey: 'y',
+                valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
+            });
+        },
+        prepare: prepareBarXSeries,
+    },
     axes: {
         x: {bandPadding: 0.5},
         y: {
@@ -134,40 +160,19 @@ export const barXPlugin = {
             }),
         },
     },
+    colorScale: {
+        getValue: (d) => d.y,
+    },
+    layers: {
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     zoom: {
         types: ['x', 'xy'],
         defaultType: 'x',
         filterData: ({series, viewport}) =>
             filterPoints(series.data, viewport, {axes: series.stacking ? 'x' : 'xy'}),
     },
-    prepareSeries: prepareBarXSeries,
-    validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
-        validateBarLabelPlacement(series.dataLabels);
-        validateBarPadding(series.barPadding);
-        validateBarMaxWidth(series.barMaxWidth);
-        validateBarOpacity(series.opacity, 'opacity');
-        validateBarOpacity(seriesOptions?.['bar-x']?.opacity, 'series.options.bar-x.opacity');
-        series.data.forEach((point, index) => {
-            validateBarOpacity(point.opacity, `data[${index}].opacity`);
-        });
-        validateStackLabelsOptions({
-            series,
-            allSeries,
-            options: seriesOptions?.['bar-x']?.stackLabels,
-        });
-        validateAxisPlotValues({series, xAxis, yAxis});
-        validateXYSeries({series, xAxis, yAxis});
-        validateStacking({series});
-        validateBarGrouping({series, allSeries});
-        validatePercentStackingValues({
-            series,
-            valueKey: 'y',
-            valueAxisType: yAxis?.[series.yAxis ?? 0]?.type,
-        });
-    },
-    getColorValue: (d) => d.y,
-    prepareShapeData,
-    renderShapes,
     interaction: {
         prepareNearestData,
         getTargetElements,

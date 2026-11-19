@@ -12,9 +12,9 @@ const linkPoints = new WeakMap<SankeyLink, SankeyLinkPoint>();
 
 export function getTargetElements({
     plot,
-    preparedData,
+    renderData,
 }: InteractionElementsArgs<PreparedSankeyData>): InteractionElement<SankeyInteractionItem>[] {
-    const shape = preparedData[0];
+    const shape = renderData[0];
     if (!shape) return [];
     const {series} = shape;
     return [

@@ -78,8 +78,8 @@ test.each([undefined, 8])(
         const point = {at: 10, amount: 20, caption: 'Orders'};
         const options =
             offset === undefined ? undefined : Object.freeze({sample: Object.freeze({offset})});
-        const prepareSeries = jest.spyOn(samplePlugin, 'prepareSeries');
-        const prepareShapeData = jest.spyOn(samplePlugin, 'prepareShapeData');
+        const prepareSeries = jest.spyOn(samplePlugin.series, 'prepare');
+        const prepareLayer = jest.spyOn(samplePlugin.layers, 'prepareData');
         const series = await getPreparedSeries({
             seriesData: [{type: 'sample', data: [point]}] as unknown as ChartSeries[],
             seriesOptions: options as unknown as ChartSeriesOptions,
@@ -97,10 +97,10 @@ test.each([undefined, 8])(
             yAxis: [],
         });
         expect(prepareSeries.mock.calls[0][0].seriesOptions).toBe(options);
-        expect(prepareShapeData.mock.calls[0][0].seriesOptions).toEqual(
+        expect(prepareLayer.mock.calls[0][0].seriesOptions).toEqual(
             expect.objectContaining({sample: {offset: offset ?? 4}}),
         );
-        expect(samplePlugin.defaults).toEqual({offset: 4});
+        expect(samplePlugin.series.optionsDefaults).toEqual({offset: 4});
     },
 );
 
@@ -108,7 +108,7 @@ test.each(['chunks', 'xLookupPoints'] as const)(
     '%s selection preserves custom fields and original points',
     async (strategy) => {
         const point = {at: 10, amount: 20, caption: 'Orders'};
-        const [series] = await samplePlugin.prepareSeries({
+        const [series] = await samplePlugin.series.prepare({
             series: [{type: 'sample', data: [point]}],
             colorScale: colorScale(),
             colors: ['black'],
@@ -150,7 +150,13 @@ test('an isolated registry resolves only registered defaults and never mutates t
         expect(registry.getRegisteredSeriesTypes()).toEqual(['sample']);
         expect(options.getPreparedOptions()).toEqual({sample: {offset: 4}});
         // Replace a declaration without importing or registering any built-in plugin.
-        registry.registerSeriesPlugin({...samplePlugin, defaults: {offset: 9}});
+        registry.registerSeriesPlugin({
+            ...samplePlugin,
+            series: {
+                ...samplePlugin.series,
+                optionsDefaults: {offset: 9},
+            },
+        });
         expect(options.getPreparedOptions()).toEqual({sample: {offset: 9}});
         expect(registry.hasSeriesPlugin('line')).toBe(false);
     });

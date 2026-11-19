@@ -1,8 +1,8 @@
 import {i18n} from '~core/i18n';
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -24,12 +24,12 @@ import type {PreparedTreemapData, TreemapTooltipChunk} from './types';
 
 import './styles.scss';
 
-async function prepareShapeData({
+async function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedTreemapSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
-    PrepareShapeDataResult<PreparedTreemapData, PreparedTreemapData>
+}: PrepareLayerArgs<PreparedTreemapSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareLayerResult<PreparedTreemapData, PreparedTreemapData>
 > {
     const data = await prepareTreemapData({
         series: series[0],
@@ -39,19 +39,19 @@ async function prepareShapeData({
     return {
         renderData: [data],
         htmlLabels: data.htmlLabels,
-        layoutData: [data],
-        tooltipItems: [data],
+        labelLayout: [data],
+        lookupItems: [data],
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedTreemapData, PreparedSeriesOptions>) {
-    return renderTreemap({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedTreemapData, PreparedSeriesOptions>) {
+    return renderTreemap({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
 }
 
 function validateTreemapData(series: TreemapSeries) {
@@ -105,23 +105,28 @@ function validateTreemapData(series: TreemapSeries) {
 
 export const treemapPlugin = {
     type: 'treemap',
-    defaults: treemapDefaults,
-    getClipPath: () => false,
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
-    validate: ({series, allSeries}) => {
-        const treemapCount = allSeries.filter((s) => s.type === 'treemap').length;
-        if (treemapCount > 1) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'It looks like you are trying to define more than one "treemap" series.',
-            });
-        }
+    series: {
+        optionsDefaults: treemapDefaults,
+        validate: ({series, allSeries}) => {
+            const treemapCount = allSeries.filter((s) => s.type === 'treemap').length;
+            if (treemapCount > 1) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'It looks like you are trying to define more than one "treemap" series.',
+                });
+            }
 
-        validateTreemapData(series);
+            validateTreemapData(series);
+        },
+        prepare: ({series, seriesOptions, legend, colorScale}) =>
+            prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
     },
-    prepareShapeData,
-    renderShapes,
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,

@@ -18,7 +18,7 @@ export function getSeriesLayers<TSeries extends ChartSeries | PreparedSeries>(
     const layers = group(
         series,
         (item, index) =>
-            getSeriesPlugin(item.type).getLayerKey?.({
+            getSeriesPlugin(item.type).layers.getKey?.({
                 series: item,
                 seriesKey: getSeriesKey(item, index),
             }) ?? item.type,

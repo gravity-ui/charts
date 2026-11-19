@@ -20,7 +20,7 @@ export interface InteractionElement<TItem extends ChartInteractionItem = ChartIn
 export interface InteractionElementsArgs<TShape = object> {
     plot: SVGGElement;
     markers: SVGGElement;
-    preparedData: TShape[];
+    renderData: TShape[];
 }
 
 const layers = new WeakMap<SVGSVGElement, Map<SVGGElement, () => InteractionElement[]>>();

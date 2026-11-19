@@ -19,7 +19,7 @@ export function renderTreemap(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedTreemapData,
+    renderData: PreparedTreemapData,
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -27,7 +27,7 @@ export function renderTreemap(
     svgElement.selectAll('*').remove();
     const labelsSvgElement = select(elements.labelsPlot);
     labelsSvgElement.selectAll('*').remove();
-    const {labelData, leaves, series} = preparedData;
+    const {labelData, leaves, series} = renderData;
     const leaf = svgElement
         .selectAll('g')
         .data(leaves)

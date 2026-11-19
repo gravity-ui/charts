@@ -1,7 +1,7 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -22,13 +22,13 @@ import type {HeatmapTooltipChunk, PreparedHeatmapData} from './types';
 
 import './styles.scss';
 
-async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedHeatmapSeries, PreparedSeriesOptions, PreparedSeries>,
-): Promise<PrepareShapeDataResult<PreparedHeatmapData, PreparedHeatmapData>> {
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedHeatmapSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<PreparedHeatmapData, PreparedHeatmapData>> {
     const {series, xAxis, xScale, yAxis, yScale} = args;
 
     if (!xAxis || !xScale || !yScale?.[0]) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareHeatmapData({
@@ -42,38 +42,44 @@ async function prepareShapeData(
     return {
         renderData: [data],
         htmlLabels: data.htmlLabels,
-        layoutData: [data],
-        tooltipItems: [data],
+        labelLayout: [data],
+        lookupItems: [data],
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedHeatmapData, PreparedSeriesOptions>) {
-    return renderHeatmap({plot, labelsPlot}, preparedData[0], seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedHeatmapData, PreparedSeriesOptions>) {
+    return renderHeatmap({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
 }
 
 export const heatmapPlugin = {
     type: 'heatmap',
-    defaults: heatmapDefaults,
+    series: {
+        optionsDefaults: heatmapDefaults,
+        prepare: ({series, seriesOptions, legend, colorScale}) =>
+            prepareHeatmapSeries({
+                series: series as HeatmapSeries[],
+                seriesOptions,
+                legend,
+                colorScale,
+            }),
+    },
     axes: {
         x: {bandPadding: 0.5, grid: 'hidden', padding: {max: 0}},
         y: {bandPadding: 0.5, grid: 'hidden', padding: {max: 0}},
     },
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareHeatmapSeries({
-            series: series as HeatmapSeries[],
-            seriesOptions,
-            legend,
-            colorScale,
-        }),
-    getColorValue: (d) => d.value,
-    prepareShapeData,
-    renderShapes,
+    colorScale: {
+        getValue: (d) => d.value,
+    },
+    layers: {
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,

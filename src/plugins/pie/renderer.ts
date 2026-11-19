@@ -27,7 +27,7 @@ export function renderPie(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedPieData[],
+    renderData: PreparedPieData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
     registerCompletion?: (completion: Promise<void>) => void,
@@ -42,7 +42,7 @@ export function renderPie(
 
     const shapesSelection = svgElement
         .selectAll<SVGGElement, PreparedPieData>('pie')
-        .data(preparedData)
+        .data(renderData)
         .join('g')
         .attr('id', (pieData) => pieData.id)
         .attr('class', b('item'))
@@ -83,7 +83,7 @@ export function renderPie(
 
     const labelGroups = labelsSvgElement
         .selectAll<SVGGElement, PreparedPieData>('g')
-        .data(preparedData)
+        .data(renderData)
         .join('g')
         .attr('transform', (pieData) => {
             const [x, y] = pieData.center;

@@ -1,7 +1,7 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -23,12 +23,12 @@ import type {PreparedRadarData, RadarTooltipChunk} from './types';
 
 import './styles.scss';
 
-async function prepareShapeData({
+async function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs<PreparedRadarSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
-    PrepareShapeDataResult<PreparedRadarData, PreparedRadarData>
+}: PrepareLayerArgs<PreparedRadarSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareLayerResult<PreparedRadarData, PreparedRadarData>
 > {
     const data = await prepareRadarData({
         series: series,
@@ -38,62 +38,67 @@ async function prepareShapeData({
     return {
         renderData: data,
         htmlLabels: data.flatMap((item) => item.htmlLabels),
-        layoutData: data,
-        tooltipItems: data,
+        labelLayout: data,
+        lookupItems: data,
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedRadarData, PreparedSeriesOptions>) {
-    return renderRadar({plot, labelsPlot}, preparedData, seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedRadarData, PreparedSeriesOptions>) {
+    return renderRadar({plot, labelsPlot}, renderData, seriesOptions, dispatcher);
 }
 
 export const radarPlugin = {
     type: 'radar',
-    defaults: radarDefaults,
-    getClipPath: () => false,
-    validate: ({series, allSeries}) => {
-        if (
-            series.categories !== undefined &&
-            (!Array.isArray(series.categories) ||
-                !series.categories.every(
-                    (category) =>
-                        typeof category === 'object' &&
-                        category !== null &&
-                        !Array.isArray(category) &&
-                        typeof category.key === 'string',
-                ))
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Radar series.categories must be an array of objects with a string key',
-            });
-        }
+    series: {
+        optionsDefaults: radarDefaults,
+        validate: ({series, allSeries}) => {
+            if (
+                series.categories !== undefined &&
+                (!Array.isArray(series.categories) ||
+                    !series.categories.every(
+                        (category) =>
+                            typeof category === 'object' &&
+                            category !== null &&
+                            !Array.isArray(category) &&
+                            typeof category.key === 'string',
+                    ))
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'Radar series.categories must be an array of objects with a string key',
+                });
+            }
 
-        if (
-            !allSeries.some(
-                (item) =>
-                    item.type === 'radar' &&
-                    Array.isArray(item.categories) &&
-                    item.categories.length > 0,
-            )
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message:
-                    'Radar categories must be specified as a nonempty array in series.categories',
-            });
-        }
+            if (
+                !allSeries.some(
+                    (item) =>
+                        item.type === 'radar' &&
+                        Array.isArray(item.categories) &&
+                        item.categories.length > 0,
+                )
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'Radar categories must be specified as a nonempty array in series.categories',
+                });
+            }
+        },
+        prepare: ({series, seriesOptions, legend, colors}) =>
+            prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     },
-    prepareSeries: ({series, seriesOptions, legend, colors}) =>
-        prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
-    prepareShapeData,
-    renderShapes,
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,

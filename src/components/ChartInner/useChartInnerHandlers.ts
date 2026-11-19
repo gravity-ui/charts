@@ -4,7 +4,7 @@ import type {Dispatch} from 'd3-dispatch';
 import {pointer} from 'd3-selection';
 
 import type {ChartScale} from '~core/scales/types';
-import type {TooltipItemData} from '~core/shapes/types';
+import type {SeriesLookupItem} from '~core/shapes/types';
 import type {ChartApi, ChartLegacyClickData} from '~core/types';
 import {EventType} from '~core/utils';
 import {getChartTargets} from '~core/utils/chart-interaction';
@@ -30,7 +30,7 @@ interface Props {
     boundsWidth: number;
     dispatcher: Dispatch<object>;
     layerIndexes: Map<string, number>;
-    shapesData: TooltipItemData[];
+    shapesData: SeriesLookupItem[];
     svgContainer: SVGSVGElement | null;
     togglePinTooltip: ChartInnerState['togglePinTooltip'];
     tooltipPinned: boolean;

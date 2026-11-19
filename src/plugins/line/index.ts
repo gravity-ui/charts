@@ -1,7 +1,7 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
@@ -33,9 +33,9 @@ import {filterLineData, getLineAxisData} from './zoom';
 
 import './styles.scss';
 
-async function prepareShapeData(
-    args: PrepareShapeDataArgs<PreparedLineSeries, PreparedSeriesOptions, PreparedSeries>,
-): Promise<PrepareShapeDataResult<PreparedLineData, PreparedLineData>> {
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedLineSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<PreparedLineData, PreparedLineData>> {
     const {
         series,
         seriesOptions,
@@ -46,12 +46,12 @@ async function prepareShapeData(
         split,
         isOutsideBounds,
         isRangeSlider,
-        otherLayers,
+        otherLabelLayouts,
         allSeries,
     } = args;
 
     if (!xAxis || !xScale || !yScale?.length || !split) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareLineData({
@@ -64,68 +64,74 @@ async function prepareShapeData(
         split,
         isOutsideBounds: isOutsideBounds ?? (() => false),
         isRangeSlider,
-        otherLayers,
+        otherLabelLayouts,
         allSeries,
         getCurveFactory,
     });
 
-    const filteredData = filterLayerLabels(data, otherLayers ?? []);
+    const filteredData = filterLayerLabels(data, otherLabelLayouts ?? []);
     return {
         renderData: filteredData,
         markers: filteredData.flatMap((item) => item.markers),
         annotations: filteredData.flatMap((item) => item.annotations),
         htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
         getHoverMarkers: (hovered) => filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
-        layoutData: filteredData,
-        tooltipItems: filteredData,
+        labelLayout: filteredData,
+        lookupItems: filteredData,
         gradientGeometry: getGradientGeometry(filteredData),
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs<PreparedLineData, PreparedSeriesOptions>) {
-    return renderLine({plot, labelsPlot, getCurveFactory}, preparedData, seriesOptions, dispatcher);
+}: RenderLayerArgs<PreparedLineData, PreparedSeriesOptions>) {
+    return renderLine({plot, labelsPlot, getCurveFactory}, renderData, seriesOptions, dispatcher);
 }
 
 export const linePlugin = {
     type: 'line',
-    defaults: lineDefaults,
+    series: {
+        optionsDefaults: lineDefaults,
+        validate: ({series, xAxis, yAxis}) => {
+            validateAxisPlotValues({series, xAxis, yAxis});
+            validateInterpolation({series});
+            validateLabelAnchor({series});
+            validateSeriesColor({color: series.color, seriesName: series.name});
+            validateXYSeries({series, xAxis, yAxis});
+        },
+        prepare: prepareLineSeries,
+    },
     axes: {
         x: {singleValueDomain: 'center'},
         y: {singleValueDomain: 'center', getData: getLineAxisData},
+        padding: {getPaintExtents: getLineAxisPadding},
     },
-    axisPadding: {getPaintExtents: getLineAxisPadding},
-    getLayerKey: ({seriesKey}) => seriesKey,
-    getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
-        if (isRangeSlider) return 'bounds';
-        const hasMinOrMax = yAxis.some(
-            (axis) => typeof axis?.min === 'number' || typeof axis?.max === 'number',
-        );
-        const hasZoom = zoomState && Object.keys(zoomState).length > 0;
-        return hasZoom || hasMinOrMax ? 'bounds' : 'horizontal';
+    colorScale: {
+        getValue: (d) => d.y,
+    },
+    layers: {
+        getKey: ({seriesKey}) => seriesKey,
+        getClipMode: ({isRangeSlider, yAxis, zoomState}) => {
+            if (isRangeSlider) return 'bounds';
+            const hasMinOrMax = yAxis.some(
+                (axis) => typeof axis?.min === 'number' || typeof axis?.max === 'number',
+            );
+            const hasZoom = zoomState && Object.keys(zoomState).length > 0;
+            return hasZoom || hasMinOrMax ? 'bounds' : 'horizontal';
+        },
+        prepareData: prepareLayer,
+        prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
+        render: renderLayer,
     },
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
         filterData: filterLineData,
     },
-    prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
-    prepareSeries: prepareLineSeries,
-    validate: ({series, xAxis, yAxis}) => {
-        validateAxisPlotValues({series, xAxis, yAxis});
-        validateInterpolation({series});
-        validateLabelAnchor({series});
-        validateSeriesColor({color: series.color, seriesName: series.name});
-        validateXYSeries({series, xAxis, yAxis});
-    },
-    getColorValue: (d) => d.y,
-    prepareShapeData,
-    renderShapes,
     interaction: {
         prepareNearestData,
         getTargetElements,
