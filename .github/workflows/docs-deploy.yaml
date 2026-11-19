@@ -1,9 +1,7 @@
 name: Documentation Deploy
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 permissions:
   contents: read
@@ -18,19 +16,25 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    outputs:
+      package-version: ${{ steps.package.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
+      - name: Read package version
+        id: package
+        run: echo "version=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: npm
-      - name: Install tsconfig
-        run: npm i @gravity-ui/tsconfig
       - name: Install dependencies
+        run: npm ci
+      - name: Install docs dependencies
         run: npm run docs:deps
         shell: bash
       - name: Setup Pages
@@ -52,6 +56,18 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Check npm latest
+        id: npm
+        env:
+          DOCS_VERSION: ${{ needs.build.outputs.package-version }}
+        run: |
+          latest=$(npm view @gravity-ui/charts@latest version --registry=https://registry.npmjs.org --prefer-online)
+          if [ "$DOCS_VERSION" = "$latest" ]; then
+            echo 'is-latest=true' >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping docs for $DOCS_VERSION. npm latest is $latest."
+          fi
       - name: Deploy to GitHub Pages
         id: deployment
+        if: steps.npm.outputs.is-latest == 'true'
         uses: actions/deploy-pages@v4
