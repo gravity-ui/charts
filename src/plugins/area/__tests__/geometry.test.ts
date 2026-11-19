@@ -5,11 +5,12 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {PreparedLegend} from '~core/series/types';
 import {getDistanceToBand} from '~core/shapes/area/band';
 import type {BandColumn} from '~core/shapes/area/band';
+import {projectAreaData} from '~core/shapes/area/prepare-data';
 
 import type {AreaSeries, SeriesInterpolation} from '../../../types';
 import {buildAreaGeometry} from '../geometry';
 import {prepareAreaSeries} from '../prepare-area-series';
-import {projectInterpolatedAreaData} from '../projection';
+import {getAreaProjectionArgs} from '../projection';
 
 type Column = NonNullable<BandColumn>;
 
@@ -29,30 +30,34 @@ function project(
         interpolation: options.interpolation ?? {type: 'cardinal'},
         data: data.map((y, x) => ({x, y})),
     }));
-    return projectInterpolatedAreaData({
-        series: prepareAreaSeries({
-            series,
-            colors: [],
-            colorScale: scaleOrdinal([] as string[], ['black']),
-            legend: {enabled: false} as PreparedLegend,
+    return projectAreaData(
+        getAreaProjectionArgs({
+            series: prepareAreaSeries({
+                series,
+                colors: [],
+                colorScale: scaleOrdinal([] as string[], ['black']),
+                legend: {enabled: false} as PreparedLegend,
+            }),
+            xAxis: {type: 'linear'} as PreparedXAxis,
+            xScale: scaleLinear()
+                .domain([0, values[0].length - 1])
+                .range([0, options.width ?? 600]),
+            yAxis: [{type: 'linear', plotIndex: 0}] as PreparedYAxis[],
+            yScale: [
+                scaleLinear()
+                    .domain([-100, 100])
+                    .range(options.reversed ? [0, 400] : [400, 0]),
+            ],
+            split: {plots: [{top: 0, height: 400}]} as PreparedSplit,
+            isOutsideBounds: () => false,
         }),
-        xAxis: {type: 'linear'} as PreparedXAxis,
-        xScale: scaleLinear()
-            .domain([0, values[0].length - 1])
-            .range([0, options.width ?? 600]),
-        yAxis: [{type: 'linear', plotIndex: 0}] as PreparedYAxis[],
-        yScale: [
-            scaleLinear()
-                .domain([-100, 100])
-                .range(options.reversed ? [0, 400] : [400, 0]),
-        ],
-        split: {plots: [{top: 0, height: 400}]} as PreparedSplit,
-        isOutsideBounds: () => false,
-    });
+    );
 }
 
 function getGeometry(data: ReturnType<typeof project>[number]) {
-    if (!data.geometry) throw new Error('Expected interpolated area geometry');
+    if (!data.geometry) {
+        throw new Error('Expected interpolated area geometry');
+    }
     return data.geometry;
 }
 
@@ -114,13 +119,19 @@ test.each([false, true])('signed cardinal layers never overlap (reversed=%s)', (
         for (let i = 1; i < band.length; i++) {
             const left = band[i - 1];
             const right = band[i];
-            if (!left || !right || left.x === right.x) continue;
+            if (!left || !right || left.x === right.x) {
+                continue;
+            }
             const x = (left.x + right.x) / 2;
             const y0 = (left.y0 + right.y0) / 2;
             const y1 = (left.y1 + right.y1) / 2;
-            if (Math.abs(y1 - y0) < 0.01) continue;
+            if (Math.abs(y1 - y0) < 0.01) {
+                continue;
+            }
             for (const [otherIndex, other] of result.entries()) {
-                if (otherIndex === index) continue;
+                if (otherIndex === index) {
+                    continue;
+                }
                 expect(
                     getDistanceToBand({
                         point: [x, (y0 + y1) / 2],
@@ -165,8 +176,11 @@ test.each(['before', 'middle', 'after'] as const)(
             100,
         )[0];
         let transition = 30;
-        if (position === 'before') transition = 10;
-        else if (position === 'after') transition = 50;
+        if (position === 'before') {
+            transition = 10;
+        } else if (position === 'after') {
+            transition = 50;
+        }
         expect(result.columns).toEqual([
             {x: 10, y0: 100, y1: 20},
             ...(transition === 10 ? [] : [{x: transition, y0: 100, y1: 20}]),
@@ -264,6 +278,8 @@ test('cardinal remains ordered on an uneven grid with a missing stack sample', (
         expect(bottom[i].y1).toBe(top[i].y0);
         expect(top[i].y1).toBeLessThanOrEqual(top[i].y0);
         expect(bottom[i].y1).toBeLessThanOrEqual(bottom[i].y0);
-        if (i) expect(bottom[i].x).toBeGreaterThanOrEqual(bottom[i - 1].x);
+        if (i) {
+            expect(bottom[i].x).toBeGreaterThanOrEqual(bottom[i - 1].x);
+        }
     }
 });

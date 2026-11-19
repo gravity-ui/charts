@@ -192,7 +192,17 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
 }
 
 export function getLineAxisData({series, viewport}: GetAxisDataArgs<LineSeries>) {
-    if (!viewport?.x.range) return undefined;
+    if (
+        !viewport ||
+        (!viewport.x.range &&
+            !series.some(
+                (item) =>
+                    item.interpolation?.type === 'cardinal' ||
+                    item.interpolation?.type === 'monotone',
+            ))
+    ) {
+        return undefined;
+    }
     const values: AxisDomainValue[] = [];
     for (const item of series) {
         const contribution =

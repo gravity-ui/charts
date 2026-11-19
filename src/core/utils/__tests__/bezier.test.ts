@@ -8,7 +8,8 @@ test('cubic endpoints remain exact across very different control magnitudes', ()
 });
 
 test('constant contours and finite opposite controls stay finite', () => {
-    for (const t of [0, 0.1, 0.5, 0.9, 1])
+    for (const t of [0, 0.1, 0.5, 0.9, 1]) {
         expect(evaluateCubicBezier(100, 100, 100, 100, t)).toBe(100);
+    }
     expect(Number.isFinite(evaluateCubicBezier(1e308, -1e308, 1e308, -1e308, 0.5))).toBe(true);
 });

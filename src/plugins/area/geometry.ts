@@ -10,13 +10,15 @@ import type {AreaSeries, SeriesInterpolation} from '../../types';
 import {
     evaluateAtX,
     evaluateSection,
+    getCriticalParameters,
+    getSectionYValues,
     getZeroFractions,
     getZeroParameters,
 } from '../interpolation/curves';
 import type {CurvePoint, CurveSection} from '../interpolation/curves';
 
 import {collectSections, intervalKey} from './curves';
-import {getAreaGeometryBreaks} from './zoom';
+import {withAreaGeometryBreaks} from './zoom';
 
 type Column = NonNullable<BandColumn>;
 
@@ -29,8 +31,6 @@ export interface AreaGeometryOptions {
     projection?: {project: (value: number) => number; invert: (coordinate: number) => number};
     xRange?: readonly [number, number];
     yRange?: readonly [number, number];
-    /** Sample only Y, relative to each clipped interval's range. */
-    relativeYTolerance?: number;
 }
 
 export interface PreparedGeometryOptions extends AreaGeometryOptions {
@@ -44,42 +44,25 @@ export interface PreparedGeometryOptions extends AreaGeometryOptions {
 const MESH_TOLERANCE = 0.1;
 const MAX_SUBDIVISIONS = 12;
 
-function sampleInterval(
-    evaluate: (t: number) => Column[],
-    start = 0,
-    end = 1,
-    relativeYTolerance?: number,
-) {
-    const first = evaluate(start);
-    const last = evaluate(end);
-    const samples = [first];
-    let tolerance = MESH_TOLERANCE;
-    const keys: (keyof Column)[] =
-        relativeYTolerance === undefined ? ['x', 'y0', 'y1'] : ['y0', 'y1'];
-    if (relativeYTolerance !== undefined) {
-        let min = Infinity;
-        let max = -Infinity;
-        const probes = [
-            first,
-            last,
-            ...[0.25, 0.5, 0.75].map((t) => evaluate(start + (end - start) * t)),
-        ];
-        for (const columns of probes) {
-            for (const column of columns) {
-                min = Math.min(min, column.y0, column.y1);
-                max = Math.max(max, column.y0, column.y1);
-            }
+function sampleInterval(evaluate: (t: number) => Column[], start = 0, end = 1) {
+    const cache = new Map<number, Column[]>();
+    const sample = (t: number) => {
+        let value = cache.get(t);
+        if (!value) {
+            value = evaluate(t);
+            cache.set(t, value);
         }
-        tolerance = Math.max(
-            (max - min) * relativeYTolerance,
-            Number.EPSILON * Math.max(Math.abs(min), Math.abs(max)),
-        );
-    }
+        return value;
+    };
+    const first = sample(start);
+    const last = sample(end);
+    const samples = [first];
+    const keys: (keyof Column)[] = ['x', 'y0', 'y1'];
     const subdivide = (a: number, b: number, left: Column[], right: Column[], depth: number) => {
         const middle = (a + b) / 2;
-        const center = evaluate(middle);
+        const center = sample(middle);
         const needsSubdivision = [0.25, 0.5, 0.75].some((fraction) => {
-            const actual = fraction === 0.5 ? center : evaluate(a + (b - a) * fraction);
+            const actual = fraction === 0.5 ? center : sample(a + (b - a) * fraction);
             return actual.some((column, index) =>
                 keys.some(
                     (key) =>
@@ -87,7 +70,7 @@ function sampleInterval(
                             column[key] -
                                 (left[index][key] +
                                     (right[index][key] - left[index][key]) * fraction),
-                        ) > tolerance,
+                        ) > MESH_TOLERANCE,
                 ),
             );
         });
@@ -102,12 +85,77 @@ function sampleInterval(
     return samples;
 }
 
+/** Find extrema of constrained boundaries without approximating their entire paths. */
+function sampleExtrema(evaluate: (t: number) => Column[], start = 0, end = 1) {
+    const cache = new Map<number, Column[]>();
+    const sample = (t: number) => {
+        let columns = cache.get(t);
+        if (!columns) {
+            columns = evaluate(t);
+            cache.set(t, columns);
+        }
+        return columns;
+    };
+    for (const fraction of [0, 0.25, 0.5, 0.75, 1]) {
+        sample(start + fraction * (end - start));
+    }
+    // Redistribution can shift an extremum just past a scalar critical point.
+    // Probe both endpoint neighborhoods before choosing refinement brackets.
+    for (const fraction of [1e-6, 1e-3, 1 - 1e-3, 1 - 1e-6]) {
+        sample(start + fraction * (end - start));
+    }
+    const probes = [...cache.keys()].sort((a, b) => a - b);
+    const values = probes.map(sample);
+    for (let i = 1; i < probes.length - 1; i++) {
+        for (let index = 0; index < values[i].length; index++) {
+            for (const key of ['y0', 'y1'] as const) {
+                const before = values[i - 1][index][key];
+                const center = values[i][index][key];
+                const after = values[i + 1][index][key];
+                let direction = 0;
+                if (center > before && center > after) {
+                    direction = 1;
+                } else if (center < before && center < after) {
+                    direction = -1;
+                }
+                if (!direction) {
+                    continue;
+                }
+                let left = probes[i - 1];
+                let right = probes[i + 1];
+                const ratio = (Math.sqrt(5) - 1) / 2;
+                let a = right - ratio * (right - left);
+                let b = left + ratio * (right - left);
+                // Golden-section refinement reduces the bracket below 3e-7
+                // of its initial width; extrema have quadratic value error.
+                for (let iteration = 0; iteration < 32; iteration++) {
+                    if (direction * sample(a)[index][key] < direction * sample(b)[index][key]) {
+                        left = a;
+                        a = b;
+                        b = left + ratio * (right - left);
+                    } else {
+                        right = b;
+                        b = a;
+                        a = right - ratio * (right - left);
+                    }
+                }
+                sample((left + right) / 2);
+            }
+        }
+    }
+    return [...cache].sort(([a], [b]) => a - b).map(([, columns]) => columns);
+}
+
 function append(columns: BandColumn[], column: Column) {
     const previous = columns[columns.length - 1];
     if (previous && previous.x === column.x) {
-        if (previous.y0 === column.y0 && previous.y1 === column.y1) return;
+        if (previous.y0 === column.y0 && previous.y1 === column.y1) {
+            return;
+        }
         // Keep opposite stack offsets disconnected at a signed root.
-        if (previous.y0 === previous.y1 && column.y0 === column.y1) columns.push(null);
+        if (previous.y0 === previous.y1 && column.y0 === column.y1) {
+            columns.push(null);
+        }
     }
     columns.push(column);
 }
@@ -147,8 +195,12 @@ function getEnvelope(
         const left = total(before, 'to');
         const right = total(after, 'from');
         const coordinate = (amount: number) => project(sign * (percent && amount ? 100 : amount));
-        if (before) points.push({x: grid[i], y: coordinate(left)});
-        if (after && (!before || left !== right)) points.push({x: grid[i], y: coordinate(right)});
+        if (before) {
+            points.push({x: grid[i], y: coordinate(left)});
+        }
+        if (after && (!before || left !== right)) {
+            points.push({x: grid[i], y: coordinate(right)});
+        }
     }
     return collectSections(points, interpolation, true);
 }
@@ -172,7 +224,9 @@ function stackColumns(
 ) {
     const {curves, positive, negative, baseline, projection, changingSign, percent} = interval;
     const values = curves.map((curve, index) => {
-        if (!curve || zeros?.has(index) || (curve.from.y === 0 && curve.to.y === 0)) return 0;
+        if (!curve || zeros?.has(index) || (curve.from.y === 0 && curve.to.y === 0)) {
+            return 0;
+        }
         const value = evaluateAtX(curve, t);
         const direction = directions[index];
         return direction * Math.max(0, direction * value);
@@ -188,10 +242,14 @@ function stackColumns(
         const envelope = sign === 1 ? positive : negative;
         // Signed roots must reach zero without envelope rescaling.
         let extent = 0;
-        if (changingSign) extent = total;
-        else if (linearTotal && envelope)
+        if (changingSign) {
+            extent = total;
+        } else if (linearTotal && envelope) {
             extent = Math.max(0, sign * projection.invert(evaluateAtX(envelope, t)));
-        if (percent) extent = Math.min(100, extent);
+        }
+        if (percent) {
+            extent = Math.min(100, extent);
+        }
         // Restore endpoint weights if all cardinal weights overshoot below zero.
         const deficit = Math.max(0, extent - total);
         if (deficit && linearTotal) {
@@ -203,12 +261,18 @@ function stackColumns(
         let offset = 0;
         let remaining = extent;
         let last = weights.length - 1;
-        while (last >= 0 && weights[last] === 0) last--;
+        while (last >= 0 && weights[last] === 0) {
+            last--;
+        }
         for (let index = 0; index < curves.length; index++) {
             const curve = curves[index];
-            if (!curve) continue;
+            if (!curve) {
+                continue;
+            }
             const direction = directions[index];
-            if (direction !== sign) continue;
+            if (direction !== sign) {
+                continue;
+            }
             // Assign the remainder to the last layer to avoid rounding gaps.
             const thickness =
                 index === last
@@ -228,8 +292,12 @@ function getCurveValue(
     stacked: boolean,
     positiveDirection: number,
 ) {
-    if (point.y === null) return null;
-    if (!stacked) return point.y;
+    if (point.y === null) {
+        return null;
+    }
+    if (!stacked) {
+        return point.y;
+    }
     return point.stackValue ?? positiveDirection * (point.y - point.y0);
 }
 
@@ -244,13 +312,12 @@ function getBoundaryParameters(curve: CurveSection, range: readonly [number, num
     );
 }
 
-export function buildAreaGeometry(
+function prepareCurves(
     data: GeometryInput[],
     baseline: number,
     positiveDirection = -1,
-    reversedX = false,
     options: AreaGeometryOptions = {},
-): AreaGeometry[] {
+) {
     const interpolation = data[0]?.series.interpolation ?? {type: 'linear'};
     const stacked = data.some((item) => item.series.stacking);
     const percent = data.some((item) => item.series.stacking === 'percent');
@@ -289,6 +356,121 @@ export function buildAreaGeometry(
     const negative = stacked
         ? getEnvelope(grid, upper, -1, interpolation, projection.project, percent)
         : undefined;
+    return {
+        interpolation,
+        stacked,
+        percent,
+        projection,
+        points,
+        grid,
+        upper,
+        lower,
+        positive,
+        negative,
+    };
+}
+
+/** Fit envelopes analytically and optimize constrained signed/logarithmic boundaries. */
+export function getAreaGeometryDomain(
+    data: GeometryInput[],
+    options: AreaGeometryOptions & {logarithmic?: boolean},
+) {
+    const {grid, upper, positive, negative} = prepareCurves(data, 0, 1, options);
+    const signed = upper.some((sections) =>
+        [...sections.values()].some((curve) => curve.from.y * curve.to.y < 0),
+    );
+    if (options.logarithmic || signed) {
+        const project = options.projection?.project ?? Number;
+        const invert = options.projection?.invert ?? Number;
+        const baseline = project(0);
+        let min = Infinity;
+        let max = -Infinity;
+        for (const columns of buildColumns(data, baseline, 1, false, options, sampleExtrema)) {
+            for (const column of columns) {
+                if (!column) {
+                    continue;
+                }
+                for (const y of [column.y0, column.y1]) {
+                    if (options.logarithmic && y === baseline) {
+                        continue;
+                    }
+                    const value = invert(y);
+                    min = Math.min(min, value);
+                    max = Math.max(max, value);
+                }
+            }
+        }
+        return min <= max ? [min, max] : [];
+    }
+    const values: number[] = [];
+    for (let i = 1; i < grid.length; i++) {
+        const key = intervalKey(grid[i - 1], grid[i]);
+        for (const [sign, envelope] of [
+            [1, positive],
+            [-1, negative],
+        ] as const) {
+            const section = envelope?.get(key);
+            if (
+                !section ||
+                !upper.some((map) => {
+                    const curve = map.get(key);
+                    return curve && (sign * curve.from.y > 0 || sign * curve.to.y > 0);
+                })
+            ) {
+                continue;
+            }
+            const contribution = getSectionYValues(section, options.xRange);
+            if (contribution.length) {
+                values.push(0, ...contribution.map((value) => sign * Math.max(0, sign * value)));
+            }
+        }
+    }
+    // Include isolated observations, which have no envelope interval.
+    for (const item of data) {
+        for (const point of item.points) {
+            if (
+                point.y !== null &&
+                (!options.xRange || (point.x >= options.xRange[0] && point.x <= options.xRange[1]))
+            ) {
+                values.push(point.y);
+            }
+        }
+    }
+    return values;
+}
+
+export function buildAreaGeometry(
+    data: GeometryInput[],
+    baseline: number,
+    positiveDirection = -1,
+    reversedX = false,
+    options: AreaGeometryOptions = {},
+): AreaGeometry[] {
+    return buildColumns(data, baseline, positiveDirection, reversedX, options).map((columns) =>
+        getPaths(filterVisibleColumns(columns, options.yRange)),
+    );
+}
+
+function buildColumns(
+    data: GeometryInput[],
+    baseline: number,
+    positiveDirection: number,
+    reversedX: boolean,
+    options: AreaGeometryOptions,
+    sample = sampleInterval,
+): BandColumn[][] {
+    const {
+        interpolation,
+        stacked,
+        percent,
+        projection,
+        points,
+        grid,
+        upper,
+        lower,
+        positive,
+        negative,
+    } = prepareCurves(data, baseline, positiveDirection, options);
     const output: BandColumn[][] = data.map(() => []);
     for (let i = 1; i < grid.length; i++) {
         const from = grid[i - 1];
@@ -298,7 +480,9 @@ export function buildAreaGeometry(
         const roots = new Map<number, Set<number>>();
         if (stacked && interpolation.type !== 'step') {
             curves.forEach((curve, index) => {
-                if (!curve || curve.from.y * curve.to.y >= 0) return;
+                if (!curve || curve.from.y * curve.to.y >= 0) {
+                    return;
+                }
                 for (const root of getZeroFractions(curve)) {
                     const indices = roots.get(root) ?? new Set<number>();
                     indices.add(index);
@@ -317,10 +501,14 @@ export function buildAreaGeometry(
         };
         const evaluate = (t: number, directions: number[]): Column[] => {
             const x = from + t * (to - from);
-            if (stacked) return stackColumns(interval, t, x, roots.get(t), directions);
+            if (stacked) {
+                return stackColumns(interval, t, x, roots.get(t), directions);
+            }
             return curves.map((curve, index) => {
                 const bottom = lower[index].get(key);
-                if (!curve || !bottom) return {x, y0: baseline, y1: baseline};
+                if (!curve || !bottom) {
+                    return {x, y0: baseline, y1: baseline};
+                }
                 const upperPoint = evaluateSection(curve, t);
                 return {
                     x: upperPoint.x,
@@ -336,8 +524,11 @@ export function buildAreaGeometry(
                 position = position === 'after' ? 'before' : 'after';
             }
             let transition = (from + to) / 2;
-            if (position === 'before') transition = from;
-            else if (position === 'after') transition = to;
+            if (position === 'before') {
+                transition = from;
+            } else if (position === 'after') {
+                transition = to;
+            }
             const directionsAt = (endpoint: 'from' | 'to') =>
                 curves.map((curve) => Math.sign(curve?.[endpoint].y ?? 0) || 1);
             const first = evaluate(0, directionsAt('from'));
@@ -350,16 +541,37 @@ export function buildAreaGeometry(
             ];
         } else {
             const cutSet = new Set([0, ...roots.keys(), 1]);
+            if (sample === sampleExtrema) {
+                // Roots and scalar critical points isolate the turns that can
+                // contribute an extremum after clamping and redistribution.
+                for (const curve of [...curves, interval.positive, interval.negative]) {
+                    if (!curve) {
+                        continue;
+                    }
+                    for (const parameter of [
+                        ...getCriticalParameters(curve),
+                        ...getZeroParameters(curve),
+                    ]) {
+                        cutSet.add((evaluateSection(curve, parameter).x - from) / (to - from));
+                    }
+                }
+            }
             if (options.xRange) {
                 if (stacked) {
                     for (const x of options.xRange) {
                         const fraction = (x - from) / (to - from);
-                        if (fraction > 0 && fraction < 1) cutSet.add(fraction);
+                        if (fraction > 0 && fraction < 1) {
+                            cutSet.add(fraction);
+                        }
                     }
                 } else {
                     for (const curve of curves) {
-                        if (!curve) continue;
-                        for (const t of getBoundaryParameters(curve, options.xRange)) cutSet.add(t);
+                        if (!curve) {
+                            continue;
+                        }
+                        for (const t of getBoundaryParameters(curve, options.xRange)) {
+                            cutSet.add(t);
+                        }
                     }
                 }
             }
@@ -370,31 +582,45 @@ export function buildAreaGeometry(
                 const end = cuts[j];
                 const middle = (start + end) / 2;
                 const directions = curves.map((curve) => {
-                    if (!curve || (curve.from.y === 0 && curve.to.y === 0)) return 1;
-                    if (curve.from.y >= 0 && curve.to.y >= 0) return 1;
-                    if (curve.from.y <= 0 && curve.to.y <= 0) return -1;
+                    if (!curve || (curve.from.y === 0 && curve.to.y === 0)) {
+                        return 1;
+                    }
+                    if (curve.from.y >= 0 && curve.to.y >= 0) {
+                        return 1;
+                    }
+                    if (curve.from.y <= 0 && curve.to.y <= 0) {
+                        return -1;
+                    }
                     return Math.sign(evaluateAtX(curve, middle)) || 1;
                 });
                 const x = stacked
                     ? from + middle * (to - from)
                     : evaluate(middle, directions)[0]?.x;
-                if (options.xRange && (x < options.xRange[0] || x > options.xRange[1])) continue;
-                samples.push(
-                    ...sampleInterval(
-                        (t) => evaluate(t, directions),
-                        start,
-                        end,
-                        options.relativeYTolerance,
-                    ),
-                );
+                if (options.xRange && (x < options.xRange[0] || x > options.xRange[1])) {
+                    continue;
+                }
+                samples.push(...sample((t) => evaluate(t, directions), start, end));
+            }
+            if (stacked && options.xRange && options.xRange[0] === options.xRange[1]) {
+                const t = (options.xRange[0] - from) / (to - from);
+                if (t >= 0 && t <= 1) {
+                    const directions = curves.map((curve) =>
+                        curve ? Math.sign(evaluateAtX(curve, t)) || 1 : 1,
+                    );
+                    samples = [evaluate(t, directions)];
+                }
             }
         }
         output.forEach((columns, index) => {
             if (!curves[index] || samples.length === 0) {
-                if (columns[columns.length - 1]) columns.push(null);
+                if (columns[columns.length - 1]) {
+                    columns.push(null);
+                }
                 return;
             }
-            for (const sample of samples) append(columns, sample[index]);
+            for (const columnsAtX of samples) {
+                append(columns, columnsAtX[index]);
+            }
         });
     }
     // Isolated observations contribute an outline point, never a filled interval.
@@ -408,17 +634,22 @@ export function buildAreaGeometry(
                 point.y === null ||
                 point.hiddenInLine ||
                 (options.xRange && (point.x < options.xRange[0] || point.x > options.xRange[1]))
-            )
+            ) {
                 continue;
+            }
             const column = {x: point.x, y0: point.y, y1: point.y};
-            if (!present.has(key(column))) columns.push(null, column, null);
+            if (!present.has(key(column))) {
+                columns.push(null, column, null);
+            }
         }
     });
-    return output.map((columns) => getPaths(filterVisibleColumns(columns, options.yRange)));
+    return output;
 }
 
 function filterVisibleColumns(columns: BandColumn[], range?: readonly [number, number]) {
-    if (!range) return columns;
+    if (!range) {
+        return columns;
+    }
     const result: BandColumn[] = [];
     let run: NonNullable<BandColumn>[] = [];
     const flush = () => {
@@ -429,14 +660,21 @@ function filterVisibleColumns(columns: BandColumn[], range?: readonly [number, n
             max = Math.max(max, column.y1);
         }
         if (min <= range[1] && max >= range[0]) {
-            if (result.length) result.push(null);
-            for (const column of run) result.push(column);
+            if (result.length) {
+                result.push(null);
+            }
+            for (const column of run) {
+                result.push(column);
+            }
         }
         run = [];
     };
     for (const column of columns) {
-        if (column) run.push(column);
-        else flush();
+        if (column) {
+            run.push(column);
+        } else {
+            flush();
+        }
     }
     flush();
     return result;
@@ -463,21 +701,32 @@ function revealDrawnAnchors(item: PreparedAreaData) {
     const merged: [number, number][] = [];
     for (const range of ranges) {
         const last = merged[merged.length - 1];
-        if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]);
-        else merged.push(range);
+        if (last && range[0] <= last[1]) {
+            last[1] = Math.max(last[1], range[1]);
+        } else {
+            merged.push(range);
+        }
     }
     const sorted = item.points.slice().sort((a, b) => a.x - b.x);
     let cursor = 0;
     for (const [min, max] of merged) {
         let before: PointData | undefined;
-        while (cursor < sorted.length && sorted[cursor].x < min) before = sorted[cursor++];
-        if (before && before.y !== null) before.hiddenInLine = false;
+        while (cursor < sorted.length && sorted[cursor].x < min) {
+            before = sorted[cursor++];
+        }
+        if (before && before.y !== null) {
+            before.hiddenInLine = false;
+        }
         while (cursor < sorted.length && sorted[cursor].x <= max) {
             const point = sorted[cursor++];
-            if (point.y !== null) point.hiddenInLine = false;
+            if (point.y !== null) {
+                point.hiddenInLine = false;
+            }
         }
         const after = sorted[cursor];
-        if (after && after.y !== null) after.hiddenInLine = false;
+        if (after && after.y !== null) {
+            after.hiddenInLine = false;
+        }
     }
 }
 
@@ -489,18 +738,14 @@ export function prepareAreaGeometry(
         JSON.stringify([item.series.yAxis, item.series.stackId]),
     ).values()) {
         const interpolation = items[0].series.interpolation;
-        if (!interpolation || interpolation.type === 'linear') continue;
+        if (!interpolation || interpolation.type === 'linear') {
+            continue;
+        }
         const options = getOptions(items[0].series);
-        const inputs = items.map((item) => {
-            const breaks = getAreaGeometryBreaks(item.series.data);
-            if (!breaks?.size) return item;
-            const points: GeometryInput['points'][number][] = [];
-            for (const point of item.points) {
-                if (breaks.has(point.data)) points.push({...point, y: null});
-                points.push(point);
-            }
-            return {...item, points};
-        });
+        const inputs = items.map((item) => ({
+            series: item.series,
+            points: withAreaGeometryBreaks(item.points, item.series.data),
+        }));
         const geometries = buildAreaGeometry(
             inputs,
             options.baseline,
@@ -515,12 +760,15 @@ export function prepareAreaGeometry(
                 (column): column is Column => column !== null,
             );
             const upper = columns.map((column) => ({x: column.x, y: column.y1}));
-            if (item.series.gradient) item.gradientBBox = getGradientBBox(upper);
-            if (item.series.fillGradient)
+            if (item.series.gradient) {
+                item.gradientBBox = getGradientBBox(upper);
+            }
+            if (item.series.fillGradient) {
                 item.fillGradientBBox = getGradientBBox([
                     ...upper,
                     ...columns.map((column) => ({x: column.x, y: column.y0})),
                 ]);
+            }
         });
     }
 }

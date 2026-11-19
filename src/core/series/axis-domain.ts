@@ -110,10 +110,8 @@ export function collectYAxisDomainValues(args: {
     xAxis?: ChartXAxis | null;
     yAxis?: ChartYAxis[];
     zoomState: Partial<ZoomState>;
-}): AxisDomainValue[][] | undefined {
+}): AxisDomainValue[][] {
     const {series, fallbackSeries, xAxis, yAxis, zoomState} = args;
-    if (!zoomState.x && !zoomState.y) return undefined;
-
     let xRange = zoomState.x;
     if (xRange && xAxis?.type !== 'category') {
         const visible = fallbackSeries.filter((item) => item.visible);

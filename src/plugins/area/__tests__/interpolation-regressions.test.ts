@@ -4,6 +4,7 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {PreparedLegend} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
+import {projectAreaData} from '~core/shapes/area/prepare-data';
 import type {AreaGeometry} from '~core/shapes/area/types';
 
 import type {AreaSeries} from '../../../types';
@@ -12,10 +13,10 @@ import {collectSections} from '../curves';
 import {getAreaAxisData} from '../domain';
 import {buildAreaGeometry} from '../geometry';
 import {prepareAreaSeries} from '../prepare-area-series';
-import {projectInterpolatedAreaData} from '../projection';
+import {getAreaProjectionArgs} from '../projection';
 import {filterAreaData} from '../zoom';
 
-type ProjectionArgs = Parameters<typeof projectInterpolatedAreaData>[0];
+type ProjectionArgs = Parameters<typeof getAreaProjectionArgs>[0];
 function area(values: (number | null)[], extra: Partial<AreaSeries> = {}): AreaSeries {
     return {
         type: 'area',
@@ -46,10 +47,12 @@ function prepareArgs(
     };
 }
 function project(series: AreaSeries[], extra: Partial<Omit<ProjectionArgs, 'series'>> = {}) {
-    return projectInterpolatedAreaData(prepareArgs(series, extra));
+    return projectAreaData(getAreaProjectionArgs(prepareArgs(series, extra)));
 }
 function geometry(item: ReturnType<typeof project>[number]) {
-    if (!item.geometry) throw new Error('Expected area geometry');
+    if (!item.geometry) {
+        throw new Error('Expected area geometry');
+    }
     return item.geometry;
 }
 function columns(shape: AreaGeometry) {
@@ -72,13 +75,14 @@ test('percent gaps preserve the 100% contour', () => {
         area([10, 10, 10], {stacking: 'percent'}),
         area([null, 10, 10], {stacking: 'percent'}),
     ]);
-    for (const item of result)
+    for (const item of result) {
         for (const p of columns(geometry(item))) {
             expect(p.y0).toBeGreaterThanOrEqual(0);
             expect(p.y1).toBeGreaterThanOrEqual(0);
             expect(p.y0).toBeLessThanOrEqual(400);
             expect(p.y1).toBeLessThanOrEqual(400);
         }
+    }
     expect(columns(geometry(result[2])).every((p) => p.y1 === 0)).toBe(true);
 });
 
@@ -116,6 +120,89 @@ test('X zoom uses the visible smooth boundary for Y bounds', () => {
         },
     });
     expect(Math.max(...result.domainValues.map(Number))).toBeCloseTo(6.544, 3);
+});
+
+test.each(['signed', 'logarithmic'] as const)(
+    '%s fitted bounds contain the constrained curve',
+    (mode) => {
+        const series = [
+            area(mode === 'signed' ? [30, -50, 25, -20] : [10, 80, 20, 60]),
+            area(mode === 'signed' ? [-10, 40, -30, 35] : [5, 20, 15, 40]),
+            area([5, 15, 10, 20]),
+        ].map(
+            (item): AreaSeries => ({
+                ...item,
+                stacking: 'normal',
+                interpolation: {type: 'cardinal'},
+            }),
+        );
+        const yScale =
+            mode === 'signed'
+                ? scaleLinear().domain([-100, 100]).range([400, 0])
+                : scaleLog().domain([1, 200]).range([400, 0]);
+        const yType = mode === 'signed' ? 'linear' : 'logarithmic';
+        const result = project(series, {
+            xScale: scaleLinear().domain([0.2, 2.8]).range([0, 400]),
+            yAxis: [{type: yType, plotIndex: 0}] as PreparedYAxis[],
+            yScale: [yScale],
+        });
+        const fitted = getAreaAxisData({
+            series,
+            axis: 'y',
+            viewport: {
+                x: {type: 'linear', range: [0.2, 2.8]},
+                y: {type: yType},
+            },
+        }).domainValues.map(Number);
+        const min = Math.min(...fitted),
+            max = Math.max(...fitted);
+        for (const item of result) {
+            for (const column of columns(geometry(item))) {
+                for (const coordinate of [column.y0, column.y1]) {
+                    if (mode === 'logarithmic' && coordinate === 400) {
+                        continue;
+                    }
+                    // Projection rounds stacked coordinates to hundredths of a pixel.
+                    expect(coordinate).toBeGreaterThanOrEqual(yScale(max) - 0.02);
+                    expect(coordinate).toBeLessThanOrEqual(yScale(min) + 0.02);
+                }
+            }
+        }
+    },
+);
+
+test('smooth logarithmic domain excludes the artificial baseline', () => {
+    const {domainValues} = getAreaAxisData({
+        series: [area([10, 20, 40, 30, 50])],
+        axis: 'y',
+        viewport: {x: {type: 'linear', range: [1, 3]}, y: {type: 'logarithmic'}},
+    });
+    expect(Math.min(...domainValues.map(Number))).toBeCloseTo(20);
+    expect(Math.max(...domainValues.map(Number))).toBeCloseTo(40);
+});
+
+test('log stack domain retains a minimum beside a scalar critical point', () => {
+    const series = [
+        [71, 35, 82, 88, 69, 90],
+        [34, 82, 60, 100, 94, 44],
+        [50, 89, 87, 99, 97, 32],
+    ]
+        .reverse()
+        .map((values) =>
+            area(values, {
+                stacking: 'normal',
+                interpolation: {type: 'cardinal'},
+            }),
+        );
+    const {domainValues} = getAreaAxisData({
+        series,
+        axis: 'y',
+        viewport: {
+            x: {type: 'linear', range: [0.1, 4.9]},
+            y: {type: 'logarithmic'},
+        },
+    });
+    expect(Math.min(...domainValues.map(Number))).toBeCloseTo(34.9205229455, 6);
 });
 
 test('smooth Y bounds preserve an interior extremum across data scales and timestamps', () => {
@@ -235,17 +322,19 @@ test('local zoom context preserves a sparse stack on the full X grid', () => {
     ];
     source[1].data[1].x = 10;
     const args = prepareArgs(source, {xScale: scaleLinear().domain([0, 10]).range([0, 1000])});
-    const full = projectInterpolatedAreaData(args);
+    const full = projectAreaData(getAreaProjectionArgs(args));
     const viewport = {x: {type: 'linear', range: [4, 6] as const}, y: {type: 'linear'}} as const;
     const selected = args.series.map((series) => ({
         ...series,
         data: [...(filterAreaData({series, viewport}).shapeData ?? [])],
     }));
-    const zoom = projectInterpolatedAreaData({
-        ...args,
-        series: selected,
-        xScale: scaleLinear().domain([4, 6]).range([0, 1000]),
-    });
+    const zoom = projectAreaData(
+        getAreaProjectionArgs({
+            ...args,
+            series: selected,
+            xScale: scaleLinear().domain([4, 6]).range([0, 1000]),
+        }),
+    );
     for (let i = 0; i < full.length; i++) {
         for (const x of [4.1, 4.5, 5, 5.5, 5.9]) {
             expect(
@@ -262,7 +351,9 @@ test('inverting a deeply zoomed cubic X preserves the sign near its endpoint', (
         {type: 'cardinal'},
         true,
     ).get('0:1000000000000');
-    if (!section) throw new Error('Missing cubic interval');
+    if (!section) {
+        throw new Error('Missing cubic interval');
+    }
     expect(evaluateAtX(section, 1e-12)).toBeCloseTo(-9850.5, 1);
 });
 
@@ -303,7 +394,9 @@ test('nearby signed roots cannot create a bridge through another layer', () => {
     for (let i = 1; i < result[1].columns.length; i++) {
         const a = result[1].columns[i - 1],
             b = result[1].columns[i];
-        if (!a || !b || a.x === b.x) continue;
+        if (!a || !b || a.x === b.x) {
+            continue;
+        }
         const low = Math.min((a.y0 + b.y0) / 2, (a.y1 + b.y1) / 2);
         const high = Math.max((a.y0 + b.y0) / 2, (a.y1 + b.y1) / 2);
         expect(Math.min(high, 100) - Math.max(low, 0)).toBeLessThanOrEqual(1e-7);

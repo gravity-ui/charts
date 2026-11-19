@@ -69,6 +69,9 @@ describe('chart config artifacts', () => {
         const step = schema.definitions.SeriesInterpolation.anyOf.find(
             (option) => option.properties.type.const === 'step',
         );
+        expect(schema.definitions.LineSeriesInterpolation).toEqual({
+            $ref: '#/definitions/SeriesInterpolation',
+        });
         expect(step.properties.position).toMatchObject({
             enum: ['middle', 'before', 'after'],
             default: 'after',

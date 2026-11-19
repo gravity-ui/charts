@@ -21,7 +21,9 @@ function getNormalizedInterpolationKey(interpolation?: SeriesInterpolation) {
 
 export function validateAreaInterpolation(series: AreaSeries, allSeries: ChartSeries[]) {
     validateInterpolation({series});
-    if (!series.stacking && !series.stackId) return;
+    if (!series.stacking && !series.stackId) {
+        return;
+    }
 
     const stackId = getSeriesStackId(series);
     const interpolation = getNormalizedInterpolationKey(series.interpolation);

@@ -30,6 +30,40 @@ function stack(stacking: AreaSeries['stacking'], interpolation: SeriesInterpolat
     };
 }
 
+test('automatic Y bounds keep cardinal overshoot inside the plot before zoom', async ({
+    mount,
+}, testInfo) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                legend: {enabled: false},
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Quantity',
+                            interpolation: {type: 'cardinal'},
+                            marker: {enabled: true},
+                            data: [0, 10, 10, 0].map((y, x) => ({x, y})),
+                        },
+                    ],
+                },
+                yAxis: [{min: 0, padding: {min: 0, max: 0}, startOnTick: false, endOnTick: false}],
+            }}
+            styles={{width: 640, height: 360}}
+        />,
+    );
+    const path = component.locator('.gcharts-area__line');
+    await expect(path).toHaveAttribute('d', /M/);
+    const bounds = await path.evaluate((node) => {
+        const box = (node as SVGPathElement).getBBox();
+        return {top: box.y, height: box.height};
+    });
+    expect(bounds.top).toBeGreaterThanOrEqual(-0.01);
+    expect(bounds.height).toBeGreaterThan(0);
+    await component.screenshot({path: testInfo.outputPath('cardinal-domain.png')});
+});
+
 for (const {stacking, interpolation, snapshot} of [
     {stacking: 'normal', interpolation: {type: 'cardinal'}, snapshot: 'area-normal-cardinal.png'},
     {stacking: 'percent', interpolation: {type: 'monotone'}, snapshot: 'area-percent-monotone.png'},
@@ -63,9 +97,12 @@ for (const {stacking, interpolation, snapshot} of [
                 for (let x = box.x + 3.7; x < box.right; x += 7.1) {
                     for (let y = box.y + 2.3; y < box.bottom; y += 7.3) {
                         const point = new DOMPoint(x, y);
-                        if (lines.some((line) => line.isPointInStroke(point))) continue;
-                        if (regions.filter((region) => region.isPointInFill(point)).length > 1)
+                        if (lines.some((line) => line.isPointInStroke(point))) {
+                            continue;
+                        }
+                        if (regions.filter((region) => region.isPointInFill(point)).length > 1) {
                             overlap++;
+                        }
                     }
                 }
                 return overlap;
@@ -101,7 +138,9 @@ test('step fill, outline and interactions agree while tooltip points remain orig
         const start = outline.getPointAtLength(0);
         const end = outline.getPointAtLength(outline.getTotalLength());
         const matrix = outline.getScreenCTM();
-        if (!matrix) throw new Error('Area transform is unavailable');
+        if (!matrix) {
+            throw new Error('Area transform is unavailable');
+        }
         const at = (y: number) =>
             new DOMPoint(
                 start.x + (end.x - start.x) * 0.8,

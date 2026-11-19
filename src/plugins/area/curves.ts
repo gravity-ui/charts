@@ -54,13 +54,19 @@ export function collectSections(
         .context(context as unknown as CanvasRenderingContext2D);
     let run: CurvePoint[] = [];
     const flush = () => {
-        if (run.length) generator(run);
+        if (run.length) {
+            generator(run);
+        }
         run = [];
     };
     for (const point of points) {
         // Duplicate X marks a gap boundary; tangents must not cross it.
-        if (point.y === null || run[run.length - 1]?.x === point.x) flush();
-        if (point.y !== null) run.push(point);
+        if (point.y === null || run[run.length - 1]?.x === point.x) {
+            flush();
+        }
+        if (point.y !== null) {
+            run.push(point);
+        }
     }
     flush();
     return sections;

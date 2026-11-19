@@ -28,4 +28,4 @@ Clamping and redistributing thickness does not generally produce another cubic B
 
 Quarter-point probes catch inflections that a midpoint can miss. The rendering target is 0.1 CSS pixels; subdivision stops after 12 levels to bound the work. X clipping happens before subdivision so offscreen intervals do not consume that budget during deep zoom.
 
-Domain fitting uses the same constrained geometry but samples only Y, targeting one millionth of each clipped interval's Y range in axis coordinates. X is normalized to [0, 1] only for clipping. A pixel tolerance or assumed plot width would make fitted bounds depend on display geometry rather than the curve's values.
+Domain fitting includes analytic Bézier extrema for unstacked curves and ordinary stack envelopes. Signed and logarithmic constraints use the same boundary evaluator as rendering: roots and scalar critical points split the intervals, then local extrema are refined numerically. This avoids building a fine mesh just to find bounds, and keeps fitted domains independent of plot dimensions.

@@ -105,7 +105,6 @@ export const projectAreaData = (args: {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    boundsWidth?: number;
     prepareGeometry?: (data: PreparedAreaData[]) => void;
     projectX?: (point: AreaSeriesData, series: PreparedAreaSeries) => number | null;
 }): PreparedAreaData[] => {

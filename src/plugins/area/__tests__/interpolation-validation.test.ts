@@ -1,3 +1,5 @@
+import {validateData} from '~core/validation';
+
 import {CHART_ERROR_CODE} from '../../../libs';
 import type {AreaSeries, SeriesInterpolation} from '../../../types';
 import {validateAreaInterpolation} from '../validation';
@@ -47,6 +49,32 @@ test('allows different interpolation in separate stacks, axes and unstacked area
 test('area options are checked by the shared interpolation validator', () => {
     const series = area({type: 'cardinal', tension: NaN});
     expect(() => validateAreaInterpolation(series, [series])).toThrow(
+        expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+    );
+});
+
+test.each(['normal', 'percent'] as const)(
+    'public validation rejects connect null mode in %s stacks',
+    (stacking) => {
+        const series: AreaSeries = {
+            ...area({type: 'monotone'}),
+            stacking,
+            nullMode: 'connect',
+            data: [10, null, 10, 10].map((y, x) => ({x, y})),
+        };
+        expect(() => validateData({series: {data: [series]}})).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    },
+);
+
+test('public validation rejects negative percent contributions before geometry preparation', () => {
+    const data: AreaSeries[] = [50, -25].map((value) => ({
+        ...area({type: 'monotone'}),
+        stacking: 'percent',
+        data: [value, value, value].map((y, x) => ({x, y})),
+    }));
+    expect(() => validateData({series: {data}})).toThrow(
         expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
     );
 });

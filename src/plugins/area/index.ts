@@ -7,7 +7,7 @@ import type {
 } from '~core/series/plugin';
 import type {PreparedAreaSeries} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
-import {prepareAreaData} from '~core/shapes/area/prepare-data';
+import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
 import {renderArea} from '~core/shapes/area/renderer';
 import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
@@ -31,11 +31,7 @@ import {getAreaAxisPadding} from './axis-padding';
 import {getAreaAxisData} from './domain';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
-import {
-    createAreaCategoryXProjector,
-    createAreaGeometryPreparer,
-    projectInterpolatedAreaData,
-} from './projection';
+import {getAreaProjectionArgs} from './projection';
 import {getAreaStackLabelAnchors} from './stack-labels';
 import {validateAreaInterpolation} from './validation';
 import {filterAreaData} from './zoom';
@@ -57,9 +53,12 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         defaultType: 'x',
         filterData: filterAreaData,
     },
-    prepareGradientGeometry: createGradientGeometryPreparer(projectInterpolatedAreaData, {
-        includeSolidSeries: true,
-    }),
+    prepareGradientGeometry: createGradientGeometryPreparer<PreparedAreaSeries>(
+        (args) => projectAreaData(getAreaProjectionArgs(args)),
+        {
+            includeSolidSeries: true,
+        },
+    ),
     prepareSeries: prepareAreaSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
         validateAreaInterpolation(series, allSeries);
@@ -106,30 +105,20 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             return {renderData: [], tooltipItems: []};
         }
 
-        const data = await prepareAreaData({
-            series: series as PreparedAreaSeries[],
-            seriesOptions,
-            xAxis,
-            xScale,
-            yAxis: yAxis ?? [],
-            yScale,
-            split,
-            isOutsideBounds: isOutsideBounds ?? (() => false),
-            isRangeSlider,
-            projectX: createAreaCategoryXProjector({
+        const data = await prepareAreaData(
+            getAreaProjectionArgs({
                 series: series as PreparedAreaSeries[],
+                seriesOptions,
                 xAxis,
                 xScale,
-            }),
-            prepareGeometry: createAreaGeometryPreparer({
-                series: series as PreparedAreaSeries[],
                 yAxis: yAxis ?? [],
                 yScale,
                 split,
-                xScale,
+                isOutsideBounds: isOutsideBounds ?? (() => false),
+                isRangeSlider,
                 boundsWidth: args.boundsWidth,
             }),
-        });
+        );
 
         const labels = await prepareStackLabels({
             ...args,
