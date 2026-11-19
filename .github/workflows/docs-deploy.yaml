@@ -11,22 +11,20 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: false
+  queue: max
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
     outputs:
-      package-version: ${{ steps.package.outputs.version }}
+      deploy-version: ${{ steps.npm.outputs.deploy-version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
-      - name: Read package version
-        id: package
-        run: echo "version=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -47,27 +45,36 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist-docs
+      - name: Check npm latest
+        id: npm
+        run: |
+          package_version=$(node -p 'require("./package.json").version')
+          latest=$(npm view @gravity-ui/charts@latest version --registry=https://registry.npmjs.org --prefer-online)
+          if [ "$package_version" = "$latest" ]; then
+            echo "deploy-version=$package_version" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping docs for $package_version. npm latest is $latest."
+          fi
 
   deploy:
     name: Deploy
     needs: build
+    if: needs.build.outputs.deploy-version != ''
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Check npm latest
-        id: npm
+      # A deploy-only rerun reuses the version check from the original build.
+      - name: Verify npm latest before publishing
         env:
-          DOCS_VERSION: ${{ needs.build.outputs.package-version }}
+          DEPLOY_VERSION: ${{ needs.build.outputs.deploy-version }}
         run: |
           latest=$(npm view @gravity-ui/charts@latest version --registry=https://registry.npmjs.org --prefer-online)
-          if [ "$DOCS_VERSION" = "$latest" ]; then
-            echo 'is-latest=true' >> "$GITHUB_OUTPUT"
-          else
-            echo "Skipping docs for $DOCS_VERSION. npm latest is $latest."
+          if [ "$DEPLOY_VERSION" != "$latest" ]; then
+            echo "::error::Cannot publish docs for $DEPLOY_VERSION. npm latest is $latest."
+            exit 1
           fi
       - name: Deploy to GitHub Pages
         id: deployment
-        if: steps.npm.outputs.is-latest == 'true'
         uses: actions/deploy-pages@v4
