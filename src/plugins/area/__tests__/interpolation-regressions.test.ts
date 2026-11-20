@@ -6,6 +6,7 @@ import type {PreparedLegend} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import {projectAreaData} from '~core/shapes/area/prepare-data';
 import type {AreaGeometry} from '~core/shapes/area/types';
+import {getClosestPoints} from '~core/utils/get-closest-data';
 
 import type {AreaSeries} from '../../../types';
 import {evaluateAtX} from '../../interpolation/curves';
@@ -94,6 +95,29 @@ test('a raw zero layer stays empty beside a percent gap', () => {
     ]);
     expect(columns(geometry(result[1])).every((p) => p.y0 === p.y1)).toBe(true);
     expect(result[1].points.every((p) => p.percentage === 0)).toBe(true);
+});
+
+test.each([
+    ['normal', 80, 20],
+    ['percent', 8, 2],
+] as const)('a %s step stack selects the layer under the pointer', (stacking, high, low) => {
+    const interpolation = {type: 'step'} as const;
+    const upper = area([high, low], {name: 'Upper', stacking, interpolation});
+    const lower = area([low, high], {name: 'Lower', stacking, interpolation});
+
+    const hovered = getClosestPoints({
+        shapesData: project([upper, lower]),
+        // The nearest observation is on the right, while the step still holds the left values.
+        position: [160, 200],
+        boundsWidth: 400,
+        boundsHeight: 400,
+    });
+
+    expect(hovered).toHaveLength(2);
+    const active = hovered.filter((item) => item.closest);
+    expect(active).toHaveLength(1);
+    expect(active[0].series.name).toBe('Upper');
+    expect(active[0].data).toBe(upper.data[1]);
 });
 
 test('log stacks accumulate data values when a layer is below the axis minimum', () => {

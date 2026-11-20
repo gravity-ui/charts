@@ -43,6 +43,12 @@ Choose the shape between observations:
 
 Markers and tooltip values stay attached to the original observations. Interpolation preserves the configured `nullMode` behavior.
 
+{% note info %}
+
+Use smooth or stepped interpolation with care on large datasets, especially for stacked areas. The additional geometry calculations can slow down rendering and tooltip updates.
+
+{% endnote %}
+
 #### Smoothing stacked areas
 
 Use identical interpolation settings on every series in a stack, including their defaults. Conflicting settings are rejected with `INVALID_DATA`.

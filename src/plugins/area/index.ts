@@ -13,6 +13,7 @@ import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
+import type {GetTooltipDataArgs} from '~core/utils/tooltip-helpers';
 import {
     validateAxisPlotValues,
     validatePercentStackingValues,
@@ -161,7 +162,16 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         getTargetElements,
     },
     tooltip: {
-        prepareData: getTooltipData,
+        prepareData(args: GetTooltipDataArgs<PreparedAreaData>) {
+            const {data, measureDistance} = args;
+            return getTooltipData({
+                ...args,
+                measureDistance:
+                    measureDistance ||
+                    (data.length > 1 &&
+                        data.some(({series, geometry}) => series.stacking && geometry)),
+            });
+        },
         getValue: getTooltipYValue,
         header: {getValue: getTooltipXValue, axis: 'x'},
         getValueFormatContext: (item) => {
