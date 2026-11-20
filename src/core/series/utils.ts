@@ -6,9 +6,14 @@ import {getSymbolBBoxWidth} from '../utils';
 import {getUniqId} from '../utils/misc';
 
 import {DEFAULT_LEGEND_SYMBOL_PADDING, DEFAULT_LEGEND_SYMBOL_SIZE} from './constants';
-import type {PathLegendSymbol, PreparedLegendSymbol, PreparedSeries, StackedSeries} from './types';
+import type {
+    BasePreparedSeries,
+    PathLegendSymbol,
+    PreparedLegendSymbol,
+    StackedSeries,
+} from './types';
 
-export const getActiveLegendItems = (series: PreparedSeries[]) => {
+export const getActiveLegendItems = (series: Pick<BasePreparedSeries, 'legend' | 'visible'>[]) => {
     return [
         ...new Set(
             series.filter((s) => s.legend.enabled && s.visible).map((s) => s.legend.groupId),
@@ -16,7 +21,7 @@ export const getActiveLegendItems = (series: PreparedSeries[]) => {
     ];
 };
 
-export const getAllLegendItems = (series: PreparedSeries[]) => {
+export const getAllLegendItems = (series: Pick<BasePreparedSeries, 'legend'>[]) => {
     return [...new Set(series.filter((s) => s.legend.enabled).map((s) => s.legend.groupId))];
 };
 
@@ -51,11 +56,11 @@ export function getSeriesStackId(
     return stackId;
 }
 
-export const getVisibleSeries = ({
+export const getVisibleSeries = <T extends Pick<BasePreparedSeries, 'legend' | 'visible'>>({
     preparedSeries,
     activeLegendItems,
 }: {
-    preparedSeries: PreparedSeries[];
+    preparedSeries: T[];
     activeLegendItems: string[];
 }) => {
     return preparedSeries.map((singleSeries) => {

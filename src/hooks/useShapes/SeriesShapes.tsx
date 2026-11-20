@@ -2,7 +2,7 @@ import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
 
-import type {SeriesPlugin} from '~core/series/plugin';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import type {SeriesShapeData, SvgLabel} from '~core/shapes/types';
 import {registerInteractionLayer} from '~core/utils/chart-interaction';
@@ -13,16 +13,16 @@ import {AnnotationLayer} from './AnnotationLayer';
 import {HtmlLayer} from './HtmlLayer';
 import {MarkerLayer} from './MarkerLayer';
 
-interface Props {
+interface Props extends SeriesShapeData {
     boundsHeight: number;
     boundsWidth: number;
     clipPathId?: string;
     dispatcher?: Dispatch<object>;
     htmlLayout: HTMLElement | null;
     namespace: string;
-    plugin: SeriesPlugin;
-    preparedData: SeriesShapeData[];
-    labels?: SvgLabel[];
+    plugin: RegisteredSeriesPlugin;
+    renderData: object[];
+    svgLabels?: SvgLabel[];
     seriesOptions: PreparedSeriesOptions;
     isRangeSlider?: boolean;
     signal?: AbortSignal;
@@ -38,8 +38,12 @@ export const SeriesShapes = ({
     htmlLayout,
     namespace,
     plugin,
-    preparedData,
-    labels,
+    renderData,
+    markers,
+    annotations,
+    htmlLabels,
+    getHoverMarkers,
+    svgLabels,
     seriesOptions,
     isRangeSlider,
     signal,
@@ -56,11 +60,11 @@ export const SeriesShapes = ({
         let cancelled = false;
         const pending: Promise<void>[] = [];
         const plot = ref.current;
-        const cleanup = plugin.renderShapes({
+        const cleanup = plugin.layers.render({
             plot: ref.current,
             labelsPlot: labelsRef.current,
-            preparedData,
-            labels,
+            renderData,
+            svgLabels,
             seriesOptions,
             boundsWidth,
             boundsHeight,
@@ -76,12 +80,12 @@ export const SeriesShapes = ({
                 if (!cancelled && !signal?.aborted) onRenderError?.(error);
             },
         );
-        const markers = markerRef.current;
+        const markerPlot = markerRef.current;
         const interaction = plugin.interaction;
         const unregister =
-            !isRangeSlider && markers && interaction
+            !isRangeSlider && markerPlot && interaction
                 ? registerInteractionLayer(plot, () =>
-                      interaction.getTargetElements({plot, markers, preparedData}),
+                      interaction.getTargetElements({plot, markers: markerPlot, renderData}),
                   )
                 : undefined;
         return () => {
@@ -94,8 +98,8 @@ export const SeriesShapes = ({
         boundsWidth,
         dispatcher,
         plugin,
-        preparedData,
-        labels,
+        renderData,
+        svgLabels,
         seriesOptions,
         isRangeSlider,
         onRenderComplete,
@@ -103,14 +107,7 @@ export const SeriesShapes = ({
         signal,
     ]);
 
-    const annotations = React.useMemo(
-        () => preparedData.flatMap((d) => d.annotations),
-        [preparedData],
-    );
-    const htmlLayerData = React.useMemo(
-        () => ({htmlElements: preparedData.flatMap((d) => d.htmlLabels)}),
-        [preparedData],
-    );
+    const htmlLayerData = React.useMemo(() => ({htmlElements: htmlLabels}), [htmlLabels]);
 
     return (
         <React.Fragment>
@@ -120,7 +117,8 @@ export const SeriesShapes = ({
                 clipPath={clipPathId ? `url(#${clipPathId})` : undefined}
             />
             <MarkerLayer
-                preparedData={preparedData}
+                markers={markers}
+                getHoverMarkers={getHoverMarkers}
                 dispatcher={dispatcher}
                 namespace={namespace}
                 elementRef={markerRef}

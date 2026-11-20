@@ -3,18 +3,14 @@ import isNil from 'es-toolkit/compat/isNil';
 
 import type {AxisDomainValue, DomainAxis, GetAxisDataArgs} from '~core/series/axis-contract';
 import {getDomainPoints} from '~core/series/domain-points';
-import {
-    getLineSegments,
-    isDrawnPoint,
-    segmentIntersectsRect,
-} from '~core/shapes/line/auto-placement';
-import type {PlacementSegment} from '~core/shapes/line/auto-placement';
-import {filterPoints} from '~core/zoom/filter-data';
 import type {FilterSeriesDataArgs} from '~core/zoom/filter-data';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import type {LineSeries} from '../../types';
 import {getVisiblePathYValues} from '../path-domain';
 
+import type {PlacementSegment} from './auto-placement';
+import {getLineSegments, isDrawnPoint, segmentIntersectsRect} from './auto-placement';
 import {getCurveFactory} from './interpolation';
 
 interface PathRun {

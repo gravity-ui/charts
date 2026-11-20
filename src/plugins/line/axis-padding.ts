@@ -1,13 +1,16 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
-import type {PreparedLineSeries} from '~core/series/types';
-import {projectLineData} from '~core/shapes/line/prepare-data';
 
 import {collectMarkerPadding} from '../marker-axis-padding';
 
-export function getLineAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+import {projectLineData} from './prepare-data';
+import type {PreparedLineSeries} from './prepared-series';
+
+export function getLineAxisPadding(
+    args: PrepareAxisPaddingArgs<PreparedLineSeries>,
+): AxisPaddingPoint[] {
     const projected = projectLineData({
         ...args,
-        series: args.series as PreparedLineSeries[],
+        series: args.series,
         isOutsideBounds: () => false,
     });
     return collectMarkerPadding(args, projected);

@@ -8,8 +8,7 @@ import {DEFAULT_AXIS_TYPE} from '../constants';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries} from '../series';
 import {hasAxisBaseline} from '../series/axis-domain';
-import {getSeriesAxisRequirements} from '../series/axis-policies';
-import {getSeriesPlugin} from '../series/seriesRegistry';
+import {getSeriesAxisPadding, getSeriesAxisRequirements} from '../series/axis-policies';
 import type {ChartAxis, ChartAxisType} from '../types';
 import {getDomainDataXBySeries, getEffectiveXRange} from '../utils';
 import {getBandSize} from '../utils/band-size';
@@ -31,7 +30,7 @@ function calculateXAxisPadding(series: PreparedSeries[]) {
     series.forEach((seriesItem) => {
         result = Math.max(
             result,
-            getSeriesPlugin(seriesItem.type).getXAxisPadding?.(seriesItem) ?? 0,
+            getSeriesAxisPadding(seriesItem.type)?.getXDomainReserve?.(seriesItem) ?? 0,
         );
     });
 

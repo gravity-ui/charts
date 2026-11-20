@@ -1,0 +1,7 @@
+.gcharts-heatmap {
+    &__label {
+        user-select: none;
+        pointer-events: none;
+        dominant-baseline: hanging;
+    }
+}

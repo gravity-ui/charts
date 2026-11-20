@@ -1,0 +1,580 @@
+import type {CurveFactory} from 'd3-shape';
+import {curveLinear, line as lineGenerator} from 'd3-shape';
+
+import type {ShapeLabels} from '~core/shapes/types';
+import {
+    getFormattedValue,
+    getLabelsSize,
+    getLayerLabelRects,
+    getTextSizeFn,
+    isPointDataLabelEnabled,
+} from '~core/utils';
+import type {SymbolBounds} from '~core/utils/symbol';
+import {getSymbolBounds} from '~core/utils/symbol';
+
+import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '../../types';
+
+import {hasNormalMarker} from './normal-marker';
+import type {PreparedLineSeries} from './prepared-series';
+import type {PointData} from './types';
+
+export const DEFAULT_PLACEMENT_ORDER: readonly LineSeriesDataLabelPlacementPosition[] = [
+    'top',
+    'bottom',
+    'left',
+    'right',
+];
+
+/** Expands the `auto` placement into the built-in position order */
+export function getPlacementPositions(
+    placement: 'auto' | LineSeriesDataLabelPlacementPosition[],
+): readonly LineSeriesDataLabelPlacementPosition[] {
+    return placement === 'auto' ? DEFAULT_PLACEMENT_ORDER : placement;
+}
+
+/**
+ * Returns `true` when placing the series labels requires the candidate checks
+ * (intersections with lines and other labels): the series has more than one
+ * candidate position, or it hides the labels that do not fit.
+ *
+ * Returns `false` when the result is predetermined — a single position with the
+ * `show` fallback always draws the label at that position shifted into the plot,
+ * so the checks (and the segments/obstacles they consume) can be skipped.
+ */
+export function needsPlacementChecks(series: PreparedLineSeries): boolean {
+    const positions = getPlacementPositions(series.dataLabels.placement);
+    return positions.length > 1 || series.dataLabels.placementFallback === 'hide';
+}
+
+/**
+ * Area available for labels, in plot pixel coordinates: x ∈ [0, xMax], y ∈ [yTop, yBottom].
+ * With split plots these are the limits of the series' own plot.
+ */
+export interface PlacementBounds {
+    xMax: number;
+    yBottom: number;
+    yTop: number;
+}
+
+/**
+ * Axis-aligned label box in plot pixel coordinates, positioned by its top-left corner.
+ * Represents both a placement candidate and an obstacle (an already placed label).
+ */
+export interface PlacementRect {
+    height: number;
+    width: number;
+    /** Left edge */
+    x: number;
+    /** Top edge */
+    y: number;
+}
+
+/**
+ * A straight piece of a drawn line between two adjacent points, used as an obstacle:
+ * `(x1, y1) → (x2, y2)` are the segment ends, `xMin/xMax/yMin/yMax` — its precomputed
+ * bounding box for the cheap intersection reject.
+ */
+export interface PlacementSegment {
+    /** Original endpoint indices when trackPointIndices is requested. */
+    pointIndices?: readonly [number, number];
+    /** Half of the line stroke width — the rect is inflated by it on intersection checks */
+    halfWidth: number;
+    x1: number;
+    x2: number;
+    xMax: number;
+    xMin: number;
+    y1: number;
+    y2: number;
+    yMax: number;
+    yMin: number;
+}
+
+interface LinePoint {
+    x: number | null;
+    y: number | null;
+    hiddenInLine?: boolean;
+}
+
+/** Mirrors the d3 line `defined()` predicate from the line renderer */
+export function isDrawnPoint<T extends LinePoint>(p: T): p is T & {x: number; y: number} {
+    return p.x !== null && p.y !== null && !p.hiddenInLine;
+}
+
+function makeSegment(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    halfWidth: number,
+): PlacementSegment {
+    return {
+        halfWidth,
+        x1,
+        x2,
+        xMax: Math.max(x1, x2),
+        xMin: Math.min(x1, x2),
+        y1,
+        y2,
+        yMax: Math.max(y1, y2),
+        yMin: Math.min(y1, y2),
+    };
+}
+
+/** Number of straight pieces a Bézier curve is flattened into */
+const CURVE_STEPS = 8;
+
+/**
+ * Drawing context for d3 curves that records the drawn path as straight segments,
+ * flattening Bézier curves by sampling. Lets the obstacles follow the rendered
+ * interpolated line instead of the chords between the data points.
+ */
+class SegmentCollector {
+    readonly segments: PlacementSegment[] = [];
+    private readonly halfWidth: number;
+    private runStart = 0;
+    private x = 0;
+    private y = 0;
+    private pointIndex = -1;
+    private readonly points?: readonly LinePoint[];
+
+    constructor(halfWidth: number, points?: readonly LinePoint[]) {
+        this.halfWidth = halfWidth;
+        this.points = points;
+    }
+
+    moveTo(x: number, y: number) {
+        this.runStart = this.segments.length;
+        this.x = x;
+        this.y = y;
+        this.advancePoint(x, y);
+    }
+
+    lineTo(x: number, y: number) {
+        const start = this.segments.length;
+        this.append(x, y);
+        this.setPointIndices(start, x, y);
+    }
+
+    quadraticCurveTo(cpx: number, cpy: number, x: number, y: number) {
+        const start = this.segments.length;
+        const {x: x0, y: y0} = this;
+        for (let i = 1; i <= CURVE_STEPS; i++) {
+            const t = i / CURVE_STEPS;
+            const mt = 1 - t;
+            this.append(
+                mt * mt * x0 + 2 * mt * t * cpx + t * t * x,
+                mt * mt * y0 + 2 * mt * t * cpy + t * t * y,
+            );
+        }
+        this.setPointIndices(start, x, y);
+    }
+
+    bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number) {
+        const start = this.segments.length;
+        const {x: x0, y: y0} = this;
+        for (let i = 1; i <= CURVE_STEPS; i++) {
+            const t = i / CURVE_STEPS;
+            const mt = 1 - t;
+            const a = mt * mt * mt;
+            const b = 3 * mt * mt * t;
+            const c = 3 * mt * t * t;
+            const d = t * t * t;
+            this.append(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
+        }
+        this.setPointIndices(start, x, y);
+    }
+
+    closePath() {}
+
+    private append(x: number, y: number) {
+        if (!this.points) {
+            // Repeated vertices must not turn an endpoint cap into an internal round join.
+            // Keep one zero-length segment only when the whole run is coincident.
+            if (this.x === x && this.y === y) {
+                if (this.segments.length > this.runStart) return;
+            } else if (this.segments.length === this.runStart + 1) {
+                const first = this.segments[this.runStart];
+                if (first.x1 === first.x2 && first.y1 === first.y2) {
+                    this.segments.pop();
+                }
+            }
+        }
+        this.segments.push(makeSegment(this.x, this.y, x, y, this.halfWidth));
+        this.x = x;
+        this.y = y;
+    }
+
+    private advancePoint(x: number, y: number) {
+        if (!this.points) return;
+        do {
+            this.pointIndex++;
+        } while (
+            this.pointIndex < this.points.length &&
+            (this.points[this.pointIndex].x !== x || this.points[this.pointIndex].y !== y)
+        );
+    }
+
+    private setPointIndices(start: number, x: number, y: number) {
+        if (!this.points) return;
+        const from = this.pointIndex;
+        this.advancePoint(x, y);
+        const pointIndices = [from, this.pointIndex] as const;
+        for (let index = start; index < this.segments.length; index++) {
+            this.segments[index].pointIndices = pointIndices;
+        }
+    }
+}
+
+/**
+ * Segments of all visible lines in the layer, following the renderer's curve and
+ * defined-point predicate. Bézier curves are flattened into straight segments.
+ */
+export function getLineSegments(
+    data: Array<{
+        curveFactory?: CurveFactory;
+        lineWidth: number;
+        points: LinePoint[];
+        /** Track endpoints for curves interpolating the input points (linear, cardinal, monotone). */
+        trackPointIndices?: boolean;
+    }>,
+): PlacementSegment[] {
+    const segments: PlacementSegment[] = [];
+    for (const d of data) {
+        const halfWidth = d.lineWidth / 2;
+        if (d.curveFactory || !d.trackPointIndices) {
+            const collector = new SegmentCollector(
+                halfWidth,
+                d.trackPointIndices ? d.points : undefined,
+            );
+            lineGenerator<LinePoint>()
+                .defined(isDrawnPoint)
+                .x((p) => p.x as number)
+                .y((p) => p.y as number)
+                .curve(d.curveFactory ?? curveLinear)
+                .context(collector as unknown as CanvasRenderingContext2D)(d.points);
+            // Pushed one by one: spreading tens of thousands of segments overflows the stack.
+            for (const segment of collector.segments) {
+                segments.push(segment);
+            }
+            continue;
+        }
+        for (let i = 1; i < d.points.length; i++) {
+            const p1 = d.points[i - 1];
+            const p2 = d.points[i];
+            if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
+                const segment = makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth);
+                if (d.trackPointIndices) segment.pointIndices = [i - 1, i];
+                segments.push(segment);
+            }
+        }
+    }
+
+    return segments;
+}
+
+function getCandidateRect(
+    position: LineSeriesDataLabelPlacementPosition,
+    point: {x: number; y: number},
+    size: {height: number; width: number},
+    padding: number,
+    markerBounds?: SymbolBounds,
+): PlacementRect {
+    const offset = padding + (markerBounds?.[position] ?? 0);
+    switch (position) {
+        case 'bottom':
+            return {...size, x: point.x - size.width / 2, y: point.y + offset};
+        case 'right':
+            return {...size, x: point.x + offset, y: point.y - size.height / 2};
+        case 'left':
+            return {...size, x: point.x - offset - size.width, y: point.y - size.height / 2};
+        case 'top':
+        default:
+            return {...size, x: point.x - size.width / 2, y: point.y - offset - size.height};
+    }
+}
+
+/**
+ * Shifts the rect into the plot bounds, reproducing the label clamping formulas of the
+ * "always above the point" behavior exactly: the x clamp applies the left limit first,
+ * and for SVG labels it is the hanging baseline that respects the top limit, so the
+ * visible box may stick out above the plot by `hangingOffset` pixels.
+ */
+export function clampPlacementRect(args: {
+    bounds: PlacementBounds;
+    hangingOffset?: number;
+    rect: PlacementRect;
+}): PlacementRect {
+    const {bounds, hangingOffset = 0, rect} = args;
+
+    return {
+        ...rect,
+        x: Math.min(bounds.xMax - rect.width, Math.max(0, rect.x)),
+        y: Math.max(bounds.yTop - hangingOffset, Math.min(bounds.yBottom - rect.height, rect.y)),
+    };
+}
+
+/** Segment × rect intersection: bbox reject, then Liang-Barsky; rect is inflated by halfWidth */
+export function segmentIntersectsRect(seg: PlacementSegment, rect: PlacementRect): boolean {
+    const left = rect.x - seg.halfWidth;
+    const right = rect.x + rect.width + seg.halfWidth;
+    const top = rect.y - seg.halfWidth;
+    const bottom = rect.y + rect.height + seg.halfWidth;
+    if (seg.xMax < left || seg.xMin > right || seg.yMax < top || seg.yMin > bottom) {
+        return false;
+    }
+    let t0 = 0;
+    let t1 = 1;
+    const dx = seg.x2 - seg.x1;
+    const dy = seg.y2 - seg.y1;
+    const p = [-dx, dx, -dy, dy];
+    const q = [seg.x1 - left, right - seg.x1, seg.y1 - top, bottom - seg.y1];
+    for (let i = 0; i < 4; i++) {
+        if (p[i] === 0) {
+            if (q[i] < 0) {
+                return false;
+            }
+            continue;
+        }
+        const t = q[i] / p[i];
+        if (p[i] < 0) {
+            if (t > t1) {
+                return false;
+            }
+            t0 = Math.max(t0, t);
+        } else {
+            if (t < t0) {
+                return false;
+            }
+            t1 = Math.min(t1, t);
+        }
+    }
+
+    return true;
+}
+
+function rectsOverlap(a: PlacementRect, b: PlacementRect): boolean {
+    return (
+        a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+    );
+}
+
+/**
+ * Picks the first position from `positions` whose label box, shifted into `bounds`,
+ * does not cross any line segment or obstacle rect. Returns `null` when no candidate fits.
+ */
+export function pickLabelPlacement(args: {
+    allowOverlap: boolean;
+    bounds: PlacementBounds;
+    hangingOffset?: number;
+    obstacles: PlacementRect[];
+    markerBounds?: SymbolBounds;
+    padding: number;
+    point: {x: number; y: number};
+    positions: readonly LineSeriesDataLabelPlacementPosition[];
+    segments: PlacementSegment[];
+    size: {height: number; width: number};
+}): PlacementRect | null {
+    for (const position of args.positions) {
+        const rect = clampPlacementRect({
+            bounds: args.bounds,
+            hangingOffset: args.hangingOffset,
+            rect: getCandidateRect(
+                position,
+                args.point,
+                args.size,
+                args.padding,
+                args.markerBounds,
+            ),
+        });
+        if (args.segments.some((s) => segmentIntersectsRect(s, rect))) {
+            continue;
+        }
+        if (!args.allowOverlap && args.obstacles.some((o) => rectsOverlap(o, rect))) {
+            continue;
+        }
+        return rect;
+    }
+
+    return null;
+}
+
+/** Label bounds of the other layers as placement obstacles. */
+export function getObstacleRectsFromLayers(layers: Partial<ShapeLabels>[]): PlacementRect[] {
+    return getLayerLabelRects(layers).map(({x, y, size}) => ({
+        height: size.height,
+        width: size.width,
+        x,
+        y,
+    }));
+}
+
+interface LabelSize {
+    hangingOffset: number;
+    height: number;
+    width: number;
+}
+
+/**
+ * Measured label sizes per series object. Every line layer places the labels of the
+ * preceding series again to use them as obstacles, so without the cache each label
+ * would be measured once per layer — noticeable for HTML labels, whose measurement
+ * is a DOM layout. A series object lives for one render of one data set, so the cache
+ * never goes stale.
+ */
+const labelSizeCache = new WeakMap<PreparedLineSeries, Map<string, LabelSize>>();
+
+async function measureLabel(
+    series: PreparedLineSeries,
+    text: string,
+    getTextSize: ReturnType<typeof getTextSizeFn>,
+): Promise<LabelSize> {
+    let cache = labelSizeCache.get(series);
+    if (!cache) {
+        cache = new Map();
+        labelSizeCache.set(series, cache);
+    }
+    const cached = cache.get(text);
+    if (cached) {
+        return cached;
+    }
+
+    let size: LabelSize;
+    if (series.dataLabels.html) {
+        const labelSize = await getLabelsSize({
+            labels: [text],
+            style: series.dataLabels.style,
+            html: true,
+        });
+        size = {hangingOffset: 0, height: labelSize.maxHeight, width: labelSize.maxWidth};
+    } else {
+        const labelSize = await getTextSize(text);
+        size = {
+            hangingOffset: labelSize.hangingOffset,
+            height: labelSize.height,
+            width: labelSize.width,
+        };
+    }
+    cache.set(text, size);
+
+    return size;
+}
+
+/**
+ * Places the labels of a line series: formats and measures each label, tries the
+ * configured positions (each shifted into the plot bounds) and applies the
+ * `placementFallback` when none fits, then converts the resulting rect into render
+ * items. Every placed label rect is pushed into `args.obstacles`, so subsequent
+ * labels avoid it.
+ *
+ * With a single position and the `show` fallback the outcome is predetermined —
+ * the first position shifted into the plot — so the checks are skipped entirely.
+ * This is both the fast path and the exact reproduction of the default
+ * "always above the point" behavior.
+ */
+export async function placeLineDataLabels(args: {
+    bounds: PlacementBounds;
+    isOutsideBounds: (x: number, y: number) => boolean;
+    obstacles: PlacementRect[];
+    points: PointData[];
+    segments: PlacementSegment[];
+    series: PreparedLineSeries;
+}): Promise<{htmlLabels: HtmlItem[]; svgLabels: LabelData[]}> {
+    const {bounds, isOutsideBounds, obstacles, points, segments, series} = args;
+    const htmlLabels: HtmlItem[] = [];
+    const svgLabels: LabelData[] = [];
+
+    const fallback = series.dataLabels.placementFallback;
+    const positions = getPlacementPositions(series.dataLabels.placement);
+    const needChecks = needsPlacementChecks(series);
+
+    const getTextSize = getTextSizeFn({style: series.dataLabels.style});
+    const normal = series.marker.states.normal;
+    const markerBounds =
+        series.dataLabels.anchor === 'marker-edge'
+            ? getSymbolBounds({
+                  symbolType: normal.symbol,
+                  // Use the same path radius as renderMarkers.
+                  radius: normal.radius + normal.borderWidth,
+                  strokeWidth: normal.borderWidth,
+              })
+            : undefined;
+
+    for (const point of points) {
+        if (point.x === null || point.y === null || isOutsideBounds(point.x, point.y)) {
+            continue;
+        }
+
+        if (!isPointDataLabelEnabled({data: point.data, series})) {
+            continue;
+        }
+
+        const anchor = {x: point.x, y: point.y};
+        const visibleMarkerBounds = hasNormalMarker(point) ? markerBounds : undefined;
+
+        const text = getFormattedValue({
+            value: point.data.label ?? point.data.y,
+            ...series.dataLabels,
+        });
+
+        const {hangingOffset, height, width} = await measureLabel(series, text, getTextSize);
+        const size = {height, width};
+
+        let rect: PlacementRect | null = null;
+        if (needChecks) {
+            rect = pickLabelPlacement({
+                allowOverlap: series.dataLabels.allowOverlap,
+                bounds,
+                hangingOffset,
+                obstacles,
+                markerBounds: visibleMarkerBounds,
+                padding: series.dataLabels.padding,
+                point: anchor,
+                positions,
+                segments,
+                size,
+            });
+        }
+        if (!rect && (!needChecks || fallback === 'show')) {
+            rect = clampPlacementRect({
+                bounds,
+                hangingOffset,
+                rect: getCandidateRect(
+                    positions[0],
+                    anchor,
+                    size,
+                    series.dataLabels.padding,
+                    visibleMarkerBounds,
+                ),
+            });
+        }
+
+        if (!rect) {
+            continue;
+        }
+
+        obstacles.push(rect);
+
+        if (series.dataLabels.html) {
+            htmlLabels.push({
+                content: text,
+                size,
+                style: series.dataLabels.style,
+                x: rect.x,
+                y: rect.y,
+            });
+        } else {
+            svgLabels.push({
+                active: true,
+                series,
+                size: {...size, hangingOffset},
+                style: series.dataLabels.style,
+                text,
+                textAnchor: 'start',
+                x: rect.x,
+                y: rect.y + hangingOffset,
+            });
+        }
+    }
+
+    return {htmlLabels, svgLabels};
+}

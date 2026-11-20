@@ -30,7 +30,7 @@ it.each([
 });
 
 it('groups equal plugin keys without changing first-occurrence order', () => {
-    jest.spyOn(getSeriesPlugin('line'), 'getLayerKey').mockReturnValue('1');
+    jest.spyOn(getSeriesPlugin('line').layers, 'getKey').mockReturnValue('1');
     const layers = getSeriesLayers(raw, (series, index) => `${series.type}_${index}`);
     expect(layers).toEqual([
         {key: '1', series: [raw[0], raw[2]]},
@@ -39,7 +39,7 @@ it('groups equal plugin keys without changing first-occurrence order', () => {
 });
 
 it('rejects layer keys shared by different plugins before dispatching series', () => {
-    jest.spyOn(getSeriesPlugin('line'), 'getLayerKey').mockReturnValue('bar-x');
+    jest.spyOn(getSeriesPlugin('line').layers, 'getKey').mockReturnValue('bar-x');
     expect(() => getSeriesLayers(raw, (series, index) => `${series.type}_${index}`)).toThrow(
         'Layer key "bar-x" is shared by different series types',
     );

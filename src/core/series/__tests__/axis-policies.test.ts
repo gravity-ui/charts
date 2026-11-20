@@ -2,24 +2,26 @@
 
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
-import {getTickValues} from '../../../components/AxisY/utils';
+import type {ChartSeries, LineSeries} from '~core/types';
+
 import type * as YTicks from '../../../components/AxisY/utils';
+import {getTickValues} from '../../../components/AxisY/utils';
 import type * as LinePlugin from '../../../plugins/line';
 import type {PreparedYAxis} from '../../axes/types';
 import {getPreparedXAxis} from '../../axes/x-axis';
 import {getPreparedYAxis} from '../../axes/y-axis';
 import {createXScale} from '../../scales/x-scale';
 import {createYScale} from '../../scales/y-scale';
-import type {ChartSeries} from '../../types';
-import {getXAxisTickValues} from '../../utils/axis/x-axis';
 import type * as XTicks from '../../utils/axis/x-axis';
+import {getXAxisTickValues} from '../../utils/axis/x-axis';
 import type {SeriesAxes} from '../axis-contract';
+import type * as AxisDomain from '../axis-domain';
 import {
     collectAxisCoordinateValues,
     getAxisCoordinateValues,
     getAxisDomainValues,
 } from '../axis-domain';
-import type * as AxisDomain from '../axis-domain';
+import type * as AxisPolicies from '../axis-policies';
 import {
     getAxisPaddingDefaults,
     getSeriesAxisRequirements,
@@ -157,11 +159,12 @@ test('axis opt-in and tick hooks work with an isolated registry', () => {
     jest.isolateModules(() => {
         const registry = jest.requireActual<typeof Registry>('../seriesRegistry');
         const domain = jest.requireActual<typeof AxisDomain>('../axis-domain');
+        const policies = jest.requireActual<typeof AxisPolicies>('../axis-policies');
         const {linePlugin} = jest.requireActual<typeof LinePlugin>('../../../plugins/line');
         const xTicks = jest.requireActual<typeof XTicks>('../../utils/axis/x-axis');
         const yTicks = jest.requireActual<typeof YTicks>('../../../components/AxisY/utils');
         expect(registry.getRegisteredSeriesTypes()).toEqual([]);
-        const series: ChartSeries[] = [
+        const series: LineSeries[] = [
             {
                 type: 'line',
                 name: 'Line',
@@ -171,11 +174,26 @@ test('axis opt-in and tick hooks work with an isolated registry', () => {
                 ],
             },
         ];
-        registry.registerSeriesPlugin({...linePlugin, axes: undefined});
+        registry.registerSeriesPlugin({
+            ...linePlugin,
+            axes: undefined,
+        });
         expect(domain.getAxisDomainValues(series, 'x')).toEqual([]);
-        registry.registerSeriesPlugin({...linePlugin, axes: false});
+        registry.registerSeriesPlugin({
+            ...linePlugin,
+            axes: false,
+        });
         expect(domain.getAxisDomainValues(series, 'y')).toEqual([]);
-        registry.registerSeriesPlugin({...linePlugin, axes: {}});
+        registry.registerSeriesPlugin({...linePlugin, axes: true});
+        expect(domain.getAxisDomainValues(series, 'x')).toEqual([0, 10]);
+        expect(domain.getAxisDomainValues(series, 'y')).toEqual([10, 30]);
+        expect(policies.getSeriesAxisPadding('line')).toBeUndefined();
+        registry.registerSeriesPlugin({
+            ...linePlugin,
+            axes: {
+                padding: linePlugin.axes.padding,
+            },
+        });
         expect(domain.getAxisDomainValues(series, 'x')).toEqual([0, 10]);
         expect(domain.getAxisDomainValues(series, 'y')).toEqual([10, 30]);
 
@@ -184,9 +202,10 @@ test('axis opt-in and tick hooks work with an isolated registry', () => {
             axes: {
                 x: {getTicks: () => ({values: [2, 8]})},
                 y: {getTicks: () => ({values: [15, 25]})},
+                padding: linePlugin.axes.padding,
             },
         });
-        const prepared = linePlugin.prepareSeries({
+        const prepared = linePlugin.series.prepare({
             series,
             colors: ['black'],
             colorScale: scaleOrdinal<string, string>().range(['black']),

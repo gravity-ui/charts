@@ -1,9 +1,9 @@
 import {linePlugin} from '../../../plugins/line';
+import type {PreparedLineData} from '../../../plugins/line/types';
 import {scatterPlugin} from '../../../plugins/scatter';
+import type {PreparedScatterData} from '../../../plugins/scatter/types';
 import type {ChartInteractionItem} from '../../../types';
 import {registerSeriesPlugin} from '../../series/seriesRegistry';
-import type {PreparedLineData} from '../../shapes/line/types';
-import type {PreparedScatterData} from '../../shapes/scatter/types';
 import {getChartClosest} from '../get-closest-data';
 import {getNearestItem} from '../nearest-point';
 
@@ -22,7 +22,7 @@ const scatterSeries = {
 const near: ChartInteractionItem = {series: lineSeries, point: {x: 6, y: 1}};
 const far: ChartInteractionItem = {series: scatterSeries, point: {x: 5, y: 9}};
 
-const line = {
+const lineData = {
     series: lineSeries,
     linecap: 'round',
     lineWidth: 2,
@@ -33,6 +33,7 @@ const line = {
         {x: 60, y: 10, data: near.point, series: lineSeries},
     ],
 } as unknown as PreparedLineData;
+const line = {type: 'line', data: lineData};
 
 test('chart lookup compares both axes before discarding any line vertices', () => {
     const args = {
@@ -52,10 +53,11 @@ test('chart lookup compares both axes before discarding any line vertices', () =
 test.each([false, true])(
     'mixed-series lookup is independent of plugin order (reverse: %s)',
     (reverse) => {
-        const scatter = {
+        const scatterData = {
             point: {x: 50, y: 90, data: far.point, series: scatterSeries},
             clipped: false,
         } as PreparedScatterData;
+        const scatter = {type: 'scatter', data: scatterData};
         const shapesData = reverse ? [scatter, line] : [line, scatter];
         const args = {
             position: [60, 10] as [number, number],
@@ -120,7 +122,7 @@ test.each(['chart', 'tooltip'] as const)('ignores unregistered shapes in %s quer
         boundsHeight: 100,
         seriesOrder: ['line'],
     };
-    const unknown = {series: {type: 'unregistered'}};
+    const unknown = {type: 'unregistered', data: {}};
     expect(getChartClosest({...args, shapesData: [unknown]})).toBeNull();
     expect(getChartClosest({...args, shapesData: [unknown, line]})).toEqual(
         getChartClosest({...args, shapesData: [line]}),

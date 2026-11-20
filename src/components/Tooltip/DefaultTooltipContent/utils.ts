@@ -63,7 +63,7 @@ export function getHoveredValues(args: {
 
     return hovered.map((item) => {
         const getValue =
-            getSeriesPlugin(item.series.type).tooltip.getValue ?? getDefaultTooltipValue;
+            getSeriesPlugin(item.series.type).tooltip?.getValue ?? getDefaultTooltipValue;
         return getValue({item, xAxis, yAxis: getTooltipYAxis(item.series, yAxes)});
     });
 }

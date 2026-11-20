@@ -25,6 +25,8 @@ function getSeriesDependencies(source: string, includeTypes = false): string[] {
         if (
             !includeTypes &&
             (ts.isTypeNode(node) ||
+                ts.isInterfaceDeclaration(node) ||
+                ts.isTypeAliasDeclaration(node) ||
                 (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly) ||
                 (ts.isExportDeclaration(node) && node.isTypeOnly))
         ) {
@@ -67,10 +69,19 @@ it('keeps shared code and public types independent of plugin internals', () => {
         const relativePath = path.relative(sourceRoot, file);
         return (
             getPluginDependencies(readFileSync(file, 'utf8'))
-                // The public component entrypoint initializes the built-in registry.
+                // Allow registry bootstrap and built-in type aggregation; runtime imports
+                // from these aggregates are checked separately below.
                 .filter(
                     (dependency) =>
-                        !(relativePath === 'components/index.tsx' && dependency === '../plugins'),
+                        !(relativePath === 'components/index.tsx' && dependency === '../plugins') &&
+                        !(
+                            relativePath === 'core/series/types.ts' &&
+                            dependency.endsWith('/prepared-series')
+                        ) &&
+                        !(
+                            relativePath === 'core/constants/defaults/series-options.ts' &&
+                            dependency.endsWith('/defaults')
+                        ),
                 )
                 .map((dependency) => `${relativePath}: ${dependency}`)
         );
@@ -99,91 +110,28 @@ it('keeps interaction contracts generic, including type-only dependencies', () =
     ]);
 });
 
-it('keeps the migrated tooltip runtime independent of built-in series implementations', () => {
-    const files = [
-        ...getRuntimeFiles(path.join(sourceRoot, 'components/Tooltip')),
-        ...getRuntimeFiles(path.join(sourceRoot, 'core/tooltip')),
-        ...getRuntimeFiles(path.join(sourceRoot, 'hooks/useTooltip')),
-        path.join(sourceRoot, 'core/utils/tooltip.ts'),
-        path.join(sourceRoot, 'core/utils/tooltip-helpers.ts'),
-        path.join(sourceRoot, 'components/ChartInner/utils/tooltip.ts'),
-    ];
-    const violations = files.flatMap((file) =>
-        getSeriesDependencies(readFileSync(file, 'utf8')).map(
-            (dependency) => `${path.relative(sourceRoot, file)}: ${dependency}`,
-        ),
+it('keeps all shared runtime independent of built-in series implementations', () => {
+    const files = ['core', 'components', 'hooks', 'types'].flatMap((directory) =>
+        getRuntimeFiles(path.join(sourceRoot, directory)),
     );
-    expect(violations).toEqual([]);
-});
-
-it('keeps migrated grouping and clipping independent of built-in series implementations', () => {
-    const files = [
-        'core/series/layers.ts',
-        'core/series/prepareSeries.ts',
-        'core/shapes/utils.ts',
-        'hooks/useShapes/index.tsx',
-        'hooks/useRangeSlider/index.ts',
-        'components/ChartInner/useChartInnerProps.ts',
-    ];
-    const violations = files.flatMap((file) =>
-        getSeriesDependencies(readFileSync(path.join(sourceRoot, file), 'utf8')).map(
-            (dependency) => `${file}: ${dependency}`,
-        ),
-    );
-    expect(violations).toEqual([]);
-});
-
-it('keeps chart interaction coordination independent of built-in series implementations', () => {
-    const files = [
-        'core/utils/chart-interaction.ts',
-        'core/utils/nearest-point.ts',
-        'core/utils/svg-hit-test.ts',
-        'core/utils/get-closest-data.ts',
-        'core/types/chart/interaction.ts',
-        'components/ChartInner/index.tsx',
-        'components/ChartInner/useChartInnerHandlers.ts',
-        'hooks/useShapes/SeriesShapes.tsx',
-        'hooks/useShapes/MarkerLayer.tsx',
-    ];
-    const violations = files.flatMap((file) =>
-        getSeriesDependencies(readFileSync(path.join(sourceRoot, file), 'utf8')).map(
-            (dependency) => `${file}: ${dependency}`,
-        ),
-    );
-    expect(violations).toEqual([]);
-});
-
-it('keeps axis-domain coordination and stacking primitives independent of built-in series', () => {
-    const files = [
-        'core/utils/common.ts',
-        'core/series/axis-domain.ts',
-        'core/series/stacked-domain.ts',
-        'core/series/axis-contract.ts',
-        'core/series/axis-policies.ts',
-        'core/utils/series-type-guards.ts',
-        'core/scales/x-scale.ts',
-        'core/scales/y-scale.ts',
-        'core/scales/utils.ts',
-        'core/scales/axis-padding.ts',
-        'core/axes/x-axis.ts',
-        'core/axes/y-axis.ts',
-        'core/utils/axis/x-axis.ts',
-        'components/AxisY/utils.ts',
-        'core/zoom/zoom.ts',
-        'core/zoom/filter-data.ts',
-        'core/utils/series/sorting.ts',
-    ];
-    const violations = files.flatMap((file) =>
-        getSeriesDependencies(readFileSync(path.join(sourceRoot, file), 'utf8')).map(
-            (dependency) => `${file}: ${dependency}`,
-        ),
-    );
+    const violations = files.flatMap((file) => {
+        const relativePath = path.relative(sourceRoot, file);
+        // The catalog declares public identifiers; the component entry point registers built-ins.
+        if (relativePath === 'core/constants/chart-types.ts') return [];
+        return getSeriesDependencies(readFileSync(file, 'utf8'))
+            .filter(
+                (dependency) =>
+                    !(relativePath === 'components/index.tsx' && dependency === '../plugins'),
+            )
+            .map((dependency) => `${relativePath}: ${dependency}`);
+    });
     expect(violations).toEqual([]);
 });
 
 it.each([
     "switch (series.type) { case 'line': break; }",
     "const types = new Set(['radar', 'bar-y']);",
+    "const renderers = {'line': render};",
     'const types = [SERIES_TYPE.Line];',
     "import {linePlugin} from '../../../plugins/line';",
     "const renderer = require('~core/shapes/line/renderer');",

@@ -26,7 +26,7 @@ async function getGeometry(scenario: Scenario) {
         name: 'Revenue',
         data: values.map((value) => ({x: value, y: value})),
     };
-    const series = await getSeriesPlugin('line').prepareSeries({
+    const series = await getSeriesPlugin('line').series.prepare({
         series: [raw],
         colors: [],
         colorScale: scaleOrdinal<string, string>().range(['black']),

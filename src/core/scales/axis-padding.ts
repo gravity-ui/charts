@@ -5,8 +5,7 @@ import {getAutomaticTickValues} from '../../components/AxisY/utils';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {PreparedSplit} from '../layout/split-types';
 import type {AxisDomainValue} from '../series/axis-contract';
-import {getSeriesAxisRequirements} from '../series/axis-policies';
-import {getSeriesPlugin} from '../series/seriesRegistry';
+import {getSeriesAxisPadding, getSeriesAxisRequirements} from '../series/axis-policies';
 import type {PreparedSeries, PreparedSeriesOptions} from '../series/types';
 import type {ChartMargin} from '../types';
 import {getOnlyVisibleSeries} from '../utils';
@@ -29,10 +28,13 @@ export interface AxisPaddingPoint extends ChartMargin {
     yAxis: number;
 }
 
-export interface PrepareAxisPaddingArgs {
+export interface PrepareAxisPaddingArgs<
+    TSeries = PreparedSeries,
+    TOptions = PreparedSeriesOptions,
+> {
     split: PreparedSplit;
-    series: PreparedSeries[];
-    seriesOptions?: PreparedSeriesOptions;
+    series: TSeries[];
+    seriesOptions?: TOptions;
     xAxis: PreparedXAxis;
     yAxis: PreparedYAxis[];
     xScale: ChartScale;
@@ -286,7 +288,10 @@ export function applyAxisPadding(
             (s) => autoX || autoY['yAxis' in s ? s.yAxis : 0],
         );
         for (const [type, items] of group(measuredSeries, (s) => s.type)) {
-            const contribution = getSeriesPlugin(type).getAxisPadding?.({...args, series: items});
+            const contribution = getSeriesAxisPadding(type)?.getPaintExtents?.({
+                ...args,
+                series: items,
+            });
             if (contribution) {
                 for (const point of contribution) points.push(point);
             }

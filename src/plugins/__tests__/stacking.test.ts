@@ -4,18 +4,21 @@ import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
-import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
+import type {PrepareLayerArgs} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
+import {getSeriesPlugin} from '~core/series/seriesRegistry';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
 import type {PreparedLegend} from '~core/series/types';
-import type {PreparedAreaData} from '~core/shapes/area/types';
-import type {PreparedBarXData} from '~core/shapes/bar-x/types';
-import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import * as textUtils from '~core/utils/text';
 
 import type {AreaSeries, BarXSeries, ChartSeries} from '../../types';
-import {areaPlugin} from '../area';
-import {barXPlugin} from '../bar-x';
-import {barYPlugin} from '../bar-y';
+import type {PreparedAreaData} from '../area/types';
+import type {PreparedBarXData} from '../bar-x/types';
+import type {BarYShapesArgs} from '../bar-y/types';
+
+const areaPlugin = getSeriesPlugin('area');
+const barXPlugin = getSeriesPlugin('bar-x');
+const barYPlugin = getSeriesPlugin('bar-y');
 
 beforeEach(() => {
     jest.spyOn(textUtils, 'getTextSizeFn').mockReturnValue(async (text) => ({
@@ -27,9 +30,9 @@ beforeEach(() => {
 
 afterEach(() => jest.restoreAllMocks());
 
-async function prepare(plugin: SeriesPlugin, raw: ChartSeries[]) {
+async function prepare(plugin: RegisteredSeriesPlugin, raw: ChartSeries[]) {
     const horizontal = plugin.type === 'bar-y';
-    const series = await plugin.prepareSeries({
+    const series = await plugin.series.prepare({
         series: raw,
         colorScale: scaleOrdinal([] as string[], ['#000']),
         colors: [],
@@ -39,7 +42,7 @@ async function prepare(plugin: SeriesPlugin, raw: ChartSeries[]) {
     const valueScale = scaleLinear()
         .domain([0, 100])
         .range(horizontal ? [0, 400] : [200, 0]);
-    const args: PrepareShapeDataArgs = {
+    const args: PrepareLayerArgs = {
         series,
         seriesOptions: getPreparedOptions(),
         xAxis: {type: 'linear'} as PreparedXAxis,
@@ -52,7 +55,7 @@ async function prepare(plugin: SeriesPlugin, raw: ChartSeries[]) {
         boundsWidth: 400,
         split: {plots: [{top: 0, height: 200}]} as PreparedSplit,
     };
-    return plugin.prepareShapeData(args);
+    return plugin.layers.prepareData(args);
 }
 
 describe.each([barXPlugin, areaPlugin])('$type stacks on different value axes', (plugin) => {

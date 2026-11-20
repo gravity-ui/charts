@@ -6,14 +6,14 @@ import type {PreparedSeries} from '../series/types';
 
 import {groupBy} from './array';
 
-export interface ShapePoint {
+export interface ShapePoint<TData = ChartSeriesData, TSeries = PreparedSeries> {
     x: number;
     y0: number;
     y1: number;
     color?: string;
     percentage?: number;
-    data: ChartSeriesData;
-    series: PreparedSeries;
+    data: TData;
+    series: TSeries;
     subTotal?: number;
     sourceX?: number;
     /**
@@ -35,7 +35,10 @@ export interface ShapePoint {
  * to pick a single active chunk across series types and is stripped before the chunks reach
  * public callbacks.
  */
-export type TooltipCandidate = TooltipDataChunk & {distance?: number};
+export type TooltipCandidate<TChunk = TooltipDataChunk> = TChunk & {
+    distance?: number;
+    closest?: boolean;
+};
 
 export interface GetTooltipDataArgs<TShapeData = unknown> {
     data: TShapeData[];
@@ -49,14 +52,22 @@ export interface GetTooltipDataArgs<TShapeData = unknown> {
     measureDistance: boolean;
 }
 
-export interface GetTooltipDataResult {
-    chunks: TooltipCandidate[];
-    xLookupPoints?: ShapePoint[];
-}
+/** A plugin selects chunks itself, or delegates X-column selection to core. */
+export type GetTooltipDataResult<
+    TChunk extends {data: unknown; series: object} = TooltipDataChunk,
+> =
+    | {chunks: TooltipCandidate<TChunk>[]; xLookupPoints?: never}
+    | {
+          chunks?: never;
+          xLookupPoints: (ShapePoint<TChunk['data'], TChunk['series']> & TChunk)[];
+      };
 
-export type GetTooltipDataFn = (args: GetTooltipDataArgs<MeaningfulAny>) => GetTooltipDataResult;
+export type GetTooltipDataFn<
+    TShapeData = MeaningfulAny,
+    TChunk extends {data: unknown; series: object} = TooltipDataChunk,
+> = (args: GetTooltipDataArgs<TShapeData>) => GetTooltipDataResult<TChunk>;
 
-export function getClosestYIndex(items: ShapePoint[], y: number) {
+export function getClosestYIndex(items: Pick<ShapePoint, 'y0' | 'y1'>[], y: number) {
     let closestYIndex = -1;
     if (y < items[0]?.y0) {
         closestYIndex = 0;
@@ -90,7 +101,11 @@ export function getSeriesLayer(layerIndexes: LayerIndexes | undefined, series: o
  * layer; the remaining ties and unmeasured candidates are resolved by the Y rule of
  * `getClosestYIndex`.
  */
-function pickClosestPoint(points: ShapePoint[], y: number, layerIndexes?: LayerIndexes) {
+function pickClosestPoint<TPoint extends ShapePoint<unknown, object>>(
+    points: TPoint[],
+    y: number,
+    layerIndexes?: LayerIndexes,
+) {
     let candidates = points;
     const measured = points.filter((p) => p.distance !== undefined);
     if (measured.length > 0) {
@@ -112,9 +127,13 @@ function pickClosestPoint(points: ShapePoint[], y: number, layerIndexes?: LayerI
  * the nearest contour wins, then the later painted one. Points without a hit test use the
  * measured distance of their series or the distance to their point.
  */
-function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
-    let shapeWinner: ShapePoint | undefined;
-    let candidates: ShapePoint[] = [];
+function getClosestHitTestPoint<TPoint extends ShapePoint<unknown, object>>(
+    points: TPoint[],
+    x: number,
+    y: number,
+) {
+    let shapeWinner: TPoint | undefined;
+    let candidates: TPoint[] = [];
     let closestDistance = Infinity;
     for (const point of points) {
         const distance =
@@ -145,14 +164,14 @@ function getClosestHitTestPoint(points: ShapePoint[], x: number, y: number) {
     return sorted[getClosestYIndex(sorted, y)] ?? points[0];
 }
 
-export function getClosestPointsByXValue(
+export function getClosestPointsByXValue<TPoint extends ShapePoint<unknown, object>>(
     x: number,
     y: number,
-    points: ShapePoint[],
+    points: TPoint[],
     layerIndexes?: LayerIndexes,
-): Array<ShapePoint & {closest: boolean}> {
+): Array<TPoint & {closest: boolean}> {
     const sorted = sort(points, (p) => p.x);
-    const closestXIndex = bisector<ShapePoint, number>((p) => p.x).center(sorted, x);
+    const closestXIndex = bisector<TPoint, number>((p) => p.x).center(sorted, x);
 
     if (sorted.length === 0 || closestXIndex === -1) {
         return [];
@@ -184,7 +203,7 @@ export function getClosestPointsByXValue(
 
     if (pointsWithSourceX.length > 1 && uniqueSourceX.size > 1) {
         const sortedBySourceX = sort(pointsWithSourceX, (p) => p.sourceX ?? 0);
-        const closestSourceXIdx = bisector<ShapePoint, number>((p) => p.sourceX ?? 0).center(
+        const closestSourceXIdx = bisector<TPoint, number>((p) => p.sourceX ?? 0).center(
             sortedBySourceX,
             x,
         );
@@ -212,8 +231,8 @@ export function getClosestPointsByXValue(
  * Resolves the effective tooltip visibility for a point: point-level setting wins
  * over series-level. Both default to `true` when unset.
  */
-export function isPointTooltipEnabled(args: {
-    data?: {tooltip?: {enabled?: boolean}} | null;
+export function isPointTooltipEnabled<TData extends object>(args: {
+    data?: (TData & {tooltip?: {enabled?: boolean}}) | null;
     series?: {tooltip?: {enabled?: boolean}} | null;
 }): boolean {
     const pointEnabled = args.data?.tooltip?.enabled;

@@ -3,7 +3,6 @@
  */
 import React from 'react';
 
-import {ThemeProvider} from '@gravity-ui/uikit';
 import {waitFor} from '@testing-library/react';
 
 import type {ChartData} from '../../types';
@@ -91,11 +90,7 @@ describe('Chart/onReady', () => {
             expect(onReady).toHaveBeenCalledTimes(1);
         });
 
-        rerender(
-            <ThemeProvider theme="light">
-                <Chart data={data} onReady={onReady} />
-            </ThemeProvider>,
-        );
+        rerender(<Chart data={data} onReady={onReady} />);
 
         // Give time for any potential extra calls to settle
         await timeout(200);

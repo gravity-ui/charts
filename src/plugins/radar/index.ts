@@ -1,90 +1,104 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedRadarSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/radar/get-tooltip-data';
-import {prepareRadarData} from '~core/shapes/radar/prepare-data';
-import {renderRadar} from '~core/shapes/radar/renderer';
-import type {PreparedRadarData} from '~core/shapes/radar/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {RadarSeries, TooltipDataChunkRadar} from '../../types';
+import type {RadarSeries} from '../../types';
 
+import {radarDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {RadarInteractionItem} from './interaction-types';
+import {prepareRadarData} from './prepare-data';
 import {prepareRadarSeries} from './prepare-radar-series';
+import type {PreparedRadarSeries} from './prepared-series';
+import {renderRadar} from './renderer';
+import type {PreparedRadarData, RadarTooltipChunk} from './types';
 
-async function prepareShapeData({
+import './styles.scss';
+
+async function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+}: PrepareLayerArgs<PreparedRadarSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareLayerResult<PreparedRadarData, PreparedRadarData>
+> {
     const data = await prepareRadarData({
-        series: series as PreparedRadarSeries[],
+        series: series,
         boundsWidth,
         boundsHeight,
     });
-    return {renderData: data, tooltipItems: data};
+    return {
+        renderData: data,
+        htmlLabels: data.flatMap((item) => item.htmlLabels),
+        labelLayout: data,
+        lookupItems: data,
+    };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderRadar(
-        {plot, labelsPlot},
-        preparedData as PreparedRadarData[],
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderLayerArgs<PreparedRadarData, PreparedSeriesOptions>) {
+    return renderRadar({plot, labelsPlot}, renderData, seriesOptions, dispatcher);
 }
 
-export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
+export const radarPlugin = {
     type: 'radar',
-    getClipPath: () => false,
-    validate: ({series, allSeries}) => {
-        if (
-            series.categories !== undefined &&
-            (!Array.isArray(series.categories) ||
-                !series.categories.every(
-                    (category) =>
-                        typeof category === 'object' &&
-                        category !== null &&
-                        !Array.isArray(category) &&
-                        typeof category.key === 'string',
-                ))
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'Radar series.categories must be an array of objects with a string key',
-            });
-        }
+    series: {
+        optionsDefaults: radarDefaults,
+        validate: ({series, allSeries}) => {
+            if (
+                series.categories !== undefined &&
+                (!Array.isArray(series.categories) ||
+                    !series.categories.every(
+                        (category) =>
+                            typeof category === 'object' &&
+                            category !== null &&
+                            !Array.isArray(category) &&
+                            typeof category.key === 'string',
+                    ))
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'Radar series.categories must be an array of objects with a string key',
+                });
+            }
 
-        if (
-            !allSeries.some(
-                (item) =>
-                    item.type === 'radar' &&
-                    Array.isArray(item.categories) &&
-                    item.categories.length > 0,
-            )
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message:
-                    'Radar categories must be specified as a nonempty array in series.categories',
-            });
-        }
+            if (
+                !allSeries.some(
+                    (item) =>
+                        item.type === 'radar' &&
+                        Array.isArray(item.categories) &&
+                        item.categories.length > 0,
+                )
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'Radar categories must be specified as a nonempty array in series.categories',
+                });
+            }
+        },
+        prepare: ({series, seriesOptions, legend, colors}) =>
+            prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
     },
-    prepareSeries: ({series, seriesOptions, legend, colors}) =>
-        prepareRadarSeries({series: series as RadarSeries[], seriesOptions, legend, colors}),
-    prepareShapeData,
-    renderShapes,
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -116,4 +130,13 @@ export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: RadarSeries;
+    prepared: PreparedRadarSeries;
+    shape: PreparedRadarData;
+    options: ChartSeriesOptions;
+    tooltipChunk: RadarTooltipChunk;
+    interaction: RadarInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

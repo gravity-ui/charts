@@ -3,11 +3,14 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedFunnelSeries, PreparedLegendOptions, PreparedSeries} from '~core/series/types';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
+import type {PreparedLegendOptions} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
 import type {ChartSeriesOptions, FunnelSeries} from '../../types';
+
+import type {PreparedFunnelSeries} from './prepared-series';
 
 type PrepareFunnelSeriesArgs = {
     series: FunnelSeries[];
@@ -30,58 +33,60 @@ export function prepareFunnelSeries(args: PrepareFunnelSeriesArgs) {
     const isConnectorsEnabled =
         series.connectors?.enabled ?? (isTrapezoid ? userSpecifiedHeight : true);
 
-    const preparedSeries: PreparedSeries[] = series.data.map<PreparedFunnelSeries>((dataItem) => {
-        const id = getUniqId();
-        const color = dataItem.color || colorScale(dataItem.name);
-        const result: PreparedFunnelSeries = {
-            type: 'funnel',
-            shape,
-            data: dataItem,
-            dataLabels: {
-                enabled: get(series, 'dataLabels.enabled', true),
-                style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
-                html: get(series, 'dataLabels.html', false),
-                format: series.dataLabels?.format,
-                align: series.dataLabels?.align ?? 'center',
-                inside: series.dataLabels?.inside ?? false,
-                anchor: series.dataLabels?.anchor ?? 'plot',
-                reserveSpace: series.dataLabels?.reserveSpace ?? true,
-                padding: series.dataLabels?.padding ?? DEFAULT_DATALABELS_PADDING,
-                preserveLineBreaks: series.dataLabels?.preserveLineBreaks ?? false,
-            },
-            visible: true,
-            name: dataItem.name,
-            id,
-            color,
-            legend: {
-                enabled: dataItem.legend?.enabled ?? series.legend?.enabled ?? legend.enabled,
+    const preparedSeries: PreparedFunnelSeries[] = series.data.map<PreparedFunnelSeries>(
+        (dataItem) => {
+            const id = getUniqId();
+            const color = dataItem.color || colorScale(dataItem.name);
+            const metadata = prepareSeriesMetadata({
+                series: {
+                    ...dataItem,
+                    id,
+                    cursor: series.cursor,
+                    tooltip: series.tooltip,
+                    custom: series.custom,
+                    visible: true,
+                },
+                color,
+                legend: {enabled: series.legend?.enabled ?? legend.enabled},
                 symbol: dataItem.legend?.symbol
                     ? prepareLegendSymbol(dataItem)
                     : prepareLegendSymbol(series),
-                groupId: dataItem.legend?.groupId ?? getUniqId(),
-                source: dataItem.legend,
-                itemText: dataItem.legend?.itemText ?? dataItem.name,
-            },
-            cursor: get(series, 'cursor', null),
-            opacity: dataItem.opacity ?? null,
-            tooltip: series.tooltip,
-            connectors: {
-                enabled: isConnectorsEnabled,
-                height: isConnectorsEnabled
-                    ? (series.connectors?.height ?? (isTrapezoid ? 0 : '25%'))
-                    : 0,
-                lineDashStyle: series.connectors?.lineDashStyle ?? 'Dash',
-                lineOpacity: series.connectors?.lineOpacity ?? (isTrapezoid ? 0 : 1),
-                lineColor: series.connectors?.lineColor ?? 'var(--g-color-line-generic-active)',
-                areaColor: series.connectors?.areaColor ?? color,
-                areaOpacity: series.connectors?.areaOpacity ?? (isTrapezoid ? 0 : 0.25),
-                lineWidth: series.connectors?.lineWidth ?? 1,
-            },
-            custom: series.custom,
-        };
+            });
+            const result: PreparedFunnelSeries = {
+                ...metadata,
+                type: 'funnel',
+                shape,
+                data: dataItem,
+                dataLabels: {
+                    enabled: get(series, 'dataLabels.enabled', true),
+                    style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
+                    html: get(series, 'dataLabels.html', false),
+                    format: series.dataLabels?.format,
+                    align: series.dataLabels?.align ?? 'center',
+                    inside: series.dataLabels?.inside ?? false,
+                    anchor: series.dataLabels?.anchor ?? 'plot',
+                    reserveSpace: series.dataLabels?.reserveSpace ?? true,
+                    padding: series.dataLabels?.padding ?? DEFAULT_DATALABELS_PADDING,
+                    preserveLineBreaks: series.dataLabels?.preserveLineBreaks ?? false,
+                },
+                opacity: dataItem.opacity ?? null,
+                connectors: {
+                    enabled: isConnectorsEnabled,
+                    height: isConnectorsEnabled
+                        ? (series.connectors?.height ?? (isTrapezoid ? 0 : '25%'))
+                        : 0,
+                    lineDashStyle: series.connectors?.lineDashStyle ?? 'Dash',
+                    lineOpacity: series.connectors?.lineOpacity ?? (isTrapezoid ? 0 : 1),
+                    lineColor: series.connectors?.lineColor ?? 'var(--g-color-line-generic-active)',
+                    areaColor: series.connectors?.areaColor ?? color,
+                    areaOpacity: series.connectors?.areaOpacity ?? (isTrapezoid ? 0 : 0.25),
+                    lineWidth: series.connectors?.lineWidth ?? 1,
+                },
+            };
 
-        return result;
-    });
+            return result;
+        },
+    );
 
     return preparedSeries;
 }
