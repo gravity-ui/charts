@@ -55,3 +55,32 @@ test('resolves totals without overwriting point values', async () => {
     expect(result[3].label?.y).toBeLessThan(result[3].y);
     expect(result[5].label?.y).toBeLessThan(result[5].y);
 });
+
+test('preserves a calculated total with y: null when nullMode is skip', async () => {
+    const data: WaterfallSeriesData[] = [
+        {x: 'Income', y: 100},
+        {x: 'Missing contribution', y: null},
+        {x: 'Expenses', y: -30},
+        {x: 'Monthly balance', total: true, y: null},
+    ];
+    const series = prepareWaterfallSeries({
+        series: [{type: 'waterfall', name: 'Balance', data}],
+        colorScale: scaleOrdinal<string, string>().range(['#000']),
+        colors: [],
+        legend: {enabled: false} as PreparedLegend,
+    }) as PreparedWaterfallSeries[];
+    const yScale = scaleLinear().domain([-20, 120]).range([400, 0]);
+    const result = await prepareWaterfallData({
+        series,
+        seriesOptions: seriesOptionsDefaults,
+        xAxis: {type: 'category', categories: data.map((d) => String(d.x))} as PreparedXAxis,
+        xScale: scaleBand()
+            .domain(data.map((d) => String(d.x)))
+            .range([0, 600]),
+        yAxis: [{type: 'linear'}] as PreparedYAxis[],
+        yScale: [yScale],
+    });
+
+    expect(result.map((d) => d.data.x)).toEqual(['Income', 'Expenses', 'Monthly balance']);
+    expect(result[2].subTotal).toBe(70);
+});
