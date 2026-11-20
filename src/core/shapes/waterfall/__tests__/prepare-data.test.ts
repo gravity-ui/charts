@@ -7,6 +7,7 @@ import type {WaterfallSeriesData} from '../../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../../axes/types';
 import {seriesOptionsDefaults} from '../../../constants';
 import type {PreparedLegend, PreparedWaterfallSeries} from '../../../series/types';
+import * as textUtils from '../../../utils/text';
 import {prepareWaterfallData} from '../prepare-data';
 
 test('resolves totals without overwriting point values', async () => {
@@ -27,6 +28,11 @@ test('resolves totals without overwriting point values', async () => {
     }) as PreparedWaterfallSeries[];
     const originalSeries = JSON.stringify(series);
     const yScale = scaleLinear().domain([-20, 20]).range([400, 0]);
+    const measurer = jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async () => ({
+        width: 20,
+        height: 10,
+        hangingOffset: 2,
+    }));
     const result = await prepareWaterfallData({
         series,
         seriesOptions: seriesOptionsDefaults,
@@ -37,7 +43,7 @@ test('resolves totals without overwriting point values', async () => {
             .range([0, 600]),
         yAxis: [{type: 'linear'}] as PreparedYAxis[],
         yScale: [yScale],
-    });
+    }).finally(() => measurer.mockRestore());
 
     expect(JSON.stringify(data)).toBe(originalData);
     expect(JSON.stringify(series)).toBe(originalSeries);

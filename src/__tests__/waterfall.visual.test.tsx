@@ -19,7 +19,7 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
-    test('Only columns that intersect the plot get labels', async ({mount}) => {
+    test('Labels stay on visible columns and shift at the edge by default', async ({mount}) => {
         const createData = (placement?: 'auto'): ChartData => ({
             xAxis: {type: 'linear', min: 0, max: 10},
             yAxis: [{min: 0, max: 40}],
@@ -29,7 +29,11 @@ test.describe('Waterfall series', () => {
                     {
                         type: 'waterfall',
                         name: 'Customers',
-                        dataLabels: {placement, allowOverlap: true},
+                        dataLabels: {
+                            placement,
+                            placementFallback: placement ? 'show' : 'hide',
+                            allowOverlap: true,
+                        },
                         data: [
                             {x: -100, y: 10, label: 'Hidden step'},
                             {x: -50, y: 0, label: 'Hidden zero'},
@@ -44,6 +48,10 @@ test.describe('Waterfall series', () => {
         const component = await mount(<ChartTestStory data={createData()} />);
         const labels = component.locator('.gcharts-waterfall__label');
         await expect(labels).toHaveText(['Decrease', 'Visible zero']);
+        const left = await labels
+            .first()
+            .evaluate((label) => (label as SVGGraphicsElement).getBBox().x);
+        expect(left).toBeCloseTo(0, 0);
 
         await component.update(<ChartTestStory data={createData('auto')} />);
         await expect(labels).toHaveText(['Decrease', 'Adaptive zero']);

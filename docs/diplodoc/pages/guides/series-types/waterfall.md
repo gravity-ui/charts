@@ -32,9 +32,9 @@ Labels are enabled by default. To label only the total, disable labels for the s
 }
 ```
 
-Set `dataLabels.placement` to `'auto'` to try `outside` first, then `inside-end`. In the [live example](#example), the **New** label moves inside because there is no room above its column. Pass an array to choose the order or use `['inside-center']` to center labels in the visible column.
+Labels go outside the value end by default. Set `dataLabels.placement` to `'auto'` to try `outside` first, then `inside-end`. Pass an array to choose the order or use `['inside-center']` to center labels in the visible column.
 
-When no position fits, `placementFallback: 'show'` shifts the first candidate toward the plot. Use `'hide'` to omit the label. With an automatic Y minimum, set `padding.min` to a size such as `'16px'` for extra room beyond the lowest value.
+With `placement` set, `placementFallback` controls what happens when no position fits. The default `'show'` shifts the first candidate into the plot. Use `'hide'` to omit the label. With an automatic Y minimum, set `padding.min` to a size such as `'16px'` for extra room beyond the lowest value.
 
 ## Connectors
 

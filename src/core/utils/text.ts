@@ -470,10 +470,10 @@ export function createLabelMeasurer() {
             } else {
                 let measure = svgMeasurers.get(style);
                 if (!measure) {
-                    measure = getTextSizeFn({style});
+                    measure = getTextSizeFn({style, decodeEntities: false});
                     svgMeasurers.set(style, measure);
                 }
-                size = measure(content);
+                size = measure(decodeHtmlEntities(content));
             }
             sizes.set(content, size);
         }

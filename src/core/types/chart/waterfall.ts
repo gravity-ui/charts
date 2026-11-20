@@ -45,7 +45,7 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
          */
         placement?: BarSeriesDataLabelPlacementOptions['placement'];
         /**
-         * What to do when none of the configured positions fits.
+         * What to do when none of the configured positions fits. Only applies when `placement` is set.
          * @default 'show'
          */
         placementFallback?: BarSeriesDataLabelPlacementOptions['placementFallback'];
