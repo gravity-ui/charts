@@ -30,6 +30,7 @@ test('resolves totals without overwriting point values', async () => {
     const result = await prepareWaterfallData({
         series,
         seriesOptions: seriesOptionsDefaults,
+        boundsWidth: 600,
         xAxis: {type: 'category', categories: data.map((d) => String(d.x))} as PreparedXAxis,
         xScale: scaleBand()
             .domain(data.map((d) => String(d.x)))

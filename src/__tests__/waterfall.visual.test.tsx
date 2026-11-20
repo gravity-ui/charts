@@ -19,6 +19,84 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Only columns that intersect the plot get labels', async ({mount}) => {
+        const createData = (placement?: 'auto'): ChartData => ({
+            xAxis: {type: 'linear', min: 0, max: 10},
+            yAxis: [{min: 0, max: 40}],
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'waterfall',
+                        name: 'Customers',
+                        dataLabels: {placement, allowOverlap: true},
+                        data: [
+                            {x: -100, y: 10, label: 'Hidden step'},
+                            {x: -50, y: 0, label: 'Hidden zero'},
+                            {x: 0, y: -10, label: 'Decrease'},
+                            {x: 7, y: 0, label: placement ? 'Adaptive zero' : 'Visible zero'},
+                        ],
+                    },
+                ],
+            },
+        });
+
+        const component = await mount(<ChartTestStory data={createData()} />);
+        const labels = component.locator('.gcharts-waterfall__label');
+        await expect(labels).toHaveText(['Decrease', 'Visible zero']);
+
+        await component.update(<ChartTestStory data={createData('auto')} />);
+        await expect(labels).toHaveText(['Decrease', 'Adaptive zero']);
+    });
+
+    test('Adaptive labels move inside at both value ends and honor the fallback', async ({
+        mount,
+    }) => {
+        const longLabel = 'Additional customers '.repeat(15).trim();
+        const createData = (placementFallback?: 'hide'): ChartData => ({
+            series: {
+                data: [
+                    {
+                        type: 'waterfall',
+                        name: 'Customers',
+                        dataLabels: {placement: 'auto', placementFallback, allowOverlap: true},
+                        data: [
+                            {x: 'Gains', y: 40, label: '&#x41;&#x42;&#x43;&#x44;'},
+                            {x: 'Losses', y: -80},
+                            {x: 'Total', total: true},
+                            {x: 'Additional', y: 10},
+                            {x: 'Extended', y: 10, label: longLabel},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['Gains', 'Losses', 'Total', 'Additional', 'Extended'],
+            },
+            yAxis: [{min: -40, max: 40}],
+            legend: {enabled: false},
+        });
+        const styles = {width: 480, height: 240};
+        const component = await mount(<ChartTestStory data={createData()} styles={styles} />);
+        const labels = component.locator('.gcharts-waterfall__label');
+        const bars = component.locator('.gcharts-waterfall__segment');
+        await expect(labels).toHaveText(['ABCD', '-80', '-40', '10', longLabel]);
+        for (let index = 0; index < 3; index++) {
+            const bar = await getLocatorBoundingBox(bars.nth(index));
+            const label = await getLocatorBoundingBox(labels.nth(index));
+            const gap = index === 0 ? label.y - bar.y : bar.y + bar.height - label.y - label.height;
+            expect(gap).toBeCloseTo(5, 0);
+            expect(label.x + label.width / 2).toBeCloseTo(bar.x + bar.width / 2, 0);
+        }
+        const outside = await getLocatorBoundingBox(labels.nth(3));
+        const bar = await getLocatorBoundingBox(bars.nth(3));
+        expect(bar.y - outside.y - outside.height).toBeCloseTo(5, 0);
+
+        await component.update(<ChartTestStory data={createData('hide')} styles={styles} />);
+        await expect(labels).toHaveText(['ABCD', '-80', '-40', '10']);
+    });
+
     test.describe('Connectors', () => {
         const points: WaterfallSeriesData[] = [
             {x: 'Income', y: 10},

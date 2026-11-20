@@ -1,3 +1,4 @@
+import {group} from 'd3-array';
 import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 import sortBy from 'es-toolkit/compat/sortBy';
@@ -12,44 +13,100 @@ import type {
 } from '../../series/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
 import {getXValue, getYValue} from '../../shapes/utils';
-import {getLabelsSize, isPointDataLabelEnabled} from '../../utils';
+import {isPointDataLabelEnabled} from '../../utils';
 import {getFormattedValue} from '../../utils/format';
+import {placeRectLabel} from '../../utils/rect-label-placement';
+import {measureSvgDataLabels} from '../data-labels';
 
 import type {PreparedWaterfallData} from './types';
 
-async function getLabelData(
-    d: PreparedWaterfallData,
-    plotHeight: number,
-): Promise<LabelData | undefined> {
-    if (!isPointDataLabelEnabled({data: d.data, series: d.series})) {
-        return undefined;
+interface PlotSize {
+    width: number;
+    height: number;
+}
+
+interface LabelCandidate {
+    column: PreparedWaterfallData;
+    text: string;
+    value: number;
+}
+
+function getLabelData(
+    {column, text, value}: LabelCandidate,
+    bounds: DOMRectReadOnly,
+    plot: PlotSize,
+): LabelData | undefined {
+    const {padding, style, placement, placementFallback} = column.series.dataLabels;
+    const {width, height, x: offsetX, y: offsetY} = bounds;
+    const labelAbove = value > 0 || (column.data.total && value === 0);
+    const size = {width, height};
+    const label = {text, style, size, textAnchor: 'middle' as const, series: column.series};
+
+    if (placement) {
+        const position = placeRectLabel({
+            anchor: column,
+            bounds: {x: 0, y: 0, ...plot},
+            size,
+            axis: 'y',
+            endAtMax: !labelAbove,
+            padding,
+            positions: placement,
+            fallback: placementFallback,
+        });
+        if (!position) return undefined;
+
+        return {
+            ...label,
+            x: position.x - offsetX,
+            y: position.y - offsetY,
+        };
     }
 
-    const yValue = d.data.total ? d.subTotal : Number(d.data.y);
-    const labelValue = d.data.label ?? yValue;
-    const text = getFormattedValue({value: labelValue, ...d.series.dataLabels});
-    const style = d.series.dataLabels.style;
-    const {maxHeight: height, maxWidth: width} = await getLabelsSize({labels: [text], style});
-
-    let y: number;
-    if (yValue > 0 || (d.data.total && yValue === 0)) {
-        y = Math.max(height, d.y - d.series.dataLabels.padding);
-    } else {
-        y = Math.min(
-            plotHeight - d.series.dataLabels.padding,
-            d.y + d.height + d.series.dataLabels.padding + height,
-        );
-    }
-
+    const left = Math.max(0, Math.min(plot.width - width, column.x + column.width / 2 + offsetX));
     return {
-        text,
-        x: d.x + d.width / 2,
-        y,
-        style,
-        size: {width, height},
-        textAnchor: 'middle',
-        series: d.series,
+        ...label,
+        x: left - offsetX,
+        y: labelAbove
+            ? Math.max(height, column.y - padding)
+            : Math.min(plot.height - padding, column.y + column.height + padding + height),
     };
+}
+
+async function prepareLabels(data: PreparedWaterfallData[], plot: PlotSize) {
+    if (plot.width <= 0 || plot.height <= 0) return;
+
+    const candidates: LabelCandidate[] = [];
+    for (const column of data) {
+        const intersectsX = column.x < plot.width && column.x + column.width > 0;
+        const intersectsY =
+            column.height === 0
+                ? column.y >= 0 && column.y <= plot.height
+                : column.height > 0 && column.y < plot.height && column.y + column.height > 0;
+        if (!intersectsX || !intersectsY || !isPointDataLabelEnabled(column)) continue;
+
+        const value = column.data.total ? column.subTotal : Number(column.data.y);
+        const text = getFormattedValue({
+            value: column.data.label ?? value,
+            format: column.series.dataLabels.format,
+        });
+        candidates.push({column, text, value});
+    }
+
+    const byStyle = group(
+        candidates,
+        ({column}) => column.series.dataLabels.style,
+        ({text}) => text,
+    );
+    for (const [style, byText] of byStyle) {
+        const bounds = await measureSvgDataLabels(
+            Array.from(byText.keys(), (text) => ({text, style, textAnchor: 'middle'})),
+        );
+        Array.from(byText.values()).forEach((items, index) => {
+            for (const candidate of items) {
+                candidate.column.label = getLabelData(candidate, bounds[index], plot);
+            }
+        });
+    }
 }
 
 function getBandWidth(args: {
@@ -91,6 +148,7 @@ interface DataItem {
 export const prepareWaterfallData = async (args: {
     series: PreparedWaterfallSeries[];
     seriesOptions: PreparedSeriesOptions;
+    boundsWidth: number;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
@@ -99,6 +157,7 @@ export const prepareWaterfallData = async (args: {
     const {
         series,
         seriesOptions,
+        boundsWidth,
         xAxis,
         xScale,
         yAxis: [yAxis],
@@ -110,7 +169,6 @@ export const prepareWaterfallData = async (args: {
         return [];
     }
 
-    const plotHeight = yLinearScale(yLinearScale.domain()[0]);
     const barMaxWidth = get(seriesOptions, 'waterfall.barMaxWidth');
     const barPadding = get(seriesOptions, 'waterfall.barPadding');
 
@@ -204,9 +262,8 @@ export const prepareWaterfallData = async (args: {
             annotations: [],
         };
 
-        preparedData.label = await getLabelData(preparedData, plotHeight);
-
         result.push(preparedData);
     }
+    await prepareLabels(result, {width: boundsWidth, height: Math.max(...yLinearScale.range())});
     return result;
 };

@@ -11,7 +11,7 @@ const data: ChartData = {
             {
                 type: 'waterfall',
                 name: 'Customers',
-                dataLabels: {enabled: true},
+                dataLabels: {placement: 'auto'},
                 data: [
                     {x: 0, y: 120},
                     {x: 1, y: 45},
@@ -28,6 +28,7 @@ const data: ChartData = {
     yAxis: [
         {
             title: {text: 'Customers'},
+            padding: {max: 0},
         },
     ],
 };

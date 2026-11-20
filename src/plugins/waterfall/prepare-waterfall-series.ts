@@ -10,6 +10,7 @@ import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
+import {resolveBarLabelPlacement} from '../bar-label-placement';
 
 function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
     const nullMode = series.nullMode ?? 'skip';
@@ -45,6 +46,8 @@ export function prepareWaterfallSeries(args: PrepareSeriesArgs<WaterfallSeries>)
         },
         dataLabels: {
             enabled: series.dataLabels?.enabled ?? true,
+            placement: resolveBarLabelPlacement(series.dataLabels?.placement),
+            placementFallback: series.dataLabels?.placementFallback ?? 'show',
             style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
             allowOverlap: series.dataLabels?.allowOverlap || false,
             padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),

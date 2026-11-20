@@ -16,6 +16,26 @@ Set `type: 'waterfall'`. Each change has an `x` position and a signed `y` value.
 
 Null values are skipped by default. Set `nullMode: 'zero'` to treat them as zero changes.
 
+## Data labels
+
+Labels are enabled by default. To label only the total, disable labels for the series and enable them on the total point.
+
+```js
+{
+  type: 'waterfall',
+  name: 'Customers',
+  dataLabels: {enabled: false},
+  data: [
+    {x: 0, y: 120},
+    {x: 1, total: true, dataLabels: {enabled: true}},
+  ],
+}
+```
+
+Set `dataLabels.placement` to `'auto'` to try `outside` first, then `inside-end`. In the [live example](#example), the **New** label moves inside because there is no room above its column. Pass an array to choose the order or use `['inside-center']` to center labels in the visible column.
+
+When no position fits, `placementFallback: 'show'` shifts the first candidate toward the plot. Use `'hide'` to omit the label. With an automatic Y minimum, set `padding.min` to a size such as `'16px'` for extra room beyond the lowest value.
+
 ## Connectors
 
 Connector lines between bars are enabled by default. Set `connectors.enabled: false` on the series to hide them. You can toggle this option when updating the chart.
