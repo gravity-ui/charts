@@ -2,7 +2,7 @@
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 
-import {getCurveFactory} from '../../../plugins/line/interpolation';
+import {getCurveFactory} from '../../../plugins/interpolation';
 import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';
 import {prepareScatterSeries} from '../../../plugins/scatter/prepare-scatter-series';
 import type {LineSeries, ScatterClusterData, ScatterSeries} from '../../../types';

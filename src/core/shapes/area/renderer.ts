@@ -94,7 +94,7 @@ export function renderArea(
     shapeSelection
         .append('path')
         .attr('class', b('line'))
-        .attr('d', (d) => line(d.points))
+        .attr('d', (d) => (d.geometry ? d.geometry.linePath : line(d.points)))
         .attr('fill', 'none')
         .attr('stroke', (d) => getLineStroke(d))
         .attr('stroke-width', (d) => d.width)
@@ -109,7 +109,7 @@ export function renderArea(
     shapeSelection
         .append('path')
         .attr('class', b('region'))
-        .attr('d', (d) => area(d.points))
+        .attr('d', (d) => (d.geometry ? d.geometry.areaPath : area(d.points)))
         .attr('fill', (d) => getAreaFill(d))
         .attr('opacity', (d) => d.opacity);
 

@@ -79,7 +79,9 @@ test('handles numeric strings, reversed traversal and log coordinates without mu
         viewport: {x: {type: 'logarithmic', range: [10, 10]}, y: {type: 'logarithmic'}},
     });
     expect(values?.length).toBeGreaterThan(0);
-    for (const value of values ?? []) expect(Number(value)).toBeCloseTo(10);
+    for (const value of values ?? []) {
+        expect(Number(value)).toBeCloseTo(10);
+    }
 });
 
 test('does not bridge gaps, sparse points, or ranges outside the path', () => {
@@ -94,18 +96,36 @@ test('does not bridge gaps, sparse points, or ranges outside the path', () => {
 });
 
 test.each([curveMonotoneX, curveCardinal])(
-    'delegates Bézier domains to existing sample selection',
+    'clips Bézier domains at window boundaries',
     (curveFactory) => {
         expect(
-            getVisiblePathYValues({
-                points: [
-                    {x: 0, y: 20},
-                    {x: 5, y: 100},
-                    {x: 10, y: 80},
-                ],
-                viewport: viewport([2, 8]),
-                curveFactory,
-            }),
-        ).toBeUndefined();
+            extent(getVisiblePathYValues({points, viewport: viewport([2, 4]), curveFactory})),
+        ).toEqual([32, 44]);
     },
 );
+
+test('includes a cardinal interior extremum with or without an X window', () => {
+    const data = [0, 10, 10, 0].map((y, x) => ({x, y}));
+    for (const window of [undefined, [0, 3]] as const) {
+        expect(
+            extent(
+                getVisiblePathYValues({
+                    points: data,
+                    viewport: {...viewport([0, 3]), x: {type: 'linear', range: window}},
+                    curveFactory: curveCardinal,
+                }),
+            ),
+        ).toEqual([0, 11.25]);
+    }
+});
+
+test('clips a cubic inside its interval without losing its interior maximum', () => {
+    const result = getVisiblePathYValues({
+        points: [0, 10, 10, 0].map((y, x) => ({x, y})),
+        viewport: viewport([1.25, 1.75]),
+        curveFactory: curveCardinal,
+    });
+    const [min, max] = extent(result);
+    expect(min).toBeCloseTo(10.9375, 8);
+    expect(max).toBeCloseTo(11.25, 8);
+});

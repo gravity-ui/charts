@@ -1,11 +1,89 @@
+import type {PreparedYAxis} from '~core/axes/types';
+import {createYScale} from '~core/scales/y-scale';
 import type {DomainViewport} from '~core/series/axis-contract';
+import {collectYAxisDomainValues} from '~core/series/axis-domain';
+import {getPreparedSeries} from '~core/series/prepareSeries';
+import type {PreparedLegendOptions} from '~core/series/types';
 import {getLineSegments, segmentIntersectsRect} from '~core/shapes/line/auto-placement';
+import {getZoomedSeriesData} from '~core/zoom/zoom';
 
 import type {LineSeries} from '../../../types';
-import * as interpolation from '../interpolation';
+import * as interpolation from '../../interpolation';
 import {filterLineData} from '../zoom';
 
 afterEach(() => jest.restoreAllMocks());
+
+async function getLineYDomain(seriesData: LineSeries[], xRange?: [number, number]) {
+    const series = await getPreparedSeries({
+        seriesData,
+        colors: ['black'],
+        seriesOptions: undefined,
+        preparedLegend: {enabled: false} as PreparedLegendOptions,
+    });
+    const zoomState = xRange ? {x: xRange} : {};
+    const {preparedSeries, preparedShapesSeries} = getZoomedSeriesData({
+        seriesData: series,
+        zoomState,
+    });
+    const [domainValues] = collectYAxisDomainValues({
+        series: preparedShapesSeries,
+        fallbackSeries: preparedSeries,
+        zoomState,
+    });
+    const axis = {
+        type: 'linear',
+        padding: {min: 0, max: 0},
+        startOnTick: false,
+        endOnTick: false,
+        plotIndex: 0,
+    } as PreparedYAxis;
+    return createYScale({axis, boundsHeight: 300, series: preparedShapesSeries, domainValues})
+        ?.domain()
+        .map(Number);
+}
+
+const cardinalLine: LineSeries = {
+    type: 'line',
+    name: 'Smooth line',
+    interpolation: {type: 'cardinal'},
+    data: [0, 100, 100, 0].map((y, x) => ({x, y})),
+};
+
+test.each([
+    {xRange: undefined, min: 0, max: 112.5},
+    {xRange: [1.25, 1.75] as [number, number], min: 109.375, max: 112.5},
+])('cardinal line fits its curve within the X window $xRange', async ({xRange, min, max}) => {
+    const domain = await getLineYDomain([cardinalLine], xRange);
+
+    expect(domain?.[0]).toBeCloseTo(min);
+    expect(domain?.[1]).toBeCloseTo(max);
+});
+
+test('an unzoomed axis also includes the sample domain of a linear sibling', async () => {
+    const linearLine: LineSeries = {
+        type: 'line',
+        name: 'Linear line',
+        data: [
+            {x: 0, y: 0},
+            // @ts-expect-error The runtime validator accepts a null X coordinate.
+            {x: null, y: 150},
+        ],
+    };
+
+    expect(await getLineYDomain([cardinalLine, linearLine])).toEqual([0, 150]);
+});
+
+test.each<LineSeries['interpolation']>([
+    undefined,
+    {type: 'monotone'},
+    {type: 'cardinal', tension: 1},
+])('uses the sample bounds directly before zoom for %p', async (options) => {
+    const curveFactory = jest.spyOn(interpolation, 'getCurveFactory');
+    const series = {...cardinalLine, interpolation: options};
+
+    expect(await getLineYDomain([series])).toEqual([0, 100]);
+    expect(curveFactory).not.toHaveBeenCalled();
+});
 
 test.each(['before', 'middle', 'after'] as const)(
     'step %s retains original anchors when the viewport contains no samples',
