@@ -1,7 +1,8 @@
 import type {SERIES_TYPE} from '../../constants';
 import type {MeaningfulAny} from '../misc';
 
-import type {BaseSeries, BaseSeriesData} from './base';
+import type {BarSeriesDataLabelPlacementOptions} from './bar-data-labels';
+import type {BaseDataLabels, BaseSeries, BaseSeriesData} from './base';
 import type {ChartLegendItem, RectLegendSymbolOptions} from './legend';
 
 export interface WaterfallSeriesData<T = MeaningfulAny> extends BaseSeriesData<T> {
@@ -37,6 +38,18 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
     positiveColor?: string;
     /** The color used for negative values. If it is not specified, the general color of the series is used. */
     negativeColor?: string;
+    dataLabels?: BaseDataLabels & {
+        /**
+         * Positions to try in order. Labels default to outside the value end.
+         * - `'auto'`: Try `outside`, then `inside-end`.
+         */
+        placement?: BarSeriesDataLabelPlacementOptions['placement'];
+        /**
+         * What to do when none of the configured positions fits. Only applies when `placement` is set.
+         * @default 'show'
+         */
+        placementFallback?: BarSeriesDataLabelPlacementOptions['placementFallback'];
+    };
     /** Individual series legend options. Has higher priority than legend options in widget data. */
     legend?: ChartLegendItem & {
         symbol?: RectLegendSymbolOptions;

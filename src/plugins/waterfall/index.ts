@@ -16,12 +16,13 @@ import {filterOverlappingLabels} from '~core/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
+import {validateBarLabelPlacement} from '../bar-label-placement';
 
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareWaterfallSeries} from './prepare-waterfall-series';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
-    const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
+    const {series, seriesOptions, boundsWidth, xAxis, xScale, yAxis, yScale} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
         return {renderData: [], tooltipItems: []};
@@ -30,6 +31,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
     const data = await prepareWaterfallData({
         series: series as PreparedWaterfallSeries[],
         seriesOptions,
+        boundsWidth,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
@@ -78,6 +80,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
     prepareSeries: prepareWaterfallSeries,
     validate: ({series}) => {
+        validateBarLabelPlacement(series.dataLabels);
         const {connectors} = series;
         if (connectors === undefined) {
             return;

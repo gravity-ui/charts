@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
 import {
+    createLabelMeasurer,
     decodeHtmlEntities,
     getMultilineTextInfo,
     getTextSizeFn,
@@ -22,6 +23,22 @@ test.each([
     try {
         const measure = getTextSizeFn({decodeEntities});
         expect(await measure('&amp;')).toMatchObject({width, height: 12, hangingOffset: 2});
+    } finally {
+        getContext.mockRestore();
+    }
+});
+
+test('the SVG label measurer decodes numeric and escaped entities once', async () => {
+    const getContext = jest.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+        measureText: (text: string) => ({
+            width: text.length,
+            fontBoundingBoxAscent: 10,
+            fontBoundingBoxDescent: 2,
+        }),
+    } as CanvasRenderingContext2D);
+    try {
+        const size = await createLabelMeasurer()('&#x41;&amp;lt;', {fontSize: '11px'}, false);
+        expect(size.width).toBe('A&lt;'.length);
     } finally {
         getContext.mockRestore();
     }

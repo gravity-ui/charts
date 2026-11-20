@@ -2,7 +2,6 @@ import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
 import get from 'es-toolkit/compat/get';
 import sortBy from 'es-toolkit/compat/sortBy';
 
-import type {LabelData} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {ChartScale} from '../../scales/types';
 import type {
@@ -12,44 +11,64 @@ import type {
 } from '../../series/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
 import {getXValue, getYValue} from '../../shapes/utils';
-import {getLabelsSize, isPointDataLabelEnabled} from '../../utils';
+import {isPointDataLabelEnabled} from '../../utils';
 import {getFormattedValue} from '../../utils/format';
+import {placeRectLabel} from '../../utils/rect-label-placement';
+import {createLabelMeasurer} from '../../utils/text';
 
 import type {PreparedWaterfallData} from './types';
 
-async function getLabelData(
-    d: PreparedWaterfallData,
-    plotHeight: number,
-): Promise<LabelData | undefined> {
-    if (!isPointDataLabelEnabled({data: d.data, series: d.series})) {
-        return undefined;
+interface PlotSize {
+    width: number;
+    height: number;
+}
+
+const DEFAULT_LABEL_POSITIONS = ['outside'] as const;
+
+async function prepareLabels(data: PreparedWaterfallData[], plot: PlotSize) {
+    if (plot.width <= 0 || plot.height <= 0) {
+        return;
     }
 
-    const yValue = d.data.total ? d.subTotal : Number(d.data.y);
-    const labelValue = d.data.label ?? yValue;
-    const text = getFormattedValue({value: labelValue, ...d.series.dataLabels});
-    const style = d.series.dataLabels.style;
-    const {maxHeight: height, maxWidth: width} = await getLabelsSize({labels: [text], style});
+    const measureLabel = createLabelMeasurer();
+    const bounds = {x: 0, y: 0, ...plot};
+    for (const column of data) {
+        const intersectsX = column.x < plot.width && column.x + column.width > 0;
+        const intersectsY =
+            column.height === 0
+                ? column.y >= 0 && column.y <= plot.height
+                : column.height > 0 && column.y < plot.height && column.y + column.height > 0;
+        if (!intersectsX || !intersectsY || !isPointDataLabelEnabled(column)) {
+            continue;
+        }
 
-    let y: number;
-    if (yValue > 0 || (d.data.total && yValue === 0)) {
-        y = Math.max(height, d.y - d.series.dataLabels.padding);
-    } else {
-        y = Math.min(
-            plotHeight - d.series.dataLabels.padding,
-            d.y + d.height + d.series.dataLabels.padding + height,
-        );
+        const value = column.data.total ? column.subTotal : Number(column.data.y);
+        const {format, style, padding, placement, placementFallback} = column.series.dataLabels;
+        const text = getFormattedValue({value: column.data.label ?? value, format});
+        const {width, height, hangingOffset} = await measureLabel(text, style, false);
+        const labelAbove = value > 0 || (column.data.total && value === 0);
+        const placed = placeRectLabel({
+            anchor: column,
+            bounds,
+            size: {width, height},
+            axis: 'y',
+            endAtMax: !labelAbove,
+            padding,
+            positions: placement ?? DEFAULT_LABEL_POSITIONS,
+            fallback: placement ? placementFallback : 'show',
+        });
+        if (placed) {
+            column.label = {
+                text,
+                style,
+                size: {width, height, hangingOffset},
+                textAnchor: 'middle',
+                series: column.series,
+                x: placed.x + width / 2,
+                y: placed.y + hangingOffset,
+            };
+        }
     }
-
-    return {
-        text,
-        x: d.x + d.width / 2,
-        y,
-        style,
-        size: {width, height},
-        textAnchor: 'middle',
-        series: d.series,
-    };
 }
 
 function getBandWidth(args: {
@@ -91,6 +110,7 @@ interface DataItem {
 export const prepareWaterfallData = async (args: {
     series: PreparedWaterfallSeries[];
     seriesOptions: PreparedSeriesOptions;
+    boundsWidth: number;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
@@ -99,6 +119,7 @@ export const prepareWaterfallData = async (args: {
     const {
         series,
         seriesOptions,
+        boundsWidth,
         xAxis,
         xScale,
         yAxis: [yAxis],
@@ -110,7 +131,6 @@ export const prepareWaterfallData = async (args: {
         return [];
     }
 
-    const plotHeight = yLinearScale(yLinearScale.domain()[0]);
     const barMaxWidth = get(seriesOptions, 'waterfall.barMaxWidth');
     const barPadding = get(seriesOptions, 'waterfall.barPadding');
 
@@ -204,9 +224,8 @@ export const prepareWaterfallData = async (args: {
             annotations: [],
         };
 
-        preparedData.label = await getLabelData(preparedData, plotHeight);
-
         result.push(preparedData);
     }
+    await prepareLabels(result, {width: boundsWidth, height: Math.max(...yLinearScale.range())});
     return result;
 };
