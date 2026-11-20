@@ -2,6 +2,7 @@ import {scaleBand, scaleLinear, scaleLog, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
+import {createXScale} from '~core/scales/x-scale';
 import type {PreparedLegend} from '~core/series/types';
 import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
 import {projectAreaData} from '~core/shapes/area/prepare-data';
@@ -132,6 +133,15 @@ test('log stacks accumulate data values when a layer is below the axis minimum',
     expect(geometry(result[0]).linePath).toBeNull();
 });
 
+test('the interpolated stack boundary and its anchors use the same pixel rounding', () => {
+    const [result] = project([area([0.5, 0.5, 0.5], {stacking: 'normal'})], {
+        yScale: [scaleLinear().domain([0, 1]).range([0, 2.01])],
+    });
+
+    expect(result.points.map(({y}) => y)).toEqual([1.01, 1.01, 1.01]);
+    expect(columns(geometry(result)).map(({y1}) => y1)).toEqual([1.01, 1.01, 1.01]);
+});
+
 test('X zoom uses the visible smooth boundary for Y bounds', () => {
     const series = area([100, 1, 100]);
     series.data = series.data.map((p, i) => ({...p, x: i * 5}));
@@ -252,6 +262,46 @@ test('smooth Y bounds preserve an interior extremum across data scales and times
         });
         expect(Math.max(...result.domainValues.map(Number)) / scale).toBeCloseTo(11.25, 5);
     }
+});
+
+test.each(['monotone', 'step'] as const)(
+    '%s area follows the axis bands when a category has no data',
+    (type) => {
+        const categories = ['Q1', 'Q2', 'Q3', 'Q4'];
+        const xAxis = {type: 'category', categories} as PreparedXAxis;
+        const args = prepareArgs([
+            area([], {
+                interpolation: {type},
+                data: [
+                    {x: 0, y: 10},
+                    {x: 'Q2', y: 20},
+                    {x: 3, y: 30},
+                ],
+            }),
+        ]);
+        const xScale = createXScale({axis: xAxis, boundsWidth: 300, series: args.series});
+        if (!xScale) {
+            throw new Error('Expected a category scale');
+        }
+        const [result] = projectAreaData(getAreaProjectionArgs({...args, xAxis, xScale}));
+
+        expect(result.points.map(({x}) => x)).toEqual([50, 150, 250]);
+        expect(columns(geometry(result)).at(-1)?.x).toBe(250);
+    },
+);
+
+test('category zoom projects tangent anchors from both edges of a sparse band domain', () => {
+    const categories = ['A', 'B', 'C', 'D', 'E'];
+    const [result] = project(
+        [area([], {data: ['A', 'B', 'D', 'E'].map((x, i) => ({x, y: 10 * (i + 1)}))})],
+        {
+            xAxis: {type: 'category', categories} as PreparedXAxis,
+            xScale: scaleBand().domain(['B', 'D']).range([0, 300]),
+            boundsWidth: 300,
+        },
+    );
+
+    expect(result.points.map(({x}) => x)).toEqual([-75, 75, 225, 375]);
 });
 
 test('category zoom preserves the cardinal curve with offscreen tangent anchors', () => {
@@ -395,11 +445,12 @@ test('nearby signed roots cannot create a bridge through another layer', () => {
     const values = [last - 2 * derivative(0), first, last, first + 2 * derivative(1)];
     const xs = [-width - shift, -shift, width - shift, 2 * width - shift];
     const interpolation = {type: 'cardinal'} as const;
+    const projectY = (value: number) => -value;
     const result = buildAreaGeometry(
         [
             {
                 series: {stacking: 'normal', interpolation},
-                points: xs.map((x) => ({x, y0: 0, y: 100})),
+                points: xs.map((x) => ({x, y0: 0, y: 100, stackValue: -100})),
             },
             {
                 series: {stacking: 'normal', interpolation},
@@ -407,13 +458,11 @@ test('nearby signed roots cannot create a bridge through another layer', () => {
                     x,
                     y0: values[i] > 0 ? 100 : 0,
                     y: (values[i] > 0 ? 100 : 0) + values[i],
+                    stackValue: -values[i],
                 })),
             },
         ],
-        0,
-        -1,
-        false,
-        {xRange: [0, 640]},
+        {baseline: 0, projection: {project: projectY, invert: projectY}, xRange: [0, 640]},
     );
     for (let i = 1; i < result[1].columns.length; i++) {
         const a = result[1].columns[i - 1],

@@ -168,6 +168,54 @@ test('step fill, outline and interactions agree while tooltip points remain orig
     expect(JSON.parse((await output.textContent()) ?? '{}').targets).toEqual([]);
 });
 
+test('the interpolated outline stays aligned with category ticks after a legend toggle', async ({
+    mount,
+}) => {
+    const component = await mount(
+        <ChartTestStory
+            data={{
+                xAxis: {type: 'category', categories: ['Q1', 'Q2', 'Q3', 'Q4']},
+                series: {
+                    data: [
+                        {
+                            type: 'area',
+                            name: 'Main series',
+                            interpolation: {type: 'monotone'},
+                            data: [
+                                {x: 'Q1', y: 10},
+                                {x: 'Q2', y: 20},
+                                {x: 'Q4', y: 30},
+                            ],
+                        },
+                        {type: 'area', name: 'Q3 series', data: [{x: 'Q3', y: 25}]},
+                    ],
+                },
+            }}
+            styles={{width: 640, height: 360}}
+        />,
+    );
+    const labels = component.locator('.gcharts-x-axis__label');
+    const outlines = component.locator('.gcharts-area__line');
+    await expect(labels).toHaveText(['Q1', 'Q2', 'Q3', 'Q4']);
+    await expect(outlines).toHaveCount(2);
+    await component
+        .locator('.gcharts-legend__item')
+        .filter({hasText: 'Q3 series'})
+        .click({modifiers: ['Control']});
+    await expect(labels).toHaveText(['Q1', 'Q2', 'Q4']);
+    await expect(outlines).toHaveCount(1);
+
+    const gridLine = component
+        .locator('.gcharts-x-axis__tick')
+        .filter({hasText: 'Q4'})
+        .locator('path:not(.gcharts-x-axis__mark)');
+    const [gridX, outline] = await Promise.all([
+        gridLine.evaluate((node) => node.getBoundingClientRect().left),
+        outlines.boundingBox(),
+    ]);
+    expect(outline && Math.abs(outline.x + outline.width - gridX)).toBeLessThan(1);
+});
+
 test('smooth percent stacks recompute after hiding a series and retain range-slider interpolation', async ({
     mount,
     page,

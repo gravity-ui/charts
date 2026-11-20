@@ -28,7 +28,6 @@ import type {
     LineSeriesDataLabelPlacementFallback,
     LineSeriesDataLabelPlacementPosition,
     LineSeriesDataLabels,
-    LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
     LinearGradient,
     MeaningfulAny,
@@ -44,6 +43,7 @@ import type {
     SankeySeriesData,
     ScatterSeries,
     ScatterSeriesData,
+    SeriesInterpolation,
     SymbolLegendSymbolOptions,
     TreemapSeries,
     TreemapSeriesData,
@@ -418,7 +418,7 @@ export type PreparedLineSeries = {
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
-    interpolation?: LineSeriesInterpolation;
+    interpolation?: SeriesInterpolation;
     opacity: number | null;
     gradient?: LinearGradient;
     yAxis: number;

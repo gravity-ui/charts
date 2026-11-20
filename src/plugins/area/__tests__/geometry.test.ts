@@ -14,6 +14,11 @@ import {getAreaProjectionArgs} from '../projection';
 
 type Column = NonNullable<BandColumn>;
 
+function geometryOptions(baseline: number) {
+    const projectY = (value: number) => baseline - value;
+    return {baseline, projection: {project: projectY, invert: projectY}};
+}
+
 function project(
     values: (number | null)[][],
     options: {
@@ -173,7 +178,7 @@ test.each(['before', 'middle', 'after'] as const)(
                     ],
                 },
             ],
-            100,
+            geometryOptions(100),
         )[0];
         let transition = 30;
         if (position === 'before') {
@@ -202,7 +207,7 @@ test.each([0, 1, 10000])('finite geometry at width %s without mutating source po
                 points: [...points],
             },
         ],
-        -100,
+        geometryOptions(-100),
     )[0];
     expect(geometry.linePath).not.toMatch(/NaN|Infinity/);
     expect(geometry.areaPath).not.toMatch(/NaN|Infinity/);
@@ -220,9 +225,7 @@ test('after steps follow observation order on a reversed X axis', () => {
                 ],
             },
         ],
-        100,
-        -1,
-        true,
+        {...geometryOptions(100), reversedX: true},
     )[0];
     expect(result.columns).toEqual([
         {x: 10, y0: 100, y1: 60},
@@ -253,23 +256,23 @@ test('cardinal remains ordered on an uneven grid with a missing stack sample', (
             {
                 series: {stacking: 'normal', interpolation},
                 points: [
-                    {x: 0, y0: 200, y: 100},
-                    {x: 1, y0: 200, y: 200},
-                    {x: 200, y0: 200, y: 190},
-                    {x: 201, y0: 200, y: 50},
+                    {x: 0, y0: 200, y: 100, stackValue: 100},
+                    {x: 1, y0: 200, y: 200, stackValue: 0},
+                    {x: 200, y0: 200, y: 190, stackValue: 10},
+                    {x: 201, y0: 200, y: 50, stackValue: 150},
                 ],
             },
             {
                 series: {stacking: 'normal', interpolation},
                 points: [
-                    {x: 0, y0: 100, y: 80},
-                    {x: 1, y0: 200, y: 170},
-                    {x: 200, y0: 190, y: 150},
-                    {x: 201, y0: 50, y: 40},
+                    {x: 0, y0: 100, y: 80, stackValue: 20},
+                    {x: 1, y0: 200, y: 170, stackValue: 30},
+                    {x: 200, y0: 190, y: 150, stackValue: 40},
+                    {x: 201, y0: 50, y: 40, stackValue: 10},
                 ],
             },
         ],
-        200,
+        geometryOptions(200),
     );
     const bottom = result[0].columns.filter((column): column is Column => column !== null);
     const top = result[1].columns.filter((column): column is Column => column !== null);

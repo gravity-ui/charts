@@ -27,16 +27,17 @@ interface GeometryInput {
     series: Pick<AreaSeries, 'stacking' | 'interpolation'>;
 }
 
-export interface AreaGeometryOptions {
-    projection?: {project: (value: number) => number; invert: (coordinate: number) => number};
-    xRange?: readonly [number, number];
-    yRange?: readonly [number, number];
+interface ValueProjection {
+    project: (value: number) => number;
+    invert: (coordinate: number) => number;
 }
 
-export interface PreparedGeometryOptions extends AreaGeometryOptions {
+export interface AreaGeometryOptions {
     baseline: number;
-    positiveDirection?: number;
+    projection: ValueProjection;
     reversedX?: boolean;
+    xRange?: readonly [number, number];
+    yRange?: readonly [number, number];
 }
 
 // Render and hit-test the same mesh, subdividing toward a tenth of a CSS pixel.
@@ -210,7 +211,7 @@ interface StackInterval {
     positive?: CurveSection;
     negative?: CurveSection;
     baseline: number;
-    projection: NonNullable<AreaGeometryOptions['projection']>;
+    projection: ValueProjection;
     changingSign: boolean;
     percent: boolean;
 }
@@ -287,20 +288,6 @@ function stackColumns(
     return result;
 }
 
-function getCurveValue(
-    point: GeometryInput['points'][number],
-    stacked: boolean,
-    positiveDirection: number,
-) {
-    if (point.y === null) {
-        return null;
-    }
-    if (!stacked) {
-        return point.y;
-    }
-    return point.stackValue ?? positiveDirection * (point.y - point.y0);
-}
-
 function getBoundaryParameters(curve: CurveSection, range: readonly [number, number]) {
     return range.flatMap((x) =>
         getZeroParameters({
@@ -312,19 +299,10 @@ function getBoundaryParameters(curve: CurveSection, range: readonly [number, num
     );
 }
 
-function prepareCurves(
-    data: GeometryInput[],
-    baseline: number,
-    positiveDirection = -1,
-    options: AreaGeometryOptions = {},
-) {
+function prepareCurves(data: GeometryInput[], projection: ValueProjection) {
     const interpolation = data[0]?.series.interpolation ?? {type: 'linear'};
     const stacked = data.some((item) => item.series.stacking);
     const percent = data.some((item) => item.series.stacking === 'percent');
-    const projection = options.projection ?? {
-        project: (value: number) => baseline + positiveDirection * value,
-        invert: (coordinate: number) => (coordinate - baseline) / positiveDirection,
-    };
     const points = data.map((item) => {
         const list = item.points;
         return list.length && list[0].x > list[list.length - 1].x ? list.slice().reverse() : list;
@@ -336,7 +314,7 @@ function prepareCurves(
         collectSections(
             list.map((point) => ({
                 x: point.x,
-                y: getCurveValue(point, stacked, positiveDirection),
+                y: stacked && point.y !== null ? (point.stackValue ?? null) : point.y,
             })),
             interpolation,
             stacked,
@@ -360,7 +338,6 @@ function prepareCurves(
         interpolation,
         stacked,
         percent,
-        projection,
         points,
         grid,
         upper,
@@ -373,28 +350,27 @@ function prepareCurves(
 /** Fit envelopes analytically and optimize constrained signed/logarithmic boundaries. */
 export function getAreaGeometryDomain(
     data: GeometryInput[],
-    options: AreaGeometryOptions & {logarithmic?: boolean},
+    options: Pick<AreaGeometryOptions, 'projection' | 'xRange'> & {logarithmic?: boolean},
 ) {
-    const {grid, upper, positive, negative} = prepareCurves(data, 0, 1, options);
+    const {projection, xRange, logarithmic} = options;
+    const {grid, upper, positive, negative} = prepareCurves(data, projection);
     const signed = upper.some((sections) =>
         [...sections.values()].some((curve) => curve.from.y * curve.to.y < 0),
     );
-    if (options.logarithmic || signed) {
-        const project = options.projection?.project ?? Number;
-        const invert = options.projection?.invert ?? Number;
-        const baseline = project(0);
+    if (logarithmic || signed) {
+        const baseline = projection.project(0);
         let min = Infinity;
         let max = -Infinity;
-        for (const columns of buildColumns(data, baseline, 1, false, options, sampleExtrema)) {
+        for (const columns of buildColumns(data, {baseline, projection, xRange}, sampleExtrema)) {
             for (const column of columns) {
                 if (!column) {
                     continue;
                 }
                 for (const y of [column.y0, column.y1]) {
-                    if (options.logarithmic && y === baseline) {
+                    if (logarithmic && y === baseline) {
                         continue;
                     }
-                    const value = invert(y);
+                    const value = projection.invert(y);
                     min = Math.min(min, value);
                     max = Math.max(max, value);
                 }
@@ -419,7 +395,7 @@ export function getAreaGeometryDomain(
             ) {
                 continue;
             }
-            const contribution = getSectionYValues(section, options.xRange);
+            const contribution = getSectionYValues(section, xRange);
             if (contribution.length) {
                 values.push(0, ...contribution.map((value) => sign * Math.max(0, sign * value)));
             }
@@ -428,10 +404,7 @@ export function getAreaGeometryDomain(
     // Include isolated observations, which have no envelope interval.
     for (const item of data) {
         for (const point of item.points) {
-            if (
-                point.y !== null &&
-                (!options.xRange || (point.x >= options.xRange[0] && point.x <= options.xRange[1]))
-            ) {
+            if (point.y !== null && (!xRange || (point.x >= xRange[0] && point.x <= xRange[1]))) {
                 values.push(point.y);
             }
         }
@@ -441,36 +414,20 @@ export function getAreaGeometryDomain(
 
 export function buildAreaGeometry(
     data: GeometryInput[],
-    baseline: number,
-    positiveDirection = -1,
-    reversedX = false,
-    options: AreaGeometryOptions = {},
+    options: AreaGeometryOptions,
 ): AreaGeometry[] {
-    return buildColumns(data, baseline, positiveDirection, reversedX, options).map((columns) =>
+    return buildColumns(data, options).map((columns) =>
         getPaths(filterVisibleColumns(columns, options.yRange)),
     );
 }
 
 function buildColumns(
     data: GeometryInput[],
-    baseline: number,
-    positiveDirection: number,
-    reversedX: boolean,
-    options: AreaGeometryOptions,
+    {baseline, projection, reversedX, xRange}: AreaGeometryOptions,
     sample = sampleInterval,
 ): BandColumn[][] {
-    const {
-        interpolation,
-        stacked,
-        percent,
-        projection,
-        points,
-        grid,
-        upper,
-        lower,
-        positive,
-        negative,
-    } = prepareCurves(data, baseline, positiveDirection, options);
+    const {interpolation, stacked, percent, points, grid, upper, lower, positive, negative} =
+        prepareCurves(data, projection);
     const output: BandColumn[][] = data.map(() => []);
     for (let i = 1; i < grid.length; i++) {
         const from = grid[i - 1];
@@ -556,9 +513,9 @@ function buildColumns(
                     }
                 }
             }
-            if (options.xRange) {
+            if (xRange) {
                 if (stacked) {
-                    for (const x of options.xRange) {
+                    for (const x of xRange) {
                         const fraction = (x - from) / (to - from);
                         if (fraction > 0 && fraction < 1) {
                             cutSet.add(fraction);
@@ -569,7 +526,7 @@ function buildColumns(
                         if (!curve) {
                             continue;
                         }
-                        for (const t of getBoundaryParameters(curve, options.xRange)) {
+                        for (const t of getBoundaryParameters(curve, xRange)) {
                             cutSet.add(t);
                         }
                     }
@@ -596,13 +553,13 @@ function buildColumns(
                 const x = stacked
                     ? from + middle * (to - from)
                     : evaluate(middle, directions)[0]?.x;
-                if (options.xRange && (x < options.xRange[0] || x > options.xRange[1])) {
+                if (xRange && (x < xRange[0] || x > xRange[1])) {
                     continue;
                 }
                 samples.push(...sample((t) => evaluate(t, directions), start, end));
             }
-            if (stacked && options.xRange && options.xRange[0] === options.xRange[1]) {
-                const t = (options.xRange[0] - from) / (to - from);
+            if (stacked && xRange && xRange[0] === xRange[1]) {
+                const t = (xRange[0] - from) / (to - from);
                 if (t >= 0 && t <= 1) {
                     const directions = curves.map((curve) =>
                         curve ? Math.sign(evaluateAtX(curve, t)) || 1 : 1,
@@ -633,7 +590,7 @@ function buildColumns(
             if (
                 point.y === null ||
                 point.hiddenInLine ||
-                (options.xRange && (point.x < options.xRange[0] || point.x > options.xRange[1]))
+                (xRange && (point.x < xRange[0] || point.x > xRange[1]))
             ) {
                 continue;
             }
@@ -732,7 +689,7 @@ function revealDrawnAnchors(item: PreparedAreaData) {
 
 export function prepareAreaGeometry(
     data: PreparedAreaData[],
-    getOptions: (series: PreparedAreaSeries) => PreparedGeometryOptions,
+    getOptions: (series: PreparedAreaSeries) => AreaGeometryOptions,
 ) {
     for (const items of group(data, (item) =>
         JSON.stringify([item.series.yAxis, item.series.stackId]),
@@ -746,13 +703,7 @@ export function prepareAreaGeometry(
             series: item.series,
             points: withAreaGeometryBreaks(item.points, item.series.data),
         }));
-        const geometries = buildAreaGeometry(
-            inputs,
-            options.baseline,
-            options.positiveDirection,
-            options.reversedX,
-            options,
-        );
+        const geometries = buildAreaGeometry(inputs, options);
         items.forEach((item, index) => {
             item.geometry = geometries[index];
             revealDrawnAnchors(item);

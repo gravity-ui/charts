@@ -3,12 +3,9 @@ import isNil from 'es-toolkit/compat/isNil';
 
 import type {AxisDomainValue, DomainAxis, GetAxisDataArgs} from '~core/series/axis-contract';
 import {getDomainPoints} from '~core/series/domain-points';
-import {
-    getLineSegments,
-    isDrawnPoint,
-    segmentIntersectsRect,
-} from '~core/shapes/line/auto-placement';
+import {getLineSegments, segmentIntersectsRect} from '~core/shapes/line/auto-placement';
 import type {PlacementSegment} from '~core/shapes/line/auto-placement';
+import {hasSmoothInterpolation, isVisibleLinePoint} from '~core/shapes/line/path';
 import {filterPoints} from '~core/zoom/filter-data';
 import type {FilterSeriesDataArgs} from '~core/zoom/filter-data';
 
@@ -59,7 +56,7 @@ function getStepSegments(
     for (let index = 1; index < points.length; index++) {
         const previous = points[index - 1];
         const point = points[index];
-        if (!isDrawnPoint(previous) || !isDrawnPoint(point)) continue;
+        if (!isVisibleLinePoint(previous) || !isVisibleLinePoint(point)) continue;
         // Intermediate step vertices belong to the same pair of original samples.
         const pointIndices = [index - 1, index] as const;
         if (previous.x === point.x && previous.y === point.y) {
@@ -101,7 +98,7 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
         isDefined: (point) => projectX(point.x) !== null && projectY(point.y) !== null,
     });
     const stepped = interpolation?.type === 'step';
-    const smooth = interpolation && interpolation.type !== 'linear' && !stepped;
+    const smooth = hasSmoothInterpolation(series);
     if (
         selection.data.length ||
         viewport.x.type === 'category' ||
@@ -141,7 +138,7 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
     const runs: PathRun[] = [];
     let run: PathRun | undefined;
     const pointRuns = points.map((point, index) => {
-        if (!isDrawnPoint(point)) {
+        if (!isVisibleLinePoint(point)) {
             run = undefined;
             return undefined;
         }
@@ -192,26 +189,41 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
 }
 
 export function getLineAxisData({series, viewport}: GetAxisDataArgs<LineSeries>) {
+    const xRange = viewport?.x.range;
     if (
         !viewport ||
-        (!viewport.x.range &&
-            !series.some(
-                (item) =>
-                    item.interpolation?.type === 'cardinal' ||
-                    item.interpolation?.type === 'monotone',
-            ))
+        (!xRange &&
+            (viewport.x.type === 'category' ||
+                viewport.y.type === 'category' ||
+                !series.some(canOvershootSamples)))
     ) {
         return undefined;
     }
     const values: AxisDomainValue[] = [];
     for (const item of series) {
-        const contribution =
-            getVisiblePathYValues({
-                points: item.data,
-                viewport,
-                curveFactory: getCurveFactory(item.interpolation),
-            }) ?? Array.from(getDomainPoints(item.data, viewport), (point) => point?.y);
-        for (const value of contribution) values.push(value);
+        const pathValues =
+            xRange || canOvershootSamples(item)
+                ? getVisiblePathYValues({
+                      points: item.data,
+                      viewport,
+                      curveFactory: getCurveFactory(item.interpolation),
+                  })
+                : undefined;
+        // Without X zoom, curve extrema extend the sample domain.
+        if (!xRange || !pathValues) {
+            const samples =
+                xRange || viewport.y.range ? getDomainPoints(item.data, viewport) : item.data;
+            for (const point of samples) {
+                values.push(point?.y);
+            }
+        }
+        for (const value of pathValues ?? []) {
+            values.push(value);
+        }
     }
     return {domainValues: values};
+}
+
+function canOvershootSamples({interpolation}: Pick<LineSeries, 'interpolation'>) {
+    return interpolation?.type === 'cardinal' && interpolation.tension !== 1;
 }

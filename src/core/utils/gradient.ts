@@ -43,13 +43,16 @@ export interface GradientPaintOptions {
 }
 
 /** Returns the bounding box of points that participate in a rendered path. */
-export function getGradientBBox(points: GradientPoint[]): GradientBBox | null {
+export function getGradientBBox(
+    points: GradientPoint[],
+    includeHiddenPoints = false,
+): GradientBBox | null {
     let bbox: GradientBBox | null = null;
     for (const point of points) {
         if (
             point.x === null ||
             point.y === null ||
-            point.hiddenInLine ||
+            (point.hiddenInLine && !includeHiddenPoints) ||
             !Number.isFinite(point.x) ||
             !Number.isFinite(point.y)
         ) {

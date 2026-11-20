@@ -16,6 +16,8 @@ import type {SymbolBounds} from '../../utils/symbol';
 import type {ShapeLabels} from '../types';
 
 import {hasNormalMarker} from './normal-marker';
+import {getLinePathPointFilter} from './path';
+import type {LinePathPoint} from './path';
 import type {PointData} from './types';
 
 export const DEFAULT_PLACEMENT_ORDER: readonly LineSeriesDataLabelPlacementPosition[] = [
@@ -89,17 +91,6 @@ export interface PlacementSegment {
     yMin: number;
 }
 
-interface LinePoint {
-    x: number | null;
-    y: number | null;
-    hiddenInLine?: boolean;
-}
-
-/** Mirrors the d3 line `defined()` predicate from the line renderer */
-export function isDrawnPoint<T extends LinePoint>(p: T): p is T & {x: number; y: number} {
-    return p.x !== null && p.y !== null && !p.hiddenInLine;
-}
-
 function makeSegment(
     x1: number,
     y1: number,
@@ -135,9 +126,9 @@ class SegmentCollector {
     private x = 0;
     private y = 0;
     private pointIndex = -1;
-    private readonly points?: readonly LinePoint[];
+    private readonly points?: readonly LinePathPoint[];
 
-    constructor(halfWidth: number, points?: readonly LinePoint[]) {
+    constructor(halfWidth: number, points?: readonly LinePathPoint[]) {
         this.halfWidth = halfWidth;
         this.points = points;
     }
@@ -231,7 +222,8 @@ export function getLineSegments(
     data: Array<{
         curveFactory?: CurveFactory;
         lineWidth: number;
-        points: LinePoint[];
+        /** Projected points in one series' observation order. */
+        points: LinePathPoint[];
         /** Track endpoints for curves interpolating the input points (linear, cardinal, monotone). */
         trackPointIndices?: boolean;
     }>,
@@ -239,13 +231,14 @@ export function getLineSegments(
     const segments: PlacementSegment[] = [];
     for (const d of data) {
         const halfWidth = d.lineWidth / 2;
+        const isPathPoint = getLinePathPointFilter(d.points[0]?.series);
         if (d.curveFactory || !d.trackPointIndices) {
             const collector = new SegmentCollector(
                 halfWidth,
                 d.trackPointIndices ? d.points : undefined,
             );
-            lineGenerator<LinePoint>()
-                .defined(isDrawnPoint)
+            lineGenerator<LinePathPoint>()
+                .defined(isPathPoint)
                 .x((p) => p.x as number)
                 .y((p) => p.y as number)
                 .curve(d.curveFactory ?? curveLinear)
@@ -259,7 +252,7 @@ export function getLineSegments(
         for (let i = 1; i < d.points.length; i++) {
             const p1 = d.points[i - 1];
             const p2 = d.points[i];
-            if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
+            if (isPathPoint(p1) && isPathPoint(p2)) {
                 const segment = makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth);
                 if (d.trackPointIndices) segment.pointIndices = [i - 1, i];
                 segments.push(segment);

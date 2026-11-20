@@ -39,9 +39,9 @@ export function validateAreaInterpolation(series: AreaSeries, allSeries: ChartSe
         if (getNormalizedInterpolationKey(other.interpolation) !== interpolation) {
             throw new ChartError({
                 code: CHART_ERROR_CODE.INVALID_DATA,
-                message: i18n('error', 'label_invalid-series-property', {
-                    key: 'interpolation',
-                    values: 'identical interpolation settings within an area stack',
+                message: i18n('error', 'label_inconsistent-area-stack-interpolation', {
+                    firstSeries: series.name,
+                    secondSeries: other.name,
                 }),
             });
         }

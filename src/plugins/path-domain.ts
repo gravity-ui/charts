@@ -16,7 +16,10 @@ interface Args {
     curveFactory?: CurveFactory;
 }
 
-/** Clip renderer path pieces and include analytic Bézier extrema. */
+/**
+ * Collect Y values and cubic extrema from the rendered path, clipped to the X window if present.
+ * Return undefined when the caller should use its sample-based domain.
+ */
 export function getVisiblePathYValues({
     points,
     viewport,

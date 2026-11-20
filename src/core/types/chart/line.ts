@@ -57,7 +57,7 @@ export interface LineSeriesLineBaseStyle {
     opacity?: number | null;
 }
 
-/** Alias retained for compatibility. */
+/** @deprecated Use SeriesInterpolation. */
 export type LineSeriesInterpolation = SeriesInterpolation;
 
 export type LineSeriesDataLabelPlacementPosition = 'top' | 'bottom' | 'left' | 'right';

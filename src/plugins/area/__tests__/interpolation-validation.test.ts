@@ -1,3 +1,4 @@
+import {i18nFactory} from '~core/i18n';
 import {validateData} from '~core/validation';
 
 import {CHART_ERROR_CODE} from '../../../libs';
@@ -33,6 +34,27 @@ test.each([
         );
     },
 );
+
+test.each([
+    [
+        'en',
+        'Area series "Online" and "Retail" in the same stack must use the same interpolation settings.',
+    ],
+    ['ru', 'У серий «Online» и «Retail» в одном стеке должны совпадать настройки интерполяции.'],
+])('names both series in the localized stack error (%s)', (language, message) => {
+    const data = [
+        {...area({type: 'monotone'}), name: 'Online', data: [{x: 0, y: 10}]},
+        {...area({type: 'step'}), name: 'Retail', data: [{x: 0, y: 20}]},
+    ];
+    i18nFactory.setLang(language);
+    try {
+        expect(() => validateData({series: {data}})).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA, message}),
+        );
+    } finally {
+        i18nFactory.setLang('en');
+    }
+});
 
 test('allows different interpolation in separate stacks, axes and unstacked areas', () => {
     const series = [
