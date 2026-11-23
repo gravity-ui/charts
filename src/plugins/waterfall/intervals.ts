@@ -10,7 +10,11 @@ export function resolveWaterfallIntervals(points: readonly PreparedWaterfallSeri
 
     for (const point of points) {
         const start = point.total ? 0 : balance;
-        if (!point.total) balance += point.y ?? 0;
+        if (!point.total) {
+            const {y} = point;
+            if (typeof y !== 'number') continue;
+            balance += y;
+        }
         intervals.set(point, {start, end: balance, previousIndex});
         previousIndex = point.index;
     }

@@ -12,7 +12,10 @@ export interface SeriesDataSelection<TPoint = unknown> {
 export interface FilterSeriesDataArgs<TSeries> {
     series: TSeries;
     viewport: DomainViewport;
-    /** This plugin's series before viewport filtering, with current legend visibility. */
+    /**
+     * Prepared series of the same type, including the current series, before viewport filtering.
+     * Each series carries its current legend visibility.
+     */
     seriesGroup?: readonly TSeries[];
 }
 

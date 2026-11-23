@@ -14,6 +14,100 @@ import {getVisibleSeries} from '../../../series/utils';
 import {getZoomedSeriesData} from '../../../zoom';
 import {prepareWaterfallData} from '../prepare-data';
 
+async function prepareUnzoomedWaterfall(
+    data: WaterfallSeriesData[],
+    options: {xAxis?: PreparedXAxis; yOrder?: PreparedYAxis['order']} = {},
+) {
+    const {xAxis = {type: 'linear'} as PreparedXAxis, yOrder} = options;
+    const yAxis = {type: 'linear', min: 0, max: 20, order: yOrder} as PreparedYAxis;
+    const series = prepareWaterfallSeries({
+        series: [{type: 'waterfall', name: 'Balance', data, dataLabels: {enabled: false}}],
+        colorScale: scaleOrdinal<string, string>().range(['#000']),
+        colors: [],
+        legend: {enabled: false} as PreparedLegend,
+    });
+    const xScale = createXScale({axis: xAxis, series, boundsWidth: 300});
+    if (!xScale) throw new Error('X scale is unavailable');
+    const yScale = createYScale({axis: yAxis, series, boundsHeight: 200});
+    const shapes = await prepareWaterfallData({
+        series,
+        intervals: getWaterfallIntervals(series),
+        seriesOptions: seriesOptionsDefaults,
+        xAxis,
+        xScale,
+        yAxis: [yAxis],
+        yScale: [yScale],
+    });
+
+    return {xDomain: xScale.domain(), shapes};
+}
+
+test('unzoomed columns on a linear X axis use the numeric spacing of points', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall([
+        {x: 2, y: 10},
+        {x: 10, y: 5},
+        {x: 100, y: -3},
+        {x: 120, total: true},
+    ]);
+
+    expect(shapes.map(({width}) => width)).toEqual([16, 16, 16, 16]);
+});
+
+test('a single column on an unzoomed linear X axis is centered and uses the default maximum width', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall([{x: 5, y: 10}]);
+
+    expect(shapes).toEqual([expect.objectContaining({x: 125, width: 50})]);
+});
+
+test('unzoomed columns use positive heights on a reversed Y axis', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall(
+        [
+            {x: 2, y: 10},
+            {x: 10, y: -4},
+            {x: 100, total: true},
+        ],
+        {yOrder: 'reverse'},
+    );
+
+    expect(shapes.map(({y, height}) => [y, y + height])).toEqual([
+        [0, 100],
+        [60, 100],
+        [0, 60],
+    ]);
+});
+
+test('a point without y retains its category and index position without interrupting the balance', async () => {
+    const xAxis = {
+        type: 'category',
+        categories: ['Opening', 'Gap', 'Expense', 'Total'],
+    } as PreparedXAxis;
+    const data = [
+        {x: 'Opening', y: 10},
+        {x: 'Gap'},
+        {x: 'Expense', y: -3},
+        {x: 'Total', total: true},
+    ];
+    const {xDomain, shapes} = await prepareUnzoomedWaterfall(data, {xAxis});
+
+    expect(xDomain).toEqual(['Opening', 'Gap', 'Expense', 'Total']);
+    expect(shapes).toMatchObject([
+        {data: {x: 'Opening', index: 0}, subTotal: 10},
+        {data: {x: 'Expense', index: 2}, subTotal: 7, previousIndex: 0},
+        {data: {x: 'Total', index: 3}, subTotal: 7, previousIndex: 2},
+    ]);
+});
+
+test('a point without y contributes to the linear X domain without producing a column', async () => {
+    const {xDomain, shapes} = await prepareUnzoomedWaterfall([
+        {x: 0, y: 10},
+        {x: 1, total: true},
+        {x: 100},
+    ]);
+
+    expect(xDomain).toEqual([0, 100]);
+    expect(shapes.map(({data}) => data.x)).toEqual([0, 1]);
+});
+
 test('resolves totals without overwriting point values', async () => {
     const data: WaterfallSeriesData[] = [
         {x: 'Loss', y: -10},

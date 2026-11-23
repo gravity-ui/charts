@@ -19,7 +19,8 @@ export function prepareWaterfallPoints(series: WaterfallSeries): PreparedWaterfa
         if (point.y === null && !nullAsZero) return;
 
         const y = !point.total && nullAsZero ? (point.y ?? 0) : point.y;
-        if (!point.total && (typeof y !== 'number' || !Number.isFinite(y))) return;
+        // A point without y can still reserve a position on the X axis.
+        if (!point.total && y !== undefined && !Number.isFinite(y)) return;
 
         points.push(
             withSourcePoint(point, {

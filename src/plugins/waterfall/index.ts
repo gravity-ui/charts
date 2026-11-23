@@ -26,10 +26,6 @@ function isPreparedWaterfallSeries(
     return 'fullData' in series;
 }
 
-function getWaterfallPoints(series: WaterfallSeries | PreparedWaterfallSeries) {
-    return isPreparedWaterfallSeries(series) ? series.data : prepareWaterfallPoints(series);
-}
-
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
 
@@ -75,10 +71,9 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
                 const intervals = getWaterfallIntervals(series.filter(isPreparedWaterfallSeries));
                 const values: number[] = [];
                 for (const item of series) {
-                    const points = getWaterfallPoints(item);
-                    const itemIntervals = isPreparedWaterfallSeries(item)
-                        ? intervals
-                        : resolveWaterfallIntervals(points);
+                    const prepared = isPreparedWaterfallSeries(item);
+                    const points = prepared ? item.data : prepareWaterfallPoints(item);
+                    const itemIntervals = prepared ? intervals : resolveWaterfallIntervals(points);
                     for (const point of points) {
                         const interval = itemIntervals.get(point);
                         if (interval) values.push(interval.start, interval.end);
@@ -92,15 +87,14 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
         filterData: ({series, viewport, seriesGroup}) => {
-            const points = getWaterfallPoints(series);
+            const waterfallSeries = series as PreparedWaterfallSeries;
             const yRange = viewport.y.range;
-            if (!yRange) return filterPoints(points, viewport);
+            if (!yRange) return filterPoints(waterfallSeries.data, viewport);
 
-            const intervals = isPreparedWaterfallSeries(series)
-                ? getWaterfallIntervals((seriesGroup ?? [series]).filter(isPreparedWaterfallSeries))
-                : resolveWaterfallIntervals(points);
+            const group = seriesGroup as readonly PreparedWaterfallSeries[] | undefined;
+            const intervals = getWaterfallIntervals(group ?? [waterfallSeries]);
             const [min, max] = yRange;
-            return filterPoints(points, viewport, {
+            return filterPoints(waterfallSeries.data, viewport, {
                 isYInRange: (point) => {
                     const interval = intervals.get(point);
                     return Boolean(
