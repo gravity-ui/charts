@@ -101,14 +101,16 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
                 boundary = nextIsOuter ? stack.next : stack.prev;
             }
             if (!boundary) continue;
-            const total = sumDecimals(stack.points.map((point) => Number(point.y)));
-            // Zero segments do not add a separate total beside a negative stack.
-            if (total === 0 && boundariesBySign.has(true)) continue;
+
+            const axisTotal = sumDecimals(stack.points.map((point) => Number(point.y)));
+            const total = getStackLabelValue(stack.options, stack.points, axisTotal);
+            if (axisTotal === 0 && total === 0 && boundariesBySign.has(true)) continue;
+
             anchors.push({
                 options: stack.options,
                 x: stack.x,
                 y: boundary.y,
-                total: getStackLabelValue(stack.options, stack.points, total),
+                total,
                 plotIndex: stack.plotIndex,
                 direction: stack.extendsUp ? 'top' : 'bottom',
             });

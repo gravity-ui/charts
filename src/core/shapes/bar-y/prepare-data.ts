@@ -227,6 +227,8 @@ function prepareBarYGeometry(args: PrepareBarYDataArgs): BarYPreparationItem[] {
 
                 stackItems.push(item);
 
+                if (s.stacking === 'normal' && xValue === 0) return;
+
                 if (extendsRight) {
                     positiveStack += width;
                 } else {

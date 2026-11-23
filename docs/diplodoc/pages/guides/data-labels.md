@@ -76,7 +76,7 @@ For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series 
 
 By default, totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals.
 
-A separate zero total is hidden when the same stack has negative values. This rule uses the original axis values, not the result of a custom aggregation callback.
+A group of zero axis values has no separate label if its calculated total is zero and a visible series with stack labels enabled contributes a negative value to the same stack at that category or axis position.
 
 Participants with the same type, `stackId` and value axis must have matching effective `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
 
@@ -94,7 +94,7 @@ Here, stack height shows revenue while the total label sums `custom.orders`. For
 
 The callback must return a finite number. Returning `NaN`, `Infinity` or `-Infinity` hides the total label.
 
-Returning `0` from the callback does not by itself hide the label. For example, a positive stack can display a custom total of `0`.
+A group with positive axis values can display a custom total of `0`.
 
 ### Area gaps and isolated points
 
