@@ -4,6 +4,7 @@ import type {MeaningfulAny} from '../misc';
 import type {ChartPointAnnotation} from './annotation';
 import type {BaseDataLabels, BaseSeries, BaseSeriesData, BaseSeriesLegend} from './base';
 import type {SeriesColor} from './gradient';
+import type {SeriesInterpolation} from './interpolation';
 import type {RectLegendSymbolOptions} from './legend';
 import type {PointMarkerOptions} from './marker';
 import type {ChartSeriesRangeSliderOptions} from './series';
@@ -56,30 +57,8 @@ export interface LineSeriesLineBaseStyle {
     opacity?: number | null;
 }
 
-export type LineSeriesInterpolation =
-    | {type: 'linear'}
-    | {type: 'monotone'}
-    | {
-          type: 'cardinal';
-          /**
-           * Controls how tightly the curve follows the control points.
-           * @minimum 0
-           * @maximum 1
-           * @default 0
-           */
-          tension?: number;
-      }
-    | {
-          type: 'step';
-          /**
-           * Where Y changes between adjacent points `(x1, y1)` and `(x2, y2)`.
-           * - `'middle'`: Change Y halfway between x1 and x2.
-           * - `'before'`: Change Y at x1, then continue horizontally.
-           * - `'after'`: Continue horizontally at y1 until x2, then change Y.
-           * @default 'after'
-           */
-          position?: 'middle' | 'before' | 'after';
-      };
+/** @deprecated Use SeriesInterpolation. */
+export type LineSeriesInterpolation = SeriesInterpolation;
 
 export type LineSeriesDataLabelPlacementPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -158,7 +137,7 @@ export interface LineSeries<T = MeaningfulAny> extends BaseSeries, LineSeriesLin
      * Markers and tooltip values remain attached to original data points.
      * Line interactions and automatic data-label placement follow the interpolated geometry.
      */
-    interpolation?: LineSeriesInterpolation;
+    interpolation?: SeriesInterpolation;
     /**
      * Options to configure how this series appears and behaves in the Range Slider component.
      */

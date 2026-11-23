@@ -101,6 +101,31 @@ test('fits an unstacked area to its interpolated boundaries under X zoom', async
     expect(domain).toEqual([0, 78]);
 });
 
+test.each([undefined, 'normal'] as const)(
+    'includes cardinal overshoot before zoom (stacking=%s)',
+    async (stacking) => {
+        const series = await prepare([
+            {
+                type: 'area',
+                name: 'Area',
+                interpolation: {type: 'cardinal'},
+                stacking,
+                data: [0, 10, 10, 0].map((y, x) => ({x, y})),
+            },
+        ]);
+        const domainValues = collectYAxisDomainValues({
+            series,
+            fallbackSeries: series,
+            zoomState: {},
+        })?.[0];
+        const full = createYScale({axis, boundsHeight: 300, series, domainValues})
+            ?.domain()
+            .map(Number);
+        expect(full).toEqual([0, 11.25]);
+        expect(domains(series, [0, 3])[0]).toEqual(full);
+    },
+);
+
 test.each([
     ['skip', 12],
     ['connect', 78],

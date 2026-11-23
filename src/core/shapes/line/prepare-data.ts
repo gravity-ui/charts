@@ -19,6 +19,7 @@ import {
     placeLineDataLabels,
 } from './auto-placement';
 import {hasNormalMarker} from './normal-marker';
+import {hasSmoothInterpolation} from './path';
 import type {PointData, PreparedLineData} from './types';
 
 function isLabeledLineLayer(layer: ShapeLabels): boolean {
@@ -67,6 +68,51 @@ interface Args {
     getCurveFactory?: (interpolation?: PreparedLineSeries['interpolation']) => CurveFactory;
 }
 
+function projectLinePoints(args: {
+    series: PreparedLineSeries;
+    xAxis: PreparedXAxis;
+    xScale: ChartScale;
+    yAxis: PreparedYAxis;
+    yScale: ChartScale;
+    yAxisTop: number;
+}) {
+    const {series, xAxis, xScale, yAxis, yScale, yAxisTop} = args;
+    const points = series.data.map<PointData>((data) => {
+        const y = getYValue({point: data, points: series.data, yAxis, yScale});
+        return {
+            x: getXValue({point: data, points: series.data, xAxis, xScale}),
+            y: y === null ? null : yAxisTop + y,
+            color: data.marker?.color ?? data.color,
+            data,
+            series,
+        };
+    });
+    if (
+        yAxis.type !== 'category' &&
+        (typeof yAxis.min === 'number' || typeof yAxis.max === 'number') &&
+        hasSmoothInterpolation(series)
+    ) {
+        const [min, max] = yScale.domain().map(Number);
+        if (min === max) {
+            // A collapsed scale maps out-of-bounds values to its center.
+            for (const point of points) {
+                if (typeof point.data.y === 'number' && point.data.y !== min) {
+                    point.y = null;
+                }
+            }
+        }
+    }
+    markHiddenPointsOutOfYRange({
+        points,
+        yScale,
+        yAxisTop,
+        axisMin: yAxis.min,
+        axisMax: yAxis.max,
+        getDataY: (point) => point.data.y,
+    });
+    return points;
+}
+
 export function projectLineData(args: Args): PreparedLineData[] {
     const {series, xAxis, yAxis, xScale, yScale, split, isRangeSlider} = args;
     const result: PreparedLineData[] = [];
@@ -78,32 +124,22 @@ export function projectLineData(args: Args): PreparedLineData[] {
             continue;
         }
         const yAxisTop = plot?.top || 0;
-        const points = s.data.map<PointData>((data) => {
-            const y = getYValue({
-                point: data,
-                points: s.data,
-                yAxis: seriesYAxis,
-                yScale: seriesYScale,
-            });
-            return {
-                x: getXValue({point: data, points: s.data, xAxis, xScale}),
-                y: y === null ? null : yAxisTop + y,
-                color: data.marker?.color ?? data.color,
-                data,
-                series: s,
-            };
-        });
-        markHiddenPointsOutOfYRange({
-            points,
+        const points = projectLinePoints({
+            series: s,
+            xAxis,
+            xScale,
+            yAxis: seriesYAxis,
             yScale: seriesYScale,
             yAxisTop,
-            axisMin: seriesYAxis.min,
-            axisMax: seriesYAxis.max,
-            getDataY: (point) => point.data.y,
         });
+        const smooth = (Boolean(s.gradient) || split.plots.length > 1) && hasSmoothInterpolation(s);
         result.push({
             points,
-            gradientBBox: s.gradient ? getGradientBBox(points) : null,
+            clipYRange:
+                split.plots.length > 1 && plot && smooth
+                    ? [plot.top, plot.top + plot.height]
+                    : undefined,
+            gradientBBox: s.gradient ? getGradientBBox(points, smooth) : null,
             markers: [],
             getSegments: () => [],
             annotations: [],
@@ -221,29 +257,14 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
                     return null;
                 }
                 const yAxisTop = split.plots[seriesYAxis.plotIndex]?.top || 0;
-                const points = s.data.map<PointData>((d) => {
-                    const yValue = getYValue({
-                        point: d,
-                        points: s.data,
-                        yAxis: seriesYAxis,
-                        yScale: seriesYScale,
-                    });
-                    return {
-                        x: getXValue({point: d, points: s.data, xAxis, xScale}),
-                        y: yValue === null ? null : yAxisTop + yValue,
-                        data: d,
-                        series: s,
-                    };
-                });
-                markHiddenPointsOutOfYRange({
-                    points,
+                return projectLinePoints({
+                    series: s,
+                    xAxis,
+                    xScale,
+                    yAxis: seriesYAxis,
                     yScale: seriesYScale,
                     yAxisTop,
-                    axisMin: seriesYAxis.min,
-                    axisMax: seriesYAxis.max,
-                    getDataY: (p) => p.data.y,
                 });
-                return points;
             };
 
             const allLineSeries = ((allSeries ?? series) as PreparedSeries[]).filter(

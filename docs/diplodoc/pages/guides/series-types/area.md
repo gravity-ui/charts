@@ -20,6 +20,47 @@ Set `type: 'area'`. Each point contains `x` and `y`. For a category axis, use a 
 
 Set `stacking: 'normal'` to show cumulative values or `stacking: 'percent'` to show shares. Use `stackId` to separate stacks. Enable `stackLabels` to show [stack totals](../data-labels.md#stack-total-labels).
 
+### Interpolation
+
+Use `interpolation` to smooth an area's boundary or show values that change in discrete steps. The same options work for unstacked, normal and percent-stacked areas.
+
+<div data-chart-example="area-interpolation/smooth"></div>
+
+```javascript
+{
+  type: 'area',
+  stacking: 'normal',
+  interpolation: {type: 'monotone'},
+}
+```
+
+Choose the shape between observations:
+
+- `linear`: Straight segments (default).
+- `monotone`: A smooth monotone-X curve through the observations without adding extrema.
+- `cardinal`: A cardinal spline with `tension` from `0` (default, loose) to `1` (straight segments).
+- `step`: Horizontal and vertical segments. `position: 'after'` (default) holds the value until the next observation; `'before'` changes it at the current observation, and `'middle'` changes halfway between them.
+
+Markers and tooltip values stay attached to the original observations. Interpolation preserves the configured `nullMode` behavior.
+
+{% note info %}
+
+Use smooth or stepped interpolation with care on large datasets, especially for stacked areas. The additional geometry calculations can slow down rendering and tooltip updates.
+
+{% endnote %}
+
+#### Smoothing stacked areas
+
+Use identical interpolation settings on every series in a stack, including their defaults. Conflicting settings are rejected with `INVALID_DATA`.
+
+Layers share boundaries without overlapping, and zero-valued intervals stay empty. Percent stacks interpolate the original shares and retain a 100% outer boundary where totals are positive.
+
+{% note info %}
+
+Preventing overlaps can flatten or introduce corners in stacked curves, especially with `cardinal` or sign changes. Unstacked cardinal curves can overshoot observations, as in [line series](line.md#line-interpolation).
+
+{% endnote %}
+
 ### Markers
 
 Set `marker.enabled: true` to show points. Configure hover markers through `series.options.area.states.hover.marker`; see [Markers](line.md#markers).

@@ -13,6 +13,7 @@ import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
+import type {GetTooltipDataArgs} from '~core/utils/tooltip-helpers';
 import {
     validateAxisPlotValues,
     validatePercentStackingValues,
@@ -20,15 +21,9 @@ import {
     validateStacking,
     validateXYSeries,
 } from '~core/validation/helpers';
-import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {
-    AreaFormatContext,
-    AreaSeries,
-    AreaSeriesData,
-    TooltipDataChunkArea,
-} from '../../types';
+import type {AreaFormatContext, AreaSeries, TooltipDataChunkArea} from '../../types';
 import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
@@ -37,11 +32,10 @@ import {getAreaAxisPadding} from './axis-padding';
 import {getAreaAxisData} from './domain';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
+import {getAreaProjectionArgs} from './projection';
 import {getAreaStackLabelAnchors} from './stack-labels';
-
-function isAreaPointDefined(point: AreaSeriesData) {
-    return point.y !== null && point.y !== undefined;
-}
+import {validateAreaInterpolation} from './validation';
+import {filterAreaData} from './zoom';
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
@@ -58,24 +52,17 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
-        filterData: ({series, viewport}) =>
-            filterPoints(
-                series.nullMode === 'connect'
-                    ? series.data.filter(isAreaPointDefined)
-                    : series.data,
-                viewport,
-                {
-                    mode: 'path',
-                    axes: series.stacking ? 'x' : 'xy',
-                    isDefined: isAreaPointDefined,
-                },
-            ),
+        filterData: filterAreaData,
     },
-    prepareGradientGeometry: createGradientGeometryPreparer(projectAreaData, {
-        includeSolidSeries: true,
-    }),
+    prepareGradientGeometry: createGradientGeometryPreparer<PreparedAreaSeries>(
+        (args) => projectAreaData(getAreaProjectionArgs(args)),
+        {
+            includeSolidSeries: true,
+        },
+    ),
     prepareSeries: prepareAreaSeries,
     validate: ({series, allSeries, seriesOptions, xAxis, yAxis}) => {
+        validateAreaInterpolation(series, allSeries);
         validateStackLabelsOptions({
             series,
             allSeries,
@@ -119,17 +106,20 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
             return {renderData: [], tooltipItems: []};
         }
 
-        const data = await prepareAreaData({
-            series: series as PreparedAreaSeries[],
-            seriesOptions,
-            xAxis,
-            xScale,
-            yAxis: yAxis ?? [],
-            yScale,
-            split,
-            isOutsideBounds: isOutsideBounds ?? (() => false),
-            isRangeSlider,
-        });
+        const data = await prepareAreaData(
+            getAreaProjectionArgs({
+                series: series as PreparedAreaSeries[],
+                seriesOptions,
+                xAxis,
+                xScale,
+                yAxis: yAxis ?? [],
+                yScale,
+                split,
+                isOutsideBounds: isOutsideBounds ?? (() => false),
+                isRangeSlider,
+                boundsWidth: args.boundsWidth,
+            }),
+        );
 
         const labels = await prepareStackLabels({
             ...args,
@@ -172,7 +162,16 @@ export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaForm
         getTargetElements,
     },
     tooltip: {
-        prepareData: getTooltipData,
+        prepareData(args: GetTooltipDataArgs<PreparedAreaData>) {
+            const {data, measureDistance} = args;
+            return getTooltipData({
+                ...args,
+                measureDistance:
+                    measureDistance ||
+                    (data.length > 1 &&
+                        data.some(({series, geometry}) => series.stacking && geometry)),
+            });
+        },
         getValue: getTooltipYValue,
         header: {getValue: getTooltipXValue, axis: 'x'},
         getValueFormatContext: (item) => {

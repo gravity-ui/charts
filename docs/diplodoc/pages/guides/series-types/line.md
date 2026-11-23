@@ -63,7 +63,11 @@ Set `interpolation: {type: 'monotone'}` to draw a smooth curve through the point
 
 <div data-chart-example="line-interpolation/monotone"></div>
 
-For a cardinal spline, set `interpolation: {type: 'cardinal', tension: 0.5}`. The `tension` ranges from `0` (default, a loose curve) to `1` (straight segments). Below `1`, the curve can overshoot the data extrema and be clipped at the plot boundary.
+For a cardinal spline, set `interpolation: {type: 'cardinal', tension: 0.5}`. The `tension` ranges from `0` (default, a loose curve) to `1` (straight segments). Below `1`, the curve can extend beyond the range of the data points.
+
+On continuous axes, automatic Y bounds include extrema of the smooth curve. With X zoom, the calculation uses the part of the curve inside the zoom window. Explicit Y limits can still clip the curve.
+
+Set `yAxis[].padding.max` or `yAxis[].padding.min` to `'auto'` to leave room for the stroke at the corresponding bound.
 
 #### Stepped lines
 

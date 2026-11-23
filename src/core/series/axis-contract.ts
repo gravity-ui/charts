@@ -23,7 +23,7 @@ export interface SeriesAxisContext<TSeries> {
 }
 
 export interface GetAxisDataArgs<TSeries> extends SeriesAxisContext<TSeries> {
-    /** Active window and coordinate systems. Omitted when the view is unfiltered. */
+    /** Coordinate systems and optional active windows. Can be omitted for unfiltered data. */
     viewport?: DomainViewport;
 }
 
