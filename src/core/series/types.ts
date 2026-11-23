@@ -524,6 +524,8 @@ export type PreparedWaterfallSeries = {
         enabled: boolean;
     };
     data: PreparedWaterfallSeriesData[];
+    /** Complete group data for resolving balances across the visible range. */
+    fullData: readonly PreparedWaterfallSeriesData[];
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;

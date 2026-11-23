@@ -1,5 +1,3 @@
-import sortBy from 'es-toolkit/compat/sortBy';
-
 import type {
     PrepareShapeDataArgs,
     PrepareShapeDataResult,
@@ -13,12 +11,24 @@ import {renderWaterfall} from '~core/shapes/waterfall/renderer';
 import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterOverlappingLabels} from '~core/utils';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
 
 import {getTargetElements, prepareNearestData} from './interaction';
-import {prepareWaterfallSeries} from './prepare-waterfall-series';
+import {getWaterfallIntervals, resolveWaterfallIntervals} from './intervals';
+import {prepareWaterfallPoints, prepareWaterfallSeries} from './prepare-waterfall-series';
+
+function isPreparedWaterfallSeries(
+    series: WaterfallSeries | PreparedWaterfallSeries,
+): series is PreparedWaterfallSeries {
+    return 'fullData' in series;
+}
+
+function getWaterfallPoints(series: WaterfallSeries | PreparedWaterfallSeries) {
+    return isPreparedWaterfallSeries(series) ? series.data : prepareWaterfallPoints(series);
+}
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
@@ -27,8 +37,12 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         return {renderData: [], tooltipItems: []};
     }
 
+    const waterfallSeries = series as PreparedWaterfallSeries[];
+    const intervals = getWaterfallIntervals(waterfallSeries);
+
     const data = await prepareWaterfallData({
-        series: series as PreparedWaterfallSeries[],
+        series: waterfallSeries,
+        intervals,
         seriesOptions,
         xAxis,
         xScale,
@@ -58,24 +72,47 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
         y: {
             baseline: 0,
             getData: ({series}) => {
-                // Preparation splits signs/totals into separate series; restore source point order.
-                const points = series.flatMap((item) => item.data);
-                const ordered = sortBy(points, (point) =>
-                    'index' in point ? point.index : undefined,
-                );
+                const intervals = getWaterfallIntervals(series.filter(isPreparedWaterfallSeries));
                 const values: number[] = [];
-                let total = 0;
-                for (const point of ordered) {
-                    if (!point.total) {
-                        total += Number(point.y) || 0;
-                        values.push(total);
+                for (const item of series) {
+                    const points = getWaterfallPoints(item);
+                    const itemIntervals = isPreparedWaterfallSeries(item)
+                        ? intervals
+                        : resolveWaterfallIntervals(points);
+                    for (const point of points) {
+                        const interval = itemIntervals.get(point);
+                        if (interval) values.push(interval.start, interval.end);
                     }
                 }
                 return {domainValues: values};
             },
         },
     },
-    zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
+    zoom: {
+        types: ['x', 'xy', 'y'],
+        defaultType: 'x',
+        filterData: ({series, viewport, seriesGroup}) => {
+            const points = getWaterfallPoints(series);
+            const yRange = viewport.y.range;
+            if (!yRange) return filterPoints(points, viewport);
+
+            const intervals = isPreparedWaterfallSeries(series)
+                ? getWaterfallIntervals((seriesGroup ?? [series]).filter(isPreparedWaterfallSeries))
+                : resolveWaterfallIntervals(points);
+            const [min, max] = yRange;
+            return filterPoints(points, viewport, {
+                isYInRange: (point) => {
+                    const interval = intervals.get(point);
+                    return Boolean(
+                        interval &&
+                        min <= max &&
+                        Math.min(interval.start, interval.end) <= max &&
+                        Math.max(interval.start, interval.end) >= min,
+                    );
+                },
+            });
+        },
+    },
     prepareSeries: prepareWaterfallSeries,
     validate: ({series}) => {
         const {connectors} = series;
