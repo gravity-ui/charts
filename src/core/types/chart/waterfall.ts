@@ -41,6 +41,9 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
     dataLabels?: BaseDataLabels & {
         /**
          * Positions to try in order. Labels default to outside the value end.
+         * A candidate must fit entirely within the plot. Inside candidates must also fit
+         * within the visible column, with `padding` at both ends along the Y axis.
+         *
          * - `'auto'`: Try `outside`, then `inside-end`.
          */
         placement?: BarSeriesDataLabelPlacementOptions['placement'];

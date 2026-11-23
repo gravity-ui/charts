@@ -10,7 +10,7 @@ import type {
     PreparedWaterfallSeriesData,
 } from '../../series/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
-import {getXValue, getYValue} from '../../shapes/utils';
+import {PLOT_BOUNDS_PIXEL_TOLERANCE, getXValue, getYValue} from '../../shapes/utils';
 import {isPointDataLabelEnabled} from '../../utils';
 import {getFormattedValue} from '../../utils/format';
 import {placeRectLabel} from '../../utils/rect-label-placement';
@@ -36,7 +36,8 @@ async function prepareLabels(data: PreparedWaterfallData[], plot: PlotSize) {
         const intersectsX = column.x < plot.width && column.x + column.width > 0;
         const intersectsY =
             column.height === 0
-                ? column.y >= 0 && column.y <= plot.height
+                ? column.y >= -PLOT_BOUNDS_PIXEL_TOLERANCE &&
+                  column.y <= plot.height + PLOT_BOUNDS_PIXEL_TOLERANCE
                 : column.height > 0 && column.y < plot.height && column.y + column.height > 0;
         if (!intersectsX || !intersectsY || !isPointDataLabelEnabled(column)) {
             continue;

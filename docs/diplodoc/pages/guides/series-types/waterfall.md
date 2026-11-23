@@ -16,25 +16,38 @@ Set `type: 'waterfall'`. Each change has an `x` position and a signed `y` value.
 
 Null values are skipped by default. Set `nullMode: 'zero'` to treat them as zero changes.
 
-## Data labels
+## Data label placement
 
-Labels are enabled by default. To label only the total, disable labels for the series and enable them on the total point.
+<a id="data-label-placement"></a>
+
+Labels are enabled by default and appear outside the value end. Use adaptive placement to move a label inside when it would extend beyond the plot. In this example, the opening balance is labeled above its column, while the refund and closing balance labels move inside near the lower edge.
+
+<div data-chart-example="data-labels/waterfall-placement"></div>
 
 ```js
-{
-  type: 'waterfall',
-  name: 'Customers',
-  dataLabels: {enabled: false},
-  data: [
-    {x: 0, y: 120},
-    {x: 1, total: true, dataLabels: {enabled: true}},
-  ],
+dataLabels: {
+    placement: 'auto',
+    placementFallback: 'hide',
 }
 ```
 
-Labels go outside the value end by default. Set `dataLabels.placement` to `'auto'` to try `outside` first, then `inside-end`. Pass an array to choose the order or use `['inside-center']` to center labels in the visible column.
+With `'auto'`, the chart tries `'outside'` first, then `'inside-end'`. Pass an array to choose which positions to try and in what order.
 
-With `placement` set, `placementFallback` controls what happens when no position fits. The default `'show'` shifts the first candidate into the plot. Use `'hide'` to omit the label. With an automatic Y minimum, set `padding.min` to a size such as `'16px'` for extra room beyond the lowest value.
+- `'outside'` places the label beyond the value end.
+- `'inside-end'` places the label inside the visible column, near the value end.
+- `'inside-center'` centers the label in the visible column.
+
+Every candidate must fit within the plot. Inside candidates must also fit within the visible column, with `dataLabels.padding` at both ends along the Y axis.
+
+With `placement` set, `placementFallback` controls what happens when no candidate fits. The default `'show'` shifts the first candidate into the plot. Set `'hide'` to omit the label.
+
+To label only the total, disable labels for the series and enable the label on the total point. See [Per-point override](../data-labels.md#per-point-override).
+
+{% note info %}
+
+With an automatic Y-axis minimum, set `yAxis[0].padding.min` to a size such as `'16px'` to reserve room for labels below the lowest value.
+
+{% endnote %}
 
 ## Connectors
 
