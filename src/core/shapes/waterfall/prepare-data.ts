@@ -156,6 +156,7 @@ export const prepareWaterfallData = async (args: {
             continue;
         }
         const zeroInterval = start === end;
+        const zeroHeight = startY === endY;
         const tolerance = zeroInterval ? PLOT_BOUNDS_PIXEL_TOLERANCE : 0;
         if (y - bottom > tolerance) continue;
 
@@ -176,9 +177,9 @@ export const prepareWaterfallData = async (args: {
             annotations: [],
         };
 
-        if (canPlaceLabels && (preparedData.height > 0 || zeroInterval)) {
-            const zeroEndAtMax = item.data.total ? reversedYAxis : !reversedYAxis;
-            const endAtMax = zeroInterval ? zeroEndAtMax : endY > startY;
+        if (canPlaceLabels && (preparedData.height > 0 || zeroHeight)) {
+            const towardHigherValues = zeroInterval ? Boolean(item.data.total) : end > start;
+            const endAtMax = zeroHeight ? towardHigherValues === reversedYAxis : endY > startY;
             preparedData.label = await getLabelData(preparedData, bounds, measureLabel, endAtMax);
         }
         result.push(preparedData);

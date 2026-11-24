@@ -29,10 +29,10 @@ afterEach(() => {
 
 async function prepareUnzoomedWaterfall(
     data: WaterfallSeriesData[],
-    options: {xAxis?: PreparedXAxis; yOrder?: PreparedYAxis['order']} = {},
+    options: {xAxis?: PreparedXAxis; yMin?: number; yOrder?: PreparedYAxis['order']} = {},
 ) {
-    const {xAxis = {type: 'linear'} as PreparedXAxis, yOrder} = options;
-    const yAxis = {type: 'linear', min: 0, max: 20, order: yOrder} as PreparedYAxis;
+    const {xAxis = {type: 'linear'} as PreparedXAxis, yMin = 0, yOrder} = options;
+    const yAxis = {type: 'linear', min: yMin, max: 20, order: yOrder} as PreparedYAxis;
     const series = prepareWaterfallSeries({
         series: [{type: 'waterfall', name: 'Balance', data, dataLabels: {enabled: false}}],
         colorScale: scaleOrdinal<string, string>().range(['#000']),
@@ -172,6 +172,24 @@ test('resolves totals without overwriting point values', async () => {
     expect(result[1].label?.y).toBeGreaterThan(result[1].y + result[1].height);
     expect(result[3].label?.y).toBeLessThan(result[3].y);
     expect(result[5].label?.y).toBeLessThan(result[5].y);
+});
+
+test('places the label below a tiny negative total that has zero pixel height', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall(
+        [
+            {x: 0, y: -0.1},
+            {x: 1, y: -0.2},
+            {x: 2, y: 0.3},
+            {x: 3, total: true, dataLabels: {enabled: true}},
+            {x: 4, y: 10},
+        ],
+        {yMin: -20},
+    );
+
+    const total = shapes[3];
+    expect(total).toMatchObject({data: {total: true}, height: 0});
+    expect(total.subTotal).toBeLessThan(0);
+    expect(total.label?.y).toBeGreaterThan(total.y);
 });
 
 test('keeps a zero-height label at the plot edge despite accumulated rounding', async () => {
