@@ -8,9 +8,9 @@ import {
     curveStepBefore,
 } from 'd3-shape';
 
-import type {LineSeriesInterpolation} from '../../types';
+import type {SeriesInterpolation} from '../../types';
 
-export function getCurveFactory(interpolation?: LineSeriesInterpolation): CurveFactory {
+export function getCurveFactory(interpolation?: SeriesInterpolation): CurveFactory {
     switch (interpolation?.type) {
         case 'monotone':
             return curveMonotoneX;

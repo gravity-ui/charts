@@ -15,7 +15,13 @@ import {
 import type {ChartData, LineSeries} from '../types';
 
 import {generateSeriesData} from './__data__/utils';
-import {getAttachedLocator, getLocator, getLocatorBoundingBox} from './utils';
+import {ChartInteractionTestStory} from './components/ChartInteractionTestStory';
+import {
+    dragElementByCalculatedPosition,
+    getAttachedLocator,
+    getLocator,
+    getLocatorBoundingBox,
+} from './utils';
 
 test.describe('Line series', () => {
     test.beforeEach(async ({page}) => {
@@ -615,6 +621,58 @@ test.describe('Line series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('a smooth line can only be hit inside its own plot', async ({mount, page}) => {
+        const data: ChartData = {
+            chart: {events: {clickMode: 'plot'}},
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'line',
+                        name: 'Upper plot',
+                        interpolation: {type: 'cardinal'},
+                        lineWidth: 4,
+                        data: [0, 100, 100, 0].map((y, x) => ({x, y})),
+                    },
+                ],
+            },
+            yAxis: [{plotIndex: 0, min: 50, max: 100}, {plotIndex: 1}],
+            split: {enable: true, plots: [{}, {}], gap: 0},
+        };
+        const component = await mount(<ChartInteractionTestStory data={data} />);
+        const path = component.locator('.gcharts-line > path');
+        await expect(path).toHaveAttribute('d', /C/);
+        const positions = await path.evaluate((node) => {
+            const line = node as SVGPathElement;
+            const height = Number(line.closest('.gcharts-chart__content')?.getAttribute('height'));
+            const matrix = line.getScreenCTM();
+            const length = line.getTotalLength();
+            const points = Array.from({length: 64}, (_, index) =>
+                line.getPointAtLength((length * index) / 64),
+            );
+            const inside = points.find((point) => point.y > 10 && point.y < height / 2 - 10);
+            const below = points.find(
+                (point) => point.y > height / 2 + 10 && point.y < height - 10,
+            );
+            if (!matrix || !inside || !below) {
+                throw new Error('Expected the curve to extend into the lower plot before clipping');
+            }
+            return {
+                inside: new DOMPoint(inside.x, inside.y).matrixTransform(matrix).toJSON(),
+                below: new DOMPoint(below.x, below.y).matrixTransform(matrix).toJSON(),
+            };
+        });
+
+        const result = component.getByTestId('interaction-result');
+        await page.mouse.click(positions.inside.x, positions.inside.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('1');
+        expect(JSON.parse((await result.textContent()) ?? '{}').targets).toHaveLength(1);
+        await page.mouse.click(positions.below.x, positions.below.y);
+        await expect(component.getByTestId('interaction-count')).toHaveText('2');
+        expect(JSON.parse((await result.textContent()) ?? '{}').targets).toEqual([]);
+    });
+
     test('Should redifine line styles for range slider', async ({mount}) => {
         const chartData: ChartData = {
             chart: {
@@ -760,6 +818,64 @@ test.describe('Line series', () => {
         };
         const component = await mount(<ChartTestStory data={chartData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Cardinal overshoot fits the automatic Y bounds and survives X zoom', async ({
+        mount,
+        page,
+    }) => {
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    chart: {margin: {top: 8, right: 12}, zoom: {enabled: true, type: 'x'}},
+                    legend: {enabled: false},
+                    series: {
+                        data: [
+                            {
+                                type: 'line',
+                                name: 'Value',
+                                interpolation: {type: 'cardinal'},
+                                lineWidth: 4,
+                                marker: {enabled: true},
+                                data: [0, 100, 100, 0].map((y, x) => ({x, y})),
+                            },
+                        ],
+                    },
+                    xAxis: {min: 0, max: 3, padding: {min: 0, max: 0}},
+                    yAxis: [{padding: {min: 0, max: 'auto'}, startOnTick: false, endOnTick: false}],
+                }}
+                styles={{width: 480, height: 300}}
+            />,
+        );
+        const path = component.locator('.gcharts-line > path');
+        await expect(path).toHaveAttribute('d', /C/);
+        const beforeZoom = await path.getAttribute('d');
+        const strokeTop = await path.evaluate(
+            (node) =>
+                (node as SVGPathElement).getBBox().y -
+                Number(node.getAttribute('stroke-width')) / 2,
+        );
+        expect(strokeTop).toBeGreaterThanOrEqual(-0.01);
+        await expect(component.locator('svg')).toHaveScreenshot('cardinal-automatic-y-bounds.png');
+
+        await dragElementByCalculatedPosition({
+            component,
+            page,
+            selector: '.gcharts-chart__content .gcharts-brush .overlay',
+            getDragOptions: ({boundingBox}) => {
+                const y = boundingBox.y + boundingBox.height / 2;
+                return {
+                    from: [boundingBox.x + boundingBox.width * 0.42, y],
+                    to: [boundingBox.x + boundingBox.width * 0.58, y],
+                };
+            },
+        });
+        await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+        await expect(path).not.toHaveAttribute('d', beforeZoom ?? '');
+        await expect(path).toHaveAttribute('d', /C/);
+        await expect(
+            component.locator('.gcharts-chart__content .gcharts-marker__symbol'),
+        ).toHaveCount(0);
     });
 
     test('Hover marker appears on closest series', async ({mount, page}) => {
@@ -1074,6 +1190,29 @@ test.describe('Line series', () => {
     });
 
     test.describe('Out-of-range points', () => {
+        test('a collapsed Y axis does not draw an out-of-range cardinal curve', async ({mount}) => {
+            const component = await mount(
+                <ChartTestStory
+                    data={{
+                        series: {
+                            data: [
+                                {
+                                    type: 'line',
+                                    name: 'Series',
+                                    interpolation: {type: 'cardinal'},
+                                    data: [0, 100, 100, 0].map((y, x) => ({x, y})),
+                                },
+                            ],
+                        },
+                        yAxis: [{min: 150, max: 150}],
+                    }}
+                />,
+            );
+            const path = component.locator('.gcharts-line > path');
+            await expect(path).toBeAttached();
+            expect(await path.getAttribute('d')).toBeNull();
+        });
+
         test('empty path when axis.min is above all data', async ({mount}) => {
             const chartData: ChartData = {
                 series: {

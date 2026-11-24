@@ -3,6 +3,8 @@ import {curveLinear, line} from 'd3-shape';
 
 import type {AxisDomainValue, DomainViewport} from '~core/series/axis-contract';
 
+import {getSectionYValues} from './interpolation/curves';
+
 interface PathPoint {
     x?: AxisDomainValue;
     y?: AxisDomainValue;
@@ -14,36 +16,46 @@ interface Args {
     curveFactory?: CurveFactory;
 }
 
-/** Clip straight path pieces emitted by the same curve factory as the renderer. */
+/**
+ * Collect Y values and cubic extrema from the rendered path, clipped to the X window if present.
+ * Return undefined when the caller should use its sample-based domain.
+ */
 export function getVisiblePathYValues({
     points,
     viewport,
     curveFactory = curveLinear,
 }: Args): AxisDomainValue[] | undefined {
-    if (!viewport.x.range || viewport.x.type === 'category' || viewport.y.type === 'category')
+    if (viewport.x.type === 'category' || viewport.y.type === 'category') {
         return undefined;
+    }
     const projectX = viewport.x.type === 'logarithmic' ? Math.log : Number;
     const projectY = viewport.y.type === 'logarithmic' ? Math.log : Number;
     const invertY = viewport.y.type === 'logarithmic' ? Math.exp : Number;
-    const min = projectX(viewport.x.range[0]);
-    const max = projectX(viewport.x.range[1]);
+    const min = viewport.x.range ? projectX(viewport.x.range[0]) : -Infinity;
+    const max = viewport.x.range ? projectX(viewport.x.range[1]) : Infinity;
     const values: AxisDomainValue[] = [];
-    if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) return values;
+    if ((viewport.x.range && (!Number.isFinite(min) || !Number.isFinite(max))) || min > max) {
+        return values;
+    }
     const projected = Array.from(points, (point) => ({
         x: point?.x === null || point?.x === undefined ? NaN : projectX(Number(point.x)),
         y: point?.y === null || point?.y === undefined ? NaN : projectY(Number(point.y)),
     }));
     let previous: {x: number; y: number} | undefined;
-    let hasCurves = false;
+    let unsupportedCurve = false;
     const context = {
         moveTo(x: number, y: number) {
             previous = {x, y};
-            if (x >= min && x <= max) values.push(invertY(y));
+            if (x >= min && x <= max) {
+                values.push(invertY(y));
+            }
         },
         lineTo(x: number, y: number) {
             const from = previous;
             previous = {x, y};
-            if (!from || Math.max(from.x, x) < min || Math.min(from.x, x) > max) return;
+            if (!from || Math.max(from.x, x) < min || Math.min(from.x, x) > max) {
+                return;
+            }
             if (from.x === x) {
                 values.push(invertY(from.y), invertY(y));
                 return;
@@ -54,12 +66,26 @@ export function getVisiblePathYValues({
                 values.push(invertY(from.y + t * (y - from.y)));
             }
         },
-        // Preserve sample-based domains for smooth curves until their extrema are supported.
-        bezierCurveTo() {
-            hasCurves = true;
+        bezierCurveTo(x1: number, y1: number, x2: number, y2: number, x: number, y: number) {
+            const from = previous;
+            previous = {x, y};
+            if (!from) {
+                return;
+            }
+            for (const value of getSectionYValues(
+                {
+                    from,
+                    first: {x: x1, y: y1},
+                    second: {x: x2, y: y2},
+                    to: {x, y},
+                },
+                viewport.x.range ? [min, max] : undefined,
+            )) {
+                values.push(invertY(value));
+            }
         },
         quadraticCurveTo() {
-            hasCurves = true;
+            unsupportedCurve = true;
         },
         closePath() {
             previous = undefined;
@@ -71,5 +97,5 @@ export function getVisiblePathYValues({
         .y((point) => point.y)
         .curve(curveFactory)
         .context(context as unknown as CanvasRenderingContext2D)(projected);
-    return hasCurves ? undefined : values;
+    return unsupportedCurve ? undefined : values;
 }

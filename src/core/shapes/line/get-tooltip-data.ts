@@ -7,8 +7,8 @@ import type {
 } from '../../utils/tooltip-helpers';
 import {getDistanceToMarkers, getMarkerFill} from '../marker';
 
-import {isDrawnPoint} from './auto-placement';
 import type {PlacementSegment} from './auto-placement';
+import {getLinePathPointFilter} from './path';
 import type {PreparedLineData} from './types';
 
 function isContinuation(segment: PlacementSegment, prev: PlacementSegment | undefined) {
@@ -20,7 +20,10 @@ function isContinuation(segment: PlacementSegment, prev: PlacementSegment | unde
  * drawn run (joins are treated as round, dash gaps are ignored), isolated points and markers.
  */
 function getDistanceToLine(item: PreparedLineData, point: Point) {
-    const {linecap} = item;
+    const {clipYRange, linecap} = item;
+    if (clipYRange && (point[1] < clipYRange[0] || point[1] > clipYRange[1])) {
+        return Infinity;
+    }
     const segments = item.getSegments();
     let distance = Infinity;
 
@@ -43,11 +46,12 @@ function getDistanceToLine(item: PreparedLineData, point: Point) {
 
     // A point without drawn neighbours draws a zero-length subpath painted by its caps.
     const {points} = item;
+    const isPathPoint = getLinePathPointFilter(item);
     for (let i = 0; i < points.length && distance > 0; i++) {
         const p = points[i];
         const prev = points[i - 1];
         const next = points[i + 1];
-        if (isDrawnPoint(p) && !(prev && isDrawnPoint(prev)) && !(next && isDrawnPoint(next))) {
+        if (isPathPoint(p) && !(prev && isPathPoint(prev)) && !(next && isPathPoint(next))) {
             distance = Math.min(
                 distance,
                 getDistanceToStrokedSegment({

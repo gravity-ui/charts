@@ -47,6 +47,8 @@ Optional `getXAxisPadding` reserves label space in pixels at the maximum end of 
 
 Omit `zoom.filterData` for scalar point filtering. Otherwise return `{data, shapeData?}`: selected samples and optional original anchors needed to draw crossing geometry.
 
+Use `seriesGroup` when point selection depends on other series of the same type. It includes the current series and its peers before viewport filtering, with their current legend visibility flags.
+
 Reuse `filterPoints` for coordinate readers, interval predicates, path mode, and filtering by dimension. Supply `isDefined` for path gaps and remove connected missing points before filtering. Stacked plugins filter their category dimension.
 
 Filtering and axis data share `viewport`: axis types, categories, and selected ranges. An absent range is unfiltered; `excluded` marks a plot outside the active brush. Derive domains from visible geometry, accounting for retained anchors outside the viewport. `plugins/path-domain.ts` clips straight curve segments from the renderer's factory; smooth curves retain sample-based domains through `getDomainPoints`. Core reuses Y contributions for layout and rendering.

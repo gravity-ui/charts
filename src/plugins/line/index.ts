@@ -19,12 +19,13 @@ import {
 } from '~core/validation/helpers';
 
 import type {LineSeries, TooltipDataChunkLine} from '../../types';
+import {getCurveFactory} from '../interpolation';
+import {validateInterpolation} from '../interpolation/validation';
 
 import {getLineAxisPadding} from './axis-padding';
 import {getTargetElements, prepareNearestData} from './interaction';
-import {getCurveFactory} from './interpolation';
 import {prepareLineSeries} from './prepare-line-series';
-import {validateInterpolation, validateLabelAnchor} from './validation';
+import {validateLabelAnchor} from './validation';
 import {filterLineData, getLineAxisData} from './zoom';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {

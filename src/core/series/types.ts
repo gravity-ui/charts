@@ -28,7 +28,6 @@ import type {
     LineSeriesDataLabelPlacementFallback,
     LineSeriesDataLabelPlacementPosition,
     LineSeriesDataLabels,
-    LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
     LinearGradient,
     MeaningfulAny,
@@ -44,6 +43,7 @@ import type {
     SankeySeriesData,
     ScatterSeries,
     ScatterSeriesData,
+    SeriesInterpolation,
     SymbolLegendSymbolOptions,
     TreemapSeries,
     TreemapSeriesData,
@@ -418,7 +418,7 @@ export type PreparedLineSeries = {
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
-    interpolation?: LineSeriesInterpolation;
+    interpolation?: SeriesInterpolation;
     opacity: number | null;
     gradient?: LinearGradient;
     yAxis: number;
@@ -439,6 +439,7 @@ export type PreparedAreaSeries = {
     lineWidth: number;
     opacity: number;
     nullMode: AreaSeries['nullMode'];
+    interpolation?: AreaSeries['interpolation'];
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;
@@ -523,6 +524,8 @@ export type PreparedWaterfallSeries = {
         enabled: boolean;
     };
     data: PreparedWaterfallSeriesData[];
+    /** Complete group data for resolving balances across the visible range. */
+    fullData: readonly PreparedWaterfallSeriesData[];
     dataLabels: {
         enabled: boolean;
         placement?: BarSeriesDataLabelPlacementPosition[];
