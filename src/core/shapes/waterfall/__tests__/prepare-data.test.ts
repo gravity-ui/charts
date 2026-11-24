@@ -11,15 +11,28 @@ import {createXScale} from '../../../scales/x-scale';
 import {createYScale} from '../../../scales/y-scale';
 import type {PreparedLegend, PreparedWaterfallSeries} from '../../../series/types';
 import {getVisibleSeries} from '../../../series/utils';
+import * as textUtils from '../../../utils/text';
 import {getZoomedSeriesData} from '../../../zoom';
 import {prepareWaterfallData} from '../prepare-data';
 
+beforeEach(() => {
+    jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async () => ({
+        width: 20,
+        height: 10,
+        hangingOffset: 2,
+    }));
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
 async function prepareUnzoomedWaterfall(
     data: WaterfallSeriesData[],
-    options: {xAxis?: PreparedXAxis; yOrder?: PreparedYAxis['order']} = {},
+    options: {xAxis?: PreparedXAxis; yMin?: number; yOrder?: PreparedYAxis['order']} = {},
 ) {
-    const {xAxis = {type: 'linear'} as PreparedXAxis, yOrder} = options;
-    const yAxis = {type: 'linear', min: 0, max: 20, order: yOrder} as PreparedYAxis;
+    const {xAxis = {type: 'linear'} as PreparedXAxis, yMin = 0, yOrder} = options;
+    const yAxis = {type: 'linear', min: yMin, max: 20, order: yOrder} as PreparedYAxis;
     const series = prepareWaterfallSeries({
         series: [{type: 'waterfall', name: 'Balance', data, dataLabels: {enabled: false}}],
         colorScale: scaleOrdinal<string, string>().range(['#000']),
@@ -33,6 +46,7 @@ async function prepareUnzoomedWaterfall(
         series,
         intervals: getWaterfallIntervals(series),
         seriesOptions: seriesOptionsDefaults,
+        boundsWidth: 300,
         xAxis,
         xScale,
         yAxis: [yAxis],
@@ -59,12 +73,12 @@ test('a single column on an unzoomed linear X axis is centered and uses the defa
     expect(shapes).toEqual([expect.objectContaining({x: 125, width: 50})]);
 });
 
-test('unzoomed columns use positive heights on a reversed Y axis', async () => {
+test('columns and labels follow the value direction on a reversed Y axis', async () => {
     const {shapes} = await prepareUnzoomedWaterfall(
         [
-            {x: 2, y: 10},
-            {x: 10, y: -4},
-            {x: 100, total: true},
+            {x: 2, y: 10, dataLabels: {enabled: true}},
+            {x: 10, y: -4, dataLabels: {enabled: true}},
+            {x: 100, total: true, dataLabels: {enabled: true}},
         ],
         {yOrder: 'reverse'},
     );
@@ -74,6 +88,9 @@ test('unzoomed columns use positive heights on a reversed Y axis', async () => {
         [60, 100],
         [0, 60],
     ]);
+    expect(shapes[0].label?.y).toBeGreaterThan(100);
+    expect(shapes[1].label?.y).toBeLessThan(60);
+    expect(shapes[2].label?.y).toBeGreaterThan(60);
 });
 
 test('a point without y retains its category and index position without interrupting the balance', async () => {
@@ -123,13 +140,14 @@ test('resolves totals without overwriting point values', async () => {
         colorScale: scaleOrdinal<string, string>().range(['#000']),
         colors: [],
         legend: {enabled: false} as PreparedLegend,
-    }) as PreparedWaterfallSeries[];
+    });
     const originalSeries = JSON.stringify(series);
     const yScale = scaleLinear().domain([-20, 20]).range([400, 0]);
     const result = await prepareWaterfallData({
         series,
         intervals: getWaterfallIntervals(series),
         seriesOptions: seriesOptionsDefaults,
+        boundsWidth: 600,
         xAxis: {type: 'category', categories: data.map((d) => String(d.x))} as PreparedXAxis,
         xScale: scaleBand()
             .domain(data.map((d) => String(d.x)))
@@ -154,6 +172,58 @@ test('resolves totals without overwriting point values', async () => {
     expect(result[1].label?.y).toBeGreaterThan(result[1].y + result[1].height);
     expect(result[3].label?.y).toBeLessThan(result[3].y);
     expect(result[5].label?.y).toBeLessThan(result[5].y);
+});
+
+test('places the label below a tiny negative total that has zero pixel height', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall(
+        [
+            {x: 0, y: -0.1},
+            {x: 1, y: -0.2},
+            {x: 2, y: 0.3},
+            {x: 3, total: true, dataLabels: {enabled: true}},
+            {x: 4, y: 10},
+        ],
+        {yMin: -20},
+    );
+
+    const total = shapes[3];
+    expect(total).toMatchObject({data: {total: true}, height: 0});
+    expect(total.subTotal).toBeLessThan(0);
+    expect(total.label?.y).toBeGreaterThan(total.y);
+});
+
+test('keeps a zero-height label at the plot edge despite accumulated rounding', async () => {
+    const data: WaterfallSeriesData[] = [
+        {x: 'Opening', y: 0.1},
+        {x: 'Increase', y: 0.2},
+        {x: 'At limit', y: 0},
+        {x: 'Decrease', y: -0.4},
+        {x: 'Off plot', y: 0},
+    ];
+    const categories = data.map((point) => String(point.x));
+    const series = prepareWaterfallSeries({
+        series: [{type: 'waterfall', name: 'Balance', data}],
+        colorScale: scaleOrdinal<string, string>().range(['#000']),
+        colors: [],
+        legend: {enabled: false} as PreparedLegend,
+    });
+    const plotHeight = 240;
+    const boundsWidth = 600;
+    const result = await prepareWaterfallData({
+        series,
+        intervals: getWaterfallIntervals(series),
+        seriesOptions: seriesOptionsDefaults,
+        boundsWidth,
+        xAxis: {type: 'category', categories} as PreparedXAxis,
+        xScale: scaleBand().domain(categories).range([0, boundsWidth]),
+        yAxis: [{type: 'linear'}] as PreparedYAxis[],
+        yScale: [scaleLinear().domain([0, 0.3]).range([plotHeight, 0])],
+    });
+
+    const atLimit = result.find((column) => column.data.x === 'At limit');
+    expect(atLimit).toMatchObject({y: 0, height: 0, label: {text: '0'}});
+    expect(atLimit?.label?.y).toBeGreaterThan(0);
+    expect(result.some((column) => column.data.x === 'Off plot')).toBe(false);
 });
 
 test('a single column in a continuous X zoom uses its original Y interval for autoscaling', async () => {
@@ -197,6 +267,7 @@ test('a single column in a continuous X zoom uses its original Y interval for au
         series: waterfallSeries,
         intervals: getWaterfallIntervals(waterfallSeries),
         seriesOptions: seriesOptionsDefaults,
+        boundsWidth: 100,
         xAxis,
         xScale,
         yAxis: [yAxis],

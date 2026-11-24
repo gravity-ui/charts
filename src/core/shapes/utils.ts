@@ -101,7 +101,7 @@ export function getYValue(args: {
  * Half a pixel matches the ±0.5 of a 1px centered stroke and far exceeds any
  * plausible float error.
  */
-const PLOT_BOUNDS_PIXEL_TOLERANCE = 0.5;
+export const PLOT_BOUNDS_PIXEL_TOLERANCE = 0.5;
 
 /**
  * Builds the "is this point outside the plot area?" predicate shared by data

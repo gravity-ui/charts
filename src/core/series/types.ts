@@ -528,6 +528,8 @@ export type PreparedWaterfallSeries = {
     fullData: readonly PreparedWaterfallSeriesData[];
     dataLabels: {
         enabled: boolean;
+        placement?: BarSeriesDataLabelPlacementPosition[];
+        placementFallback: BarSeriesDataLabelPlacementFallback;
         style: BaseTextStyle;
         allowOverlap: boolean;
         padding: number;

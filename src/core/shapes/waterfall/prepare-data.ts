@@ -11,45 +11,61 @@ import type {
     PreparedWaterfallSeriesData,
 } from '../../series/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
-import {getXValue, getYValue} from '../../shapes/utils';
-import {getLabelsSize, isPointDataLabelEnabled} from '../../utils';
+import {PLOT_BOUNDS_PIXEL_TOLERANCE, getXValue, getYValue} from '../../shapes/utils';
+import {isPointDataLabelEnabled} from '../../utils';
 import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
+import {placeRectLabel} from '../../utils/rect-label-placement';
+import {createLabelMeasurer} from '../../utils/text';
 
 import type {PreparedWaterfallData, WaterfallInterval} from './types';
 
+interface PlotBounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+const DEFAULT_LABEL_POSITIONS = ['outside'] as const;
+
 async function getLabelData(
-    d: PreparedWaterfallData,
-    plotHeight: number,
+    column: PreparedWaterfallData,
+    bounds: PlotBounds,
+    measureLabel: ReturnType<typeof createLabelMeasurer>,
+    endAtMax: boolean,
 ): Promise<LabelData | undefined> {
-    if (!isPointDataLabelEnabled({data: d.data, series: d.series})) {
+    const intersectsX = column.x < bounds.width && column.x + column.width > 0;
+    if (!intersectsX || !isPointDataLabelEnabled(column)) {
         return undefined;
     }
 
-    const yValue = d.data.total ? d.subTotal : Number(d.data.y);
-    const labelValue = d.data.label ?? yValue;
-    const text = getFormattedValue({value: labelValue, ...d.series.dataLabels});
-    const style = d.series.dataLabels.style;
-    const {maxHeight: height, maxWidth: width} = await getLabelsSize({labels: [text], style});
-
-    let y: number;
-    if (yValue > 0 || (d.data.total && yValue === 0)) {
-        y = Math.max(height, d.y - d.series.dataLabels.padding);
-    } else {
-        y = Math.min(
-            plotHeight - d.series.dataLabels.padding,
-            d.y + d.height + d.series.dataLabels.padding + height,
-        );
+    const value = column.data.total ? column.subTotal : Number(column.data.y);
+    const {format, style, padding, placement, placementFallback} = column.series.dataLabels;
+    const text = getFormattedValue({value: column.data.label ?? value, format});
+    const {width, height, hangingOffset} = await measureLabel(text, style, false);
+    const placed = placeRectLabel({
+        anchor: column,
+        bounds,
+        size: {width, height},
+        axis: 'y',
+        endAtMax,
+        padding,
+        positions: placement ?? DEFAULT_LABEL_POSITIONS,
+        fallback: placement ? placementFallback : 'show',
+    });
+    if (!placed) {
+        return undefined;
     }
 
     return {
         text,
-        x: d.x + d.width / 2,
-        y,
         style,
-        size: {width, height},
+        size: {width, height, hangingOffset},
         textAnchor: 'middle',
-        series: d.series,
+        series: column.series,
+        x: placed.x + width / 2,
+        y: placed.y + hangingOffset,
     };
 }
 
@@ -78,6 +94,7 @@ export const prepareWaterfallData = async (args: {
     series: PreparedWaterfallSeries[];
     intervals: ReadonlyMap<PreparedWaterfallSeriesData, WaterfallInterval>;
     seriesOptions: PreparedSeriesOptions;
+    boundsWidth: number;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
@@ -87,6 +104,7 @@ export const prepareWaterfallData = async (args: {
         series,
         intervals,
         seriesOptions,
+        boundsWidth,
         xAxis,
         xScale,
         yAxis: [yAxis],
@@ -99,6 +117,10 @@ export const prepareWaterfallData = async (args: {
     const [rangeStart, rangeEnd] = yScale.range();
     const plotTop = Math.min(rangeStart, rangeEnd);
     const plotBottom = Math.max(rangeStart, rangeEnd);
+    const bounds = {x: 0, y: plotTop, width: boundsWidth, height: plotBottom - plotTop};
+    const canPlaceLabels = bounds.width > 0 && bounds.height > 0;
+    const measureLabel = createLabelMeasurer();
+    const reversedYAxis = rangeStart < rangeEnd;
     const barMaxWidth = get(seriesOptions, 'waterfall.barMaxWidth');
     const barPadding = get(seriesOptions, 'waterfall.barPadding');
 
@@ -130,15 +152,19 @@ export const prepareWaterfallData = async (args: {
 
         const y = Math.max(plotTop, Math.min(startY, endY));
         const bottom = Math.min(plotBottom, Math.max(startY, endY));
-        if (!Number.isFinite(y) || !Number.isFinite(bottom) || bottom < y) {
+        if (!Number.isFinite(y) || !Number.isFinite(bottom)) {
             continue;
         }
+        const zeroInterval = start === end;
+        const zeroHeight = startY === endY;
+        const tolerance = zeroInterval ? PLOT_BOUNDS_PIXEL_TOLERANCE : 0;
+        if (y - bottom > tolerance) continue;
 
         const preparedData: PreparedWaterfallData = {
             x: xCenter - rectWidth / 2,
-            y,
+            y: Math.min(y, plotBottom),
             width: rectWidth,
-            height: bottom - y,
+            height: Math.max(0, bottom - y),
             endY,
             previousIndex,
             opacity: get(item.data, 'opacity', null),
@@ -151,8 +177,11 @@ export const prepareWaterfallData = async (args: {
             annotations: [],
         };
 
-        preparedData.label = await getLabelData(preparedData, plotBottom);
-
+        if (canPlaceLabels && (preparedData.height > 0 || zeroHeight)) {
+            const towardHigherValues = zeroInterval ? Boolean(item.data.total) : end > start;
+            const endAtMax = zeroHeight ? towardHigherValues === reversedYAxis : endY > startY;
+            preparedData.label = await getLabelData(preparedData, bounds, measureLabel, endAtMax);
+        }
         result.push(preparedData);
     }
     return result;

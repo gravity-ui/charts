@@ -409,13 +409,14 @@ describe('chart config artifacts', () => {
                     `
                 const horizontal: BarYSeries = {type: 'bar-y', name: 'Orders', data: [], dataLabels: {placement: ['outside', 'inside-end', 'inside-center'], placementFallback: 'hide'}};
                 const vertical: BarXSeries = {type: 'bar-x', name: 'Orders', data: [], dataLabels: {placement: 'auto'}};
+                const waterfall: WaterfallSeries = {type: 'waterfall', name: 'Balance', data: [], dataLabels: {placement: 'auto', placementFallback: 'hide'}};
                 // @ts-expect-error Center must explicitly refer to inside placement.
                 horizontal.dataLabels!.placement = ['center'];
                 // @ts-expect-error Candidates must be an array.
                 vertical.dataLabels!.placement = 'outside';
                 // @ts-expect-error This feature is not a base label option.
                 const base: BaseDataLabels = {placement: 'auto'};
-                void [horizontal, vertical, base];
+                void [horizontal, vertical, waterfall, base];
             `,
             ),
         ).not.toThrow();
@@ -425,7 +426,7 @@ describe('chart config artifacts', () => {
             'inside-center',
         ]);
         const validate = createSchemaValidator().compile(schema);
-        for (const type of ['bar-x', 'bar-y']) {
+        for (const type of ['bar-x', 'bar-y', 'waterfall']) {
             for (const [dataLabels, valid] of [
                 [{}, true],
                 [{placement: 'auto', placementFallback: 'hide'}, true],

@@ -15,6 +15,7 @@ import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
+import {validateBarLabelPlacement} from '../bar-label-placement';
 
 import {getTargetElements, prepareNearestData} from './interaction';
 import {getWaterfallIntervals, resolveWaterfallIntervals} from './intervals';
@@ -27,7 +28,7 @@ function isPreparedWaterfallSeries(
 }
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
-    const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
+    const {series, seriesOptions, boundsWidth, xAxis, xScale, yAxis, yScale} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
         return {renderData: [], tooltipItems: []};
@@ -40,6 +41,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         series: waterfallSeries,
         intervals,
         seriesOptions,
+        boundsWidth,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
@@ -109,6 +111,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     },
     prepareSeries: prepareWaterfallSeries,
     validate: ({series}) => {
+        validateBarLabelPlacement(series.dataLabels);
         const {connectors} = series;
         if (connectors === undefined) {
             return;
