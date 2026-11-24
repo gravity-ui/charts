@@ -1,3 +1,5 @@
+import {group} from 'd3-array';
+
 import type {PreparedXAxis, PreparedYAxis} from '../axes/types';
 import type {RangeSliderState} from '../range-slider/types';
 import type {PreparedSeries, PreparedZoomableSeries} from '../series';
@@ -24,6 +26,7 @@ export function getZoomedSeriesData(args: {
     }
     const preparedSeries: PreparedSeries[] = [];
     const preparedShapesSeries: PreparedSeries[] = [];
+    const groups = group(seriesData, (series) => series.type);
     for (const series of seriesData) {
         if (!isPreparedZoomableSeries(series)) continue;
         const yAxisIndex = 'yAxis' in series ? (series.yAxis ?? 0) : 0;
@@ -38,8 +41,11 @@ export function getZoomedSeriesData(args: {
             },
         };
         const selection =
-            getSeriesPlugin(series.type).zoom?.filterData?.({series, viewport}) ??
-            filterPoints<unknown>(series.data, viewport);
+            getSeriesPlugin(series.type).zoom?.filterData?.({
+                series,
+                viewport,
+                seriesGroup: groups.get(series.type),
+            }) ?? filterPoints<unknown>(series.data, viewport);
         preparedSeries.push({...series, data: selection.data} as PreparedSeries);
         preparedShapesSeries.push({
             ...series,

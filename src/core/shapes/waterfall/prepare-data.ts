@@ -1,4 +1,4 @@
-import type {ScaleBand, ScaleLinear, ScaleTime} from 'd3-scale';
+import type {AxisDomain, AxisScale} from 'd3-axis';
 import get from 'es-toolkit/compat/get';
 import sortBy from 'es-toolkit/compat/sortBy';
 
@@ -13,9 +13,10 @@ import type {
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '../../shapes/bar-constants';
 import {getXValue, getYValue} from '../../shapes/utils';
 import {getLabelsSize, isPointDataLabelEnabled} from '../../utils';
+import {getBandSize} from '../../utils/band-size';
 import {getFormattedValue} from '../../utils/format';
 
-import type {PreparedWaterfallData} from './types';
+import type {PreparedWaterfallData, WaterfallInterval} from './types';
 
 async function getLabelData(
     d: PreparedWaterfallData,
@@ -59,28 +60,13 @@ function getBandWidth(args: {
 }) {
     const {series, xAxis, xScale} = args;
 
-    if (xAxis.type === 'category') {
-        const xBandScale = xScale as ScaleBand<string>;
-        return xBandScale.bandwidth();
-    }
-
-    const xLinearScale = xScale as ScaleLinear<number, number> | ScaleTime<number, number>;
-    const xValues = series.reduce<number[]>((acc, s) => {
-        s.data.forEach((dataItem) => acc.push(Number(dataItem.x)));
-        return acc;
-    }, []);
-
-    let bandWidth = Infinity;
-    xValues.sort().forEach((xValue, index) => {
-        if (index > 0 && xValue !== xValues[index - 1]) {
-            const dist = xLinearScale(xValue) - xLinearScale(xValues[index - 1]);
-            if (dist < bandWidth) {
-                bandWidth = dist;
-            }
-        }
-    });
-
-    return bandWidth;
+    const domain =
+        xAxis.type === 'category'
+            ? xScale.domain()
+            : [...new Set(series.flatMap((s) => s.data.map((point) => Number(point.x))))]
+                  .filter(Number.isFinite)
+                  .sort((a, b) => a - b);
+    return getBandSize({domain, scale: xScale as AxisScale<AxisDomain>});
 }
 
 interface DataItem {
@@ -90,6 +76,7 @@ interface DataItem {
 
 export const prepareWaterfallData = async (args: {
     series: PreparedWaterfallSeries[];
+    intervals: ReadonlyMap<PreparedWaterfallSeriesData, WaterfallInterval>;
     seriesOptions: PreparedSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
@@ -98,27 +85,27 @@ export const prepareWaterfallData = async (args: {
 }): Promise<PreparedWaterfallData[]> => {
     const {
         series,
+        intervals,
         seriesOptions,
         xAxis,
         xScale,
         yAxis: [yAxis],
         yScale: [yScale],
     } = args;
-    const yLinearScale = yScale as ScaleLinear<number, number> | undefined;
-
-    if (!yLinearScale) {
+    if (!yScale) {
         return [];
     }
 
-    const plotHeight = yLinearScale(yLinearScale.domain()[0]);
+    const [rangeStart, rangeEnd] = yScale.range();
+    const plotTop = Math.min(rangeStart, rangeEnd);
+    const plotBottom = Math.max(rangeStart, rangeEnd);
     const barMaxWidth = get(seriesOptions, 'waterfall.barMaxWidth');
     const barPadding = get(seriesOptions, 'waterfall.barPadding');
 
-    const flattenData = series.reduce<DataItem[]>((acc, s) => {
-        acc.push(...s.data.map((d) => ({data: d, series: s})));
-        return acc;
-    }, []);
-    const data: DataItem[] = sortBy<DataItem>(flattenData, (d) => d.data.index);
+    const data = sortBy<DataItem>(
+        series.flatMap((s) => s.data.map((d) => ({data: d, series: s}))),
+        (d) => d.data.index,
+    );
 
     const bandWidth = getBandWidth({
         series,
@@ -127,84 +114,44 @@ export const prepareWaterfallData = async (args: {
     });
     const rectGap = Math.max(bandWidth * barPadding, MIN_BAR_GAP);
     const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(bandWidth - rectGap, barMaxWidth));
-    const yZero =
-        getYValue({
-            point: {y: 0},
-            yScale: yLinearScale,
-            yAxis,
-        }) ?? 0;
 
-    let totalValue = 0;
     const result: PreparedWaterfallData[] = [];
-    for (let i = 0; i < data.length; i++) {
-        const item = data[i];
-
-        if (typeof item.data.y !== 'number' && !item.data.total) {
-            continue;
-        }
-
-        if (!item.data.total) {
-            totalValue += Number(item.data.y);
-        }
-
-        const prevPoint = result[result.length - 1];
+    for (const item of data) {
         const xCenter = getXValue({point: item.data, xAxis, xScale});
-        if (xCenter === null) {
-            continue;
-        }
-        const x = xCenter - rectWidth / 2;
-        const yValue = Number(item.data.total ? totalValue : item.data.y);
-        const calculatedYValue = getYValue({
-            point: {y: Math.abs(yValue)},
-            yScale: yLinearScale,
-            yAxis,
-        });
-        if (calculatedYValue === null) {
-            continue;
-        }
-        const height = yZero - calculatedYValue;
+        if (xCenter === null || !Number.isFinite(xCenter)) continue;
 
-        let y;
-        if (!prevPoint || item.data.total) {
-            y = getYValue({
-                point: {
-                    y: yValue > 0 ? yValue : 0,
-                },
-                yScale: yLinearScale,
-                yAxis,
-            });
-        } else if ((prevPoint.data.total ? prevPoint.subTotal : Number(prevPoint.data.y)) < 0) {
-            if (Number(item.data.y) > 0) {
-                y = prevPoint.y + prevPoint.height - height;
-            } else {
-                y = prevPoint.y + prevPoint.height;
-            }
-        } else if (Number(item.data.y) < 0) {
-            y = prevPoint.y;
-        } else {
-            y = prevPoint.y - height;
-        }
+        const interval = intervals.get(item.data);
+        if (!interval) continue;
 
-        if (y === null) {
+        const {start, end, previousIndex} = interval;
+        const startY = getYValue({point: {y: start}, yScale, yAxis});
+        const endY = getYValue({point: {y: end}, yScale, yAxis});
+        if (startY === null || endY === null) continue;
+
+        const y = Math.max(plotTop, Math.min(startY, endY));
+        const bottom = Math.min(plotBottom, Math.max(startY, endY));
+        if (!Number.isFinite(y) || !Number.isFinite(bottom) || bottom < y) {
             continue;
         }
 
         const preparedData: PreparedWaterfallData = {
-            x,
+            x: xCenter - rectWidth / 2,
             y,
             width: rectWidth,
-            height,
+            height: bottom - y,
+            endY,
+            previousIndex,
             opacity: get(item.data, 'opacity', null),
             data: item.data,
             series: item.series,
-            subTotal: totalValue,
+            subTotal: end,
             htmlLabels: [],
             markers: [],
             getHoverMarkers: () => [],
             annotations: [],
         };
 
-        preparedData.label = await getLabelData(preparedData, plotHeight);
+        preparedData.label = await getLabelData(preparedData, plotBottom);
 
         result.push(preparedData);
     }
