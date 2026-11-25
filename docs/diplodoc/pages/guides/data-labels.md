@@ -74,19 +74,33 @@ series: {
 
 For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series or in `series.options[type]`. Totals are disabled by default. Series settings override plugin options; `style` is merged property by property.
 
-By default, totals sum only **visible series with stack labels enabled** and update when legend visibility changes. `enabled: false` excludes a series from the sum. Percent stacks also show raw sums; positive and negative values have separate totals.
+Totals use points from **visible series with stack labels enabled** and update when you show or hide a series in the legend. The default aggregation uses raw values, including on percent stacks.
 
-A separate zero total is hidden when the same stack has negative values. This rule uses the original axis values, not the result of a custom aggregation callback.
-
-Participants with the same type, `stackId` and value axis must have matching effective `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
+Participants with the same type, `stackId` and value axis must have matching effective `mode`, `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
 
 **Stack totals take priority over segment labels of the same series type.** An overlapping segment label is hidden unless its `dataLabels.allowOverlap` is `true`. Overlap between stack totals is controlled by `stackLabels.allowOverlap` (default: `false`). See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
 
 <div data-chart-example="data-labels/stack-labels"></div>
 
+### Show a single total for positive and negative values
+
+To show net sales on a stacked column with `100` in sales and `-30` in refunds, set `mode` to `'allSigns'`. The default sum shows one label of `70`.
+
+```ts
+stackLabels: {
+  enabled: true,
+  mode: 'allSigns',
+}
+```
+
+- `'perSign'` (default) calculates separate totals for positive and negative values. In the example, the labels are `100` and `-30`.
+- `'allSigns'` calculates one total per stack, value axis, and category or X value.
+
+In `'perSign'` mode, a separate zero total is hidden when the same stack has negative values. This rule uses the original axis values, independently of the result of a custom aggregation.
+
 ### Custom stack totals
 
-Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. Points are original values from participating visible series at the same category or X, grouped by stack and sign. The default is `'sum'`.
+Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. The points passed to the callback depend on [`stackLabels.mode`](#show-a-single-total-for-positive-and-negative-values). The default aggregation is `'sum'`.
 
 Here, stack height shows revenue while the total label sums `custom.orders`. Formatting and positioning stay unchanged.
 

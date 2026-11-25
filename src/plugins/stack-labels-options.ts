@@ -23,7 +23,7 @@ function validateStackLabelsAggregation(aggregation: StackLabelsOptions['aggrega
 export function resolveStackLabelsOptions(
     defaults?: StackLabelsOptions,
     overrides?: StackLabelsOptions,
-): Required<Omit<StackLabelsOptions, 'format'>> & Pick<StackLabelsOptions, 'format'> {
+): Required<Omit<StackLabelsOptions, 'format' | 'mode'>> & Pick<StackLabelsOptions, 'format'> {
     return {
         aggregation: overrides?.aggregation ?? defaults?.aggregation ?? 'sum',
         enabled: overrides?.enabled ?? defaults?.enabled ?? false,
