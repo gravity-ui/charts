@@ -57,3 +57,17 @@ export function getStackLabelsAggregationData(type: 'bar-x' | 'bar-y' | 'area'):
 
     return data;
 }
+
+export function getAllSignsStackLabelsData(): ChartData {
+    return {
+        xAxis: {type: 'category', categories: ['January']},
+        yAxis: [{min: -40, max: 120}],
+        series: {
+            data: [
+                {type: 'bar-x', name: 'Sales', stacking: 'normal', data: [{x: 0, y: 100}]},
+                {type: 'bar-x', name: 'Refunds', stacking: 'normal', data: [{x: 0, y: -30}]},
+            ],
+            options: {'bar-x': {stackLabels: {enabled: true, mode: 'allSigns'}}},
+        },
+    };
+}

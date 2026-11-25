@@ -22,6 +22,7 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
         {format: {type: 'number', precision: 2}},
         {padding: 10},
         {aggregation: () => 10},
+        {mode: 'allSigns'},
         {allowOverlap: true},
     ])('rejects conflicting effective options: %j', (override) => {
         const {series, data} = config();
@@ -38,6 +39,7 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
             style: {fontColor: 'red', fontSize: '18px'},
             padding: 5,
             aggregation: 'sum',
+            mode: 'perSign',
             allowOverlap: false,
         };
         const original = JSON.stringify(data);
@@ -89,6 +91,15 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
         series.forEach((item) => {
             item.stackLabels = {aggregation: 'sum'};
         });
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+
+    test('rejects an unknown stack label mode', () => {
+        const {data} = config();
+        Object.assign(data.series.options?.[type]?.stackLabels ?? {}, {mode: 'single'});
 
         expect(() => validateData(data)).toThrow(
             expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),

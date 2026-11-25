@@ -5,9 +5,8 @@ import type {ChartScale} from '~core/scales/types';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import type {PreparedBarYData} from '~core/shapes/bar-y/types';
 import {getDataCategoryValue} from '~core/utils';
-import {sumDecimals} from '~core/utils/math';
 
-import {getStackLabelValue} from '../stack-labels';
+import {getStackLabelGroups, getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
@@ -51,18 +50,10 @@ export function getBarYStackLabelAnchors(
     for (const items of stacks.values()) {
         const options = optionsBySeries.get(items[0].series);
         if (!options?.enabled) continue;
-        const pointsBySign = group(
-            items.filter((item) => typeof item.data.x === 'number' && Number.isFinite(item.data.x)),
-            (item) => Number(item.data.x) < 0,
-        );
-        for (const negative of [false, true]) {
-            const points = pointsBySign.get(negative);
-            if (!points?.length) continue;
-            const total = sumDecimals(points.map((item) => Number(item.data.x)));
-            // Zero segments do not add a separate total beside a negative stack.
-            if (total === 0 && pointsBySign.has(true)) continue;
+        const groups = getStackLabelGroups(items, (item) => item.data.x, options.mode);
+        for (const {points, edgePoints, negative, total} of groups) {
             const extendsRight = negative === reversed;
-            const outer = points.reduce((end, item) =>
+            const outer = edgePoints.reduce((end, item) =>
                 (extendsRight ? item.x + item.width > end.x + end.width : item.x < end.x)
                     ? item
                     : end,

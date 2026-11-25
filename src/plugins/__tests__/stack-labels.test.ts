@@ -126,6 +126,39 @@ describe('bar-x stack label anchors', () => {
     );
 });
 
+describe.each([barXPlugin, barYPlugin])('$type combined stack labels', (plugin) => {
+    const mixedValues = [
+        [100, 30],
+        [-30, -30],
+    ];
+
+    test('sums both signs and shows a zero total when they cancel out', async () => {
+        const {result} = await prepare(plugin, mixedValues, 'normal', {
+            enabled: true,
+            mode: 'allSigns',
+        });
+
+        expect(texts(result.labels)).toEqual(['0', '70']);
+    });
+
+    test('passes original points of both signs to the callback once per category', async () => {
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+        const {raw} = await prepare(plugin, mixedValues, 'normal', {
+            enabled: true,
+            mode: 'allSigns',
+            aggregation,
+        });
+
+        expect(aggregation).toHaveBeenCalledTimes(2);
+        const pointSets = aggregation.mock.calls.map(([{points}]) => points);
+        for (const [index, point] of raw[0].data.entries()) {
+            const points = pointSets.find(([first]) => first === point);
+            expect(points).toHaveLength(2);
+            expect(points?.[1]).toBe(raw[1].data[index]);
+        }
+    });
+});
+
 describe.each(plugins)('$type stack labels', (plugin) => {
     test.each(['normal', 'percent'] as const)(
         'aggregates original custom data independently of geometry in %s stacks',
