@@ -27,6 +27,8 @@ export function renderTreemap(
     const labelsSvgElement = select(elements.labelsPlot);
     labelsSvgElement.selectAll('*').remove();
     const {labelData, leaves, series} = preparedData;
+    const getFillColor = (d: HierarchyRectangularNode<TreemapSeriesData>) =>
+        d.data.color || series.levels?.find((l) => l.index === d.depth)?.color || series.color;
     const leaf = svgElement
         .selectAll('g')
         .data(leaves)
@@ -37,14 +39,7 @@ export function renderTreemap(
         .append('rect')
         .attr('id', (d) => d.id || d.name)
         .attr('opacity', (d) => d.data.opacity ?? null)
-        .attr('fill', (d) => {
-            if (d.data.color) {
-                return d.data.color;
-            }
-
-            const levelOptions = series.levels?.find((l) => l.index === d.depth);
-            return levelOptions?.color || series.color;
-        })
+        .attr('fill', getFillColor)
         .attr('width', (d) => d.x1 - d.x0)
         .attr('height', (d) => d.y1 - d.y0);
     const labelSelection = labelsSvgElement
@@ -74,9 +69,8 @@ export function renderTreemap(
             const hovered = Boolean(hoverEnabled && hoveredData === d.data);
             const inactive = Boolean(inactiveEnabled && hoveredData && !hovered);
             currentRect
-                .attr('fill', (currentD) => {
-                    const levelOptions = series.levels?.find((l) => l.index === currentD.depth);
-                    const initialColor = levelOptions?.color || d.data.color || series.color;
+                .attr('fill', () => {
+                    const initialColor = getFillColor(d);
                     if (hovered) {
                         return (
                             color(initialColor)?.brighter(hoverOptions?.brightness).toString() ||
