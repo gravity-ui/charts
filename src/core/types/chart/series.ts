@@ -114,7 +114,7 @@ export interface StackLabelsOptions<T = MeaningfulAny> {
     /**
      * Calculate the label value from the points grouped by `mode`.
      * Return a finite number; NaN and infinite results hide the label. Returning zero does not itself hide it.
-     * Area totals include isolated real points, but no label is shown without an area boundary at that X.
+     * Area totals include isolated real points. `allSigns` can use a visible positive marker as the label anchor at a gap.
      * - `'sum'`: Sum raw values (`x` for bar-y, `y` for bar-x and area).
      * @default 'sum'
      */

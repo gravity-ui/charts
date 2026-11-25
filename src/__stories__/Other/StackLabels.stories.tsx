@@ -45,7 +45,7 @@ export const AreaAllSigns: Story = {
             categories: ['January', 'February', 'March', 'April', 'May'],
             valueAxis: {min: -60, max: 120},
             entries: [
-                {name: 'Sales', values: [100, 90, null, 80, null]},
+                {name: 'Sales', values: [100, 90, null, 80, null], markerIndex: 3},
                 {name: 'Refunds', values: [-30, -40, -20, -30, -25]},
             ],
         }),

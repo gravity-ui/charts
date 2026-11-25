@@ -498,6 +498,30 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 });
 
 describe('area stack labels', () => {
+    test('anchors a combined total outside a visible marker at an area gap', async () => {
+        const values = [
+            [null, 30, null],
+            [-10, -10, -10],
+        ];
+        const {args, result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([positive]) => {
+                if (positive.type === 'area') {
+                    positive.marker = {radius: 12};
+                    positive.data[1].marker = {states: {normal: {enabled: true}}};
+                }
+            },
+        );
+        const data = result.renderData as PreparedAreaData[];
+        expect(
+            getAreaStackLabelAnchors(data, args).filter((anchor) => anchor.x === 200),
+        ).toMatchObject([{y: 58, total: 20, direction: 'top'}]);
+    });
+
     test('includes an isolated point in the combined total and uses the available boundary', async () => {
         const values = [
             [null, 30, null, 40, 20],

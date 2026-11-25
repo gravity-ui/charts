@@ -96,7 +96,7 @@ stackLabels: {
 - `'perSign'` (default) calculates separate totals for positive and negative values. In the example, the labels are `100` and `-30`.
 - `'allSigns'` calculates one total per stack, value axis, and category or X value.
 
-The combined label uses the outer edge of the positive part of the stack when available, or the negative edge if the positive edge is unavailable.
+The combined label uses the outer edge of the positive part of the stack when available. For stacks with only negative values, it uses the negative edge. See [Area gaps and isolated points](#area-gaps-and-isolated-points) for placement at gaps.
 
 In `'perSign'` mode, a separate zero total is hidden when the same stack has negative values. This rule uses the original axis values, independently of the result of a custom aggregation.
 
@@ -116,4 +116,4 @@ Returning `0` from the callback does not by itself hide the label. For example, 
 
 Both the default sum and custom aggregation include real points on both sides of an area gap, including points isolated between two nulls. Synthetic points added during layout are excluded.
 
-The label is positioned at an existing area boundary, independently of which points contribute to its value. If a stack at a given X contains only isolated points and has no area boundary, no total label is shown.
+In `'allSigns'` mode, a visible marker on an isolated positive point anchors the label when there is no positive area boundary. If both are absent, the label can use the negative edge. If neither an eligible marker nor an area boundary is available at that X, the total label is hidden.
