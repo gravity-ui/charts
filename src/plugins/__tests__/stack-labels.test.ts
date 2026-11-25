@@ -152,9 +152,9 @@ describe.each([barXPlugin, barYPlugin])('$type combined stack labels', (plugin) 
         expect(aggregation).toHaveBeenCalledTimes(2);
         const pointSets = aggregation.mock.calls.map(([{points}]) => points);
         for (const [index, point] of raw[0].data.entries()) {
-            const points = pointSets.find(([first]) => first === point);
+            const points = pointSets.find((set) => set.some((entry) => entry === point));
             expect(points).toHaveLength(2);
-            expect(points?.[1]).toBe(raw[1].data[index]);
+            expect(points).toContain(raw[1].data[index]);
         }
     });
 });
@@ -498,6 +498,37 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 });
 
 describe('area stack labels', () => {
+    test('includes an isolated point in the combined total and uses the available boundary', async () => {
+        const values = [
+            [null, 30, null, 40, 20],
+            [-10, -10, -20, -40, -10],
+        ];
+        const options: StackLabelsOptions = {enabled: true, mode: 'allSigns'};
+        const {args, raw, result} = await prepare(areaPlugin, values, 'normal', options);
+        const data = result.renderData as PreparedAreaData[];
+        const anchors = getAreaStackLabelAnchors(data, args);
+
+        expect(anchors.filter((anchor) => anchor.x === 200)).toMatchObject([
+            {total: 20, y: 110, direction: 'bottom'},
+        ]);
+        expect(anchors.filter((anchor) => anchor.x === 400)).toMatchObject([
+            {total: 0, y: 60, direction: 'top'},
+        ]);
+
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+        args.seriesOptions = getPreparedOptions({area: {stackLabels: {...options, aggregation}}});
+        getAreaStackLabelAnchors(data, args);
+
+        const isolated = raw[0].data[1];
+        const isolatedCalls = aggregation.mock.calls.filter(([{points}]) =>
+            points.some((point) => point === isolated),
+        );
+        expect(isolatedCalls).toHaveLength(1);
+        const points = isolatedCalls[0][0].points;
+        expect(points).toHaveLength(2);
+        expect(points).toContain(raw[1].data[1]);
+    });
+
     test.each([false, true])('follows both value ends, reversed=%s', async (reversed) => {
         const {args} = await prepare(areaPlugin, [[10], [20], [-10], [-20]]);
         const yScale = scaleLinear()

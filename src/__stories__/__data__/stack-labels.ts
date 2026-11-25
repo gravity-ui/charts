@@ -58,16 +58,30 @@ export function getStackLabelsAggregationData(type: 'bar-x' | 'bar-y' | 'area'):
     return data;
 }
 
-export function getAllSignsStackLabelsData(): ChartData {
+interface AllSignsStackLabelsDataProps {
+    type: 'bar-x' | 'area';
+    categories: string[];
+    valueAxis: {min: number; max: number};
+    entries: {name: string; values: (number | null)[]}[];
+}
+
+export function getAllSignsStackLabelsData({
+    type,
+    categories,
+    valueAxis,
+    entries,
+}: AllSignsStackLabelsDataProps): ChartData {
     return {
-        xAxis: {type: 'category', categories: ['January']},
-        yAxis: [{min: -40, max: 120}],
+        xAxis: {type: 'category', categories},
+        yAxis: [valueAxis],
         series: {
-            data: [
-                {type: 'bar-x', name: 'Sales', stacking: 'normal', data: [{x: 0, y: 100}]},
-                {type: 'bar-x', name: 'Refunds', stacking: 'normal', data: [{x: 0, y: -30}]},
-            ],
-            options: {'bar-x': {stackLabels: {enabled: true, mode: 'allSigns'}}},
+            data: entries.map(({name, values}) => ({
+                type,
+                name,
+                stacking: 'normal',
+                data: values.map((y, x) => ({x, y})),
+            })),
+            options: {[type]: {stackLabels: {enabled: true, mode: 'allSigns'}}},
         },
     };
 }

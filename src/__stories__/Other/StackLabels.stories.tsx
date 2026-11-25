@@ -24,7 +24,33 @@ export const Bars: Story = {args: {data: getStackLabelsData('bar-y')}};
 export const BarsPercent: Story = {args: {data: getStackLabelsData('bar-y', 'percent')}};
 export const Area: Story = {args: {data: getStackLabelsData('area')}};
 export const AreaPercent: Story = {args: {data: getStackLabelsData('area', 'percent')}};
-export const ColumnsAllSigns: Story = {args: {data: getAllSignsStackLabelsData()}};
+export const ColumnsAllSigns: Story = {
+    args: {
+        data: getAllSignsStackLabelsData({
+            type: 'bar-x',
+            categories: ['January'],
+            valueAxis: {min: -40, max: 120},
+            entries: [
+                {name: 'Sales', values: [100]},
+                {name: 'Refunds', values: [-30]},
+            ],
+        }),
+    },
+};
+
+export const AreaAllSigns: Story = {
+    args: {
+        data: getAllSignsStackLabelsData({
+            type: 'area',
+            categories: ['January', 'February', 'March', 'April', 'May'],
+            valueAxis: {min: -60, max: 120},
+            entries: [
+                {name: 'Sales', values: [100, 90, null, 80, null]},
+                {name: 'Refunds', values: [-30, -40, -20, -30, -25]},
+            ],
+        }),
+    },
+};
 
 function createCustomAggregationStory(type: 'bar-x' | 'bar-y' | 'area'): Story {
     return {

@@ -96,6 +96,8 @@ stackLabels: {
 - `'perSign'` (default) calculates separate totals for positive and negative values. In the example, the labels are `100` and `-30`.
 - `'allSigns'` calculates one total per stack, value axis, and category or X value.
 
+The combined label uses the outer edge of the positive part of the stack when available, or the negative edge if the positive edge is unavailable.
+
 In `'perSign'` mode, a separate zero total is hidden when the same stack has negative values. This rule uses the original axis values, independently of the result of a custom aggregation.
 
 ### Custom stack totals
