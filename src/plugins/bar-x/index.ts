@@ -37,6 +37,7 @@ import type {PreparedBarXSeries} from './prepared-series';
 import {renderBarX} from './renderer';
 import {getBarXStackLabelAnchors} from './stack-labels';
 import type {BarXTooltipChunk, PreparedBarXData} from './types';
+import {getBarXStackKey} from './utils';
 
 import './styles.scss';
 
@@ -136,7 +137,7 @@ export const barXPlugin = {
             validateAxisPlotValues({series, xAxis, yAxis});
             validateXYSeries({series, xAxis, yAxis});
             validateStacking({series});
-            validateBarGrouping({series, allSeries});
+            validateBarGrouping({series, allSeries, getStackKey: getBarXStackKey});
             validatePercentStackingValues({
                 series,
                 valueKey: 'y',

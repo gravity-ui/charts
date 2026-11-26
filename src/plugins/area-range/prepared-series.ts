@@ -1,4 +1,8 @@
-import type {BasePreparedAxisRelatedSeries, BasePreparedSeries} from '~core/series/types';
+import type {
+    BasePreparedAxisRelatedSeries,
+    BasePreparedSeries,
+    PreparedSeriesMarker,
+} from '~core/series/types';
 import type {SeriesGradientState} from '~core/utils/gradient-reference';
 
 import type {
@@ -8,7 +12,6 @@ import type {
     LinearGradient,
     ValueFormat,
 } from '../../types';
-import type {PreparedAreaSeries} from '../area/prepared-series';
 
 export type PreparedAreaRangeSeries = {
     type: AreaRangeSeries['type'];
@@ -18,7 +21,7 @@ export type PreparedAreaRangeSeries = {
     lineWidth: number;
     opacity: number;
     nullMode: AreaRangeSeries['nullMode'];
-    marker: PreparedAreaSeries['marker'];
+    marker: PreparedSeriesMarker;
     dataLabels: {
         enabled: boolean;
         style: BaseTextStyle;

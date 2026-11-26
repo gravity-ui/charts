@@ -173,6 +173,27 @@ export type PreparedHaloOptions = {
     size: number;
 };
 
+export interface PreparedSeriesMarker {
+    states: {
+        normal: {
+            symbol: `${SymbolType}`;
+            enabled: boolean;
+            radius: number;
+            borderWidth: number;
+            borderColor: string;
+        };
+        hover: {
+            enabled: boolean;
+            /** Whether permanent markers can use hover styles. Defaults to true. */
+            enabledForNormal?: boolean;
+            radius: number;
+            borderWidth: number;
+            borderColor: string;
+            halo: PreparedHaloOptions;
+        };
+    };
+}
+
 export type BasePreparedSeries<TTooltip = BaseSeries['tooltip']> = {
     color: string;
     name: string;

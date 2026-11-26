@@ -1,5 +1,5 @@
-import type {Point} from '~core/utils/geometry';
 import {getDistanceToPolygon, getDistanceToSegment} from '~core/utils/geometry';
+import type {Point} from '~core/utils/geometry';
 
 /** A column of a filled band; `null` breaks the band. */
 export type BandColumn = {x: number; y0: number; y1: number} | null;

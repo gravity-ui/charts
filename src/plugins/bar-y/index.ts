@@ -6,6 +6,7 @@ import type {
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
+import {getSeriesStackId} from '~core/series/utils';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {BarYFormatContext, ChartSeries, ChartSeriesOptions} from '~core/types';
 import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
@@ -120,7 +121,7 @@ export const barYPlugin = {
             validateAxisPlotValues({series, xAxis, yAxis});
             validateXYSeries({series, xAxis, yAxis});
             validateStacking({series});
-            validateBarGrouping({series, allSeries});
+            validateBarGrouping({series, allSeries, getStackKey: getSeriesStackId});
             validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
         },
         prepare: prepareBarYSeries,

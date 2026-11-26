@@ -1,10 +1,10 @@
 import type {AnnotationAnchor, PreparedAnnotation} from '~core/series/types';
+import type {BandColumn} from '~core/shapes/band';
 import type {GradientShapeData, MarkerItem, SeriesShapeData} from '~core/shapes/types';
 import type {TooltipDataChunkArea} from '~core/types';
 
 import type {AreaSeriesData, LabelData} from '../../types';
 
-import type {BandColumn} from './band';
 import type {PreparedAreaSeries} from './prepared-series';
 
 export interface AreaGeometry {
