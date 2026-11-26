@@ -109,6 +109,19 @@ it('keeps shared code and public types independent of plugin internals', () => {
     expect(violations).toEqual([]);
 });
 
+it('uses type-only imports to aggregate the built-in prepared series', () => {
+    const source = readFileSync(path.join(sourceRoot, 'core/series/types.ts'), 'utf8');
+    const file = ts.createSourceFile('types.ts', source, ts.ScriptTarget.Latest, true);
+    const typeOnlyImports = file.statements
+        .filter(ts.isImportDeclaration)
+        .filter((statement) => statement.importClause?.isTypeOnly)
+        .flatMap((statement) => getPluginDependencies(statement.getText(file)));
+    const expected = [...seriesNames].map((type) => `../../plugins/${type}/prepared-series`).sort();
+
+    expect(typeOnlyImports.sort()).toEqual(expected);
+    expect(getPluginDependencies(source).sort()).toEqual(expected);
+});
+
 it.each([
     "import type {LineInteractionItem} from '../../../plugins/line/interaction-types';",
     "export type {ChartSankeyLinkPoint} from '../../../plugins/sankey/interaction-types';",

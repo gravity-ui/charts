@@ -29,24 +29,6 @@ import type {
 } from '../../types';
 import type {DashStyle, SeriesOptionsDefaults, SymbolType} from '../constants';
 
-export type {PreparedAreaRangeSeries} from '../../plugins/area-range/prepared-series';
-export type {PreparedAreaSeries} from '../../plugins/area/prepared-series';
-export type {PreparedBarXSeries} from '../../plugins/bar-x/prepared-series';
-export type {PreparedBarYSeries} from '../../plugins/bar-y/prepared-series';
-export type {PreparedFunnelSeries} from '../../plugins/funnel/prepared-series';
-export type {PreparedHeatmapSeries} from '../../plugins/heatmap/prepared-series';
-export type {PreparedLineSeries} from '../../plugins/line/prepared-series';
-export type {PreparedPieSeries} from '../../plugins/pie/prepared-series';
-export type {PreparedRadarSeries} from '../../plugins/radar/prepared-series';
-export type {PreparedSankeySeries} from '../../plugins/sankey/prepared-series';
-export type {PreparedScatterSeries} from '../../plugins/scatter/prepared-series';
-export type {PreparedTreemapSeries} from '../../plugins/treemap/prepared-series';
-export type {
-    PreparedWaterfallSeries,
-    PreparedWaterfallSeriesData,
-} from '../../plugins/waterfall/prepared-series';
-export type {PreparedXRangeSeries} from '../../plugins/x-range/prepared-series';
-
 export type PreparedAnnotation = {
     label: {
         size: {height: number; width: number};

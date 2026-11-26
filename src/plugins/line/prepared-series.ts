@@ -1,8 +1,8 @@
-import type {DashStyle, LineCap, LineJoin, SymbolType} from '~core/constants';
+import type {DashStyle, LineCap, LineJoin} from '~core/constants';
 import type {
     BasePreparedAxisRelatedSeries,
     BasePreparedSeries,
-    PreparedHaloOptions,
+    PreparedSeriesMarker,
 } from '~core/series/types';
 import type {SeriesGradientState} from '~core/utils/gradient-reference';
 
@@ -35,26 +35,7 @@ export type PreparedLineSeries = {
         placementFallback: LineSeriesDataLabelPlacementFallback;
         anchor: NonNullable<LineSeriesDataLabels['anchor']>;
     };
-    marker: {
-        states: {
-            normal: {
-                symbol: `${SymbolType}`;
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-            };
-            hover: {
-                enabled: boolean;
-                /** Whether permanent markers can use hover styles. Defaults to true. */
-                enabledForNormal?: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-                halo: PreparedHaloOptions;
-            };
-        };
-    };
+    marker: PreparedSeriesMarker;
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
