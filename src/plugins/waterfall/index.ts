@@ -1,5 +1,3 @@
-import sortBy from 'es-toolkit/compat/sortBy';
-
 import type {
     PrepareLayerArgs,
     PrepareLayerResult,
@@ -9,65 +7,54 @@ import type {
 import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import type {ChartSeries, ChartSeriesOptions} from '~core/types';
-import {filterOverlappingLabels} from '~core/utils';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {WaterfallSeries} from '../../types';
+import {validateBarLabelPlacement} from '../bar-label-placement';
 
 import {waterfallDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import type {WaterfallInteractionItem} from './interaction-types';
+import {getWaterfallIntervals, resolveWaterfallIntervals} from './intervals';
 import {prepareWaterfallData} from './prepare-data';
-import {prepareWaterfallSeries} from './prepare-waterfall-series';
+import {prepareWaterfallPoints, prepareWaterfallSeries} from './prepare-waterfall-series';
 import type {PreparedWaterfallSeries} from './prepared-series';
 import {renderWaterfall} from './renderer';
 import type {PreparedWaterfallData, WaterfallTooltipChunk} from './types';
 
 import './styles.scss';
 
+function isPreparedWaterfallSeries(
+    series: WaterfallSeries | PreparedWaterfallSeries,
+): series is PreparedWaterfallSeries {
+    return 'fullData' in series;
+}
+
 async function prepareLayer(
     args: PrepareLayerArgs<PreparedWaterfallSeries, PreparedSeriesOptions, PreparedSeries>,
 ): Promise<PrepareLayerResult<PreparedWaterfallData, PreparedWaterfallData>> {
-    const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
+    const {series, seriesOptions, boundsWidth, xAxis, xScale, yAxis, yScale} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
         return {renderData: [], lookupItems: []};
     }
 
+    const intervals = getWaterfallIntervals(series);
+
     const data = await prepareWaterfallData({
-        series: series,
+        series,
+        intervals,
         seriesOptions,
+        boundsWidth,
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
         yScale,
     });
 
-    const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-    if (!allowOverlap) {
-        const filtered = filterOverlappingLabels(data.flatMap((d) => d.htmlLabels));
-        const [first, ...rest] = data;
-        if (first) {
-            const filteredData = [
-                {...first, htmlLabels: filtered},
-                ...rest.map((d) => ({...d, htmlLabels: [] as typeof d.htmlLabels})),
-            ];
-            return {
-                renderData: filteredData,
-                htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
-                labelLayout: filteredData,
-                lookupItems: filteredData,
-            };
-        }
-    }
-
-    return {
-        renderData: data,
-        htmlLabels: data.flatMap((item) => item.htmlLabels),
-        labelLayout: data,
-        lookupItems: data,
-    };
+    return {renderData: data, lookupItems: data};
 }
 
 export const waterfallPlugin = {
@@ -75,6 +62,7 @@ export const waterfallPlugin = {
     series: {
         optionsDefaults: waterfallDefaults,
         validate: ({series}) => {
+            validateBarLabelPlacement(series.dataLabels);
             const {connectors} = series;
             if (connectors === undefined) {
                 return;
@@ -104,17 +92,15 @@ export const waterfallPlugin = {
         y: {
             baseline: 0,
             getData: ({series}) => {
-                // Preparation splits signs/totals into separate series; restore source point order.
-                const points = series.flatMap((item) => item.data);
-                const ordered = sortBy(points, (point) =>
-                    'index' in point ? point.index : undefined,
-                );
+                const intervals = getWaterfallIntervals(series.filter(isPreparedWaterfallSeries));
                 const values: number[] = [];
-                let total = 0;
-                for (const point of ordered) {
-                    if (!point.total) {
-                        total += Number(point.y) || 0;
-                        values.push(total);
+                for (const item of series) {
+                    const prepared = isPreparedWaterfallSeries(item);
+                    const points = prepared ? item.data : prepareWaterfallPoints(item);
+                    const itemIntervals = prepared ? intervals : resolveWaterfallIntervals(points);
+                    for (const point of points) {
+                        const interval = itemIntervals.get(point);
+                        if (interval) values.push(interval.start, interval.end);
                     }
                 }
                 return {domainValues: values};
@@ -143,7 +129,28 @@ export const waterfallPlugin = {
             );
         },
     },
-    zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
+    zoom: {
+        types: ['x', 'xy', 'y'],
+        defaultType: 'x',
+        filterData: ({series, viewport, seriesGroup}) => {
+            const yRange = viewport.y.range;
+            if (!yRange) return filterPoints(series.data, viewport);
+
+            const intervals = getWaterfallIntervals(seriesGroup ?? [series]);
+            const [min, max] = yRange;
+            return filterPoints(series.data, viewport, {
+                isYInRange: (point) => {
+                    const interval = intervals.get(point);
+                    return Boolean(
+                        interval &&
+                        min <= max &&
+                        Math.min(interval.start, interval.end) <= max &&
+                        Math.max(interval.start, interval.end) >= min,
+                    );
+                },
+            });
+        },
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,

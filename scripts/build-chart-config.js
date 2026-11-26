@@ -14,12 +14,13 @@ const OUTPUT_DIR = path.resolve(ROOT_DIR, 'dist/config');
 const DECLARATION_PATH = path.resolve(OUTPUT_DIR, 'chart-config.d.ts');
 const SCHEMA_PATH = path.resolve(OUTPUT_DIR, 'chart-config.schema.json');
 
-// Preserve published definition anchors when generic parameters change their generated names.
+// Preserve published definition anchors when their generated names change.
 const DEFINITION_ALIASES = {
     ChartOptions: 'ChartOptions<ChartInteractionItem>',
     'ChartOptions<JsonValue>': 'ChartOptions<ChartInteractionItem>',
     ChartSeriesOptions: 'ChartSeriesOptions<JsonValue>',
     StackLabelsOptions: 'StackLabelsOptions<JsonValue>',
+    LineSeriesInterpolation: 'SeriesInterpolation',
 };
 
 // A declaration bundle is standalone only while every package exposed by ChartConfig is inlined.

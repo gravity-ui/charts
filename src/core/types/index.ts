@@ -23,6 +23,7 @@ export type * from './chart/bar-y';
 export type * from './chart/area';
 export type * from './chart/area-range';
 export type * from './chart/line';
+export type * from './chart/interpolation';
 export * from './chart/series';
 export * from './chart/split';
 export * from './chart/title';

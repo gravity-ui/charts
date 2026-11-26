@@ -63,7 +63,7 @@ describe('bar placement options', () => {
             validateBarLabelPlacement(options as BarSeriesDataLabelPlacementOptions),
         ).toThrow(expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}));
     });
-    test.each(['bar-x', 'bar-y'] as const)('%s plugin validates placement', (type) => {
+    test.each(['bar-x', 'bar-y', 'waterfall'] as const)('%s plugin validates placement', (type) => {
         const config: ChartData = {
             series: {
                 data: [{type, name: 'Orders', data: [{x: 1, y: 2}], dataLabels: {placement: []}}],

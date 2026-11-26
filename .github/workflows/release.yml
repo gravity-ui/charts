@@ -7,9 +7,21 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      release-created: ${{ steps.release.outputs.release-created }}
     steps:
       - uses: gravity-ui/release-action@v2
+        id: release
         with:
           github-token: ${{ secrets.GRAVITY_UI_BOT_GITHUB_TOKEN }}
           npm-token: ${{ secrets.GRAVITY_UI_BOT_NPM_TOKEN }}
           node-version-file: '.nvmrc'
+
+  docs:
+    needs: release
+    if: needs.release.outputs.release-created == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs-deploy.yaml

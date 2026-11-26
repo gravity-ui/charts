@@ -1,13 +1,6 @@
 import {getDistanceToRect} from '~core/utils/geometry';
-import type {
-    GetTooltipDataArgs,
-    GetTooltipDataResult,
-    ShapePoint,
-    TooltipCandidate,
-} from '~core/utils/tooltip-helpers';
+import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 import {getClosestPointsByXValue} from '~core/utils/tooltip-helpers';
-
-import type {WaterfallSeriesData} from '../../types';
 
 import type {PreparedWaterfallData, WaterfallTooltipChunk} from './types';
 
@@ -17,8 +10,8 @@ export function getTooltipData(
     const {data, position, measureDistance} = args;
     const [pointerX, pointerY] = position;
 
-    const points = data.map<PluginShapePoint>((d) => ({
-        data: d.data as WaterfallSeriesData,
+    const points = data.map((d) => ({
+        data: d.data,
         distance: measureDistance ? getDistanceToRect({point: position, ...d}) : undefined,
         series: d.series,
         x: d.x + d.width / 2,
@@ -27,13 +20,5 @@ export function getTooltipData(
         subTotal: d.subTotal,
     }));
 
-    const chunks = getClosestPointsByXValue(
-        pointerX,
-        pointerY,
-        points,
-    ) as TooltipCandidate<WaterfallTooltipChunk>[];
-
-    return {chunks};
+    return {chunks: getClosestPointsByXValue(pointerX, pointerY, points)};
 }
-
-type PluginShapePoint = ShapePoint<WaterfallTooltipChunk['data'], WaterfallTooltipChunk['series']>;

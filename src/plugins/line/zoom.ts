@@ -7,11 +7,12 @@ import type {FilterSeriesDataArgs} from '~core/zoom/filter-data';
 import {filterPoints} from '~core/zoom/filter-data';
 
 import type {LineSeries} from '../../types';
+import {getCurveFactory} from '../interpolation';
 import {getVisiblePathYValues} from '../path-domain';
 
 import type {PlacementSegment} from './auto-placement';
-import {getLineSegments, isDrawnPoint, segmentIntersectsRect} from './auto-placement';
-import {getCurveFactory} from './interpolation';
+import {getLineSegments, segmentIntersectsRect} from './auto-placement';
+import {hasSmoothInterpolation, isVisibleLinePoint} from './path';
 
 interface PathRun {
     start: number;
@@ -56,7 +57,7 @@ function getStepSegments(
     for (let index = 1; index < points.length; index++) {
         const previous = points[index - 1];
         const point = points[index];
-        if (!isDrawnPoint(previous) || !isDrawnPoint(point)) continue;
+        if (!isVisibleLinePoint(previous) || !isVisibleLinePoint(point)) continue;
         // Intermediate step vertices belong to the same pair of original samples.
         const pointIndices = [index - 1, index] as const;
         if (previous.x === point.x && previous.y === point.y) {
@@ -89,7 +90,10 @@ function createCoordinateProjector(axis: DomainAxis) {
     };
 }
 
-export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeries>) {
+export function filterLineData({
+    series,
+    viewport,
+}: FilterSeriesDataArgs<Pick<LineSeries, 'data' | 'interpolation'>>) {
     const {interpolation} = series;
     const projectX = createCoordinateProjector(viewport.x);
     const projectY = createCoordinateProjector(viewport.y);
@@ -98,7 +102,7 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
         isDefined: (point) => projectX(point.x) !== null && projectY(point.y) !== null,
     });
     const stepped = interpolation?.type === 'step';
-    const smooth = interpolation && interpolation.type !== 'linear' && !stepped;
+    const smooth = hasSmoothInterpolation(series);
     if (
         selection.data.length ||
         viewport.x.type === 'category' ||
@@ -138,7 +142,7 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
     const runs: PathRun[] = [];
     let run: PathRun | undefined;
     const pointRuns = points.map((point, index) => {
-        if (!isDrawnPoint(point)) {
+        if (!isVisibleLinePoint(point)) {
             run = undefined;
             return undefined;
         }
@@ -189,16 +193,41 @@ export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeri
 }
 
 export function getLineAxisData({series, viewport}: GetAxisDataArgs<LineSeries>) {
-    if (!viewport?.x.range) return undefined;
+    const xRange = viewport?.x.range;
+    if (
+        !viewport ||
+        (!xRange &&
+            (viewport.x.type === 'category' ||
+                viewport.y.type === 'category' ||
+                !series.some(canOvershootSamples)))
+    ) {
+        return undefined;
+    }
     const values: AxisDomainValue[] = [];
     for (const item of series) {
-        const contribution =
-            getVisiblePathYValues({
-                points: item.data,
-                viewport,
-                curveFactory: getCurveFactory(item.interpolation),
-            }) ?? Array.from(getDomainPoints(item.data, viewport), (point) => point?.y);
-        for (const value of contribution) values.push(value);
+        const pathValues =
+            xRange || canOvershootSamples(item)
+                ? getVisiblePathYValues({
+                      points: item.data,
+                      viewport,
+                      curveFactory: getCurveFactory(item.interpolation),
+                  })
+                : undefined;
+        // Without X zoom, curve extrema extend the sample domain.
+        if (!xRange || !pathValues) {
+            const samples =
+                xRange || viewport.y.range ? getDomainPoints(item.data, viewport) : item.data;
+            for (const point of samples) {
+                values.push(point?.y);
+            }
+        }
+        for (const value of pathValues ?? []) {
+            values.push(value);
+        }
     }
     return {domainValues: values};
+}
+
+function canOvershootSamples({interpolation}: Pick<LineSeries, 'interpolation'>) {
+    return interpolation?.type === 'cardinal' && interpolation.tension !== 1;
 }

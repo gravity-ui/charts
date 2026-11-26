@@ -9,7 +9,7 @@ import get from 'es-toolkit/compat/get';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import {renderDataLabels} from '~core/shapes/data-labels';
 import {setActiveState} from '~core/shapes/utils';
-import {getLineDashArray} from '~core/utils';
+import {getLineDashArray, getUniqId} from '~core/utils';
 import {
     createGradientPaintResolver,
     getBrighterGradient,
@@ -19,6 +19,7 @@ import {
 import type {LabelData, TooltipDataChunkLine} from '../../types';
 import {block} from '../../utils';
 
+import {getLinePathPointFilter, hasSmoothInterpolation} from './path';
 import type {PointData, PreparedLineData} from './types';
 
 const b = block('line');
@@ -39,7 +40,6 @@ export function renderLine(
     const hoverOptions = get(seriesOptions, 'line.states.hover');
     const inactiveOptions = get(seriesOptions, 'line.states.inactive');
     const line = lineGenerator<PointData>()
-        .defined((d) => d.y !== null && d.x !== null && !d.hiddenInLine)
         .x((d) => d.x as number)
         .y((d) => d.y as number);
 
@@ -48,7 +48,9 @@ export function renderLine(
     const bounds = new Map(
         renderData.map((data) => [
             data,
-            data.gradientBBox === undefined ? getGradientBBox(data.points) : data.gradientBBox,
+            data.gradientBBox === undefined
+                ? getGradientBBox(data.points, hasSmoothInterpolation(data))
+                : data.gradientBBox,
         ]),
     );
     const getStroke = (data: PreparedLineData, hovered = false, brightness?: number) => {
@@ -69,7 +71,27 @@ export function renderLine(
         .selectAll('path')
         .data(renderData)
         .join('path')
-        .attr('d', (d) => line.curve(elements.getCurveFactory(d.interpolation))(d.points))
+        .attr('d', (d) =>
+            line
+                .defined(getLinePathPointFilter(d))
+                .curve(elements.getCurveFactory(d.interpolation))(d.points),
+        )
+        .attr('clip-path', ({clipYRange}) => {
+            if (!clipYRange) return null;
+            const [top, bottom] = clipYRange;
+            let id = `line-plot-${getUniqId()}`;
+            while (elements.plot.ownerDocument.getElementById(id)) {
+                id = `line-plot-${getUniqId()}`;
+            }
+            plotSvgElement
+                .append('clipPath')
+                .attr('id', id)
+                .append('rect')
+                .attr('width', '100%')
+                .attr('y', top)
+                .attr('height', bottom - top);
+            return `url(#${id})`;
+        })
         .attr('fill', 'none')
         .attr('stroke', (d) => getStroke(d))
         .attr('stroke-width', (d) => d.lineWidth)

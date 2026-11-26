@@ -20,6 +20,7 @@ export function getTooltipData(
         chunks: [
             {
                 data: closestPoint.data,
+                color: data[0].colors.get(closestPoint),
                 series: data[0].series,
                 closest: true,
                 // The chunk is found only when the pointer is inside the shape.

@@ -16,19 +16,20 @@ import {
 } from '~core/validation/helpers';
 
 import type {LineSeries} from '../../types';
+import {getCurveFactory} from '../interpolation';
+import {validateInterpolation} from '../interpolation/validation';
 
 import {getLineAxisPadding} from './axis-padding';
 import {lineDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import type {LineInteractionItem} from './interaction-types';
-import {getCurveFactory} from './interpolation';
 import {prepareLineData, projectLineData} from './prepare-data';
 import {prepareLineSeries} from './prepare-line-series';
 import type {PreparedLineSeries} from './prepared-series';
 import {renderLine} from './renderer';
 import type {LineTooltipChunk, PreparedLineData} from './types';
-import {validateInterpolation, validateLabelAnchor} from './validation';
+import {validateLabelAnchor} from './validation';
 import {filterLineData, getLineAxisData} from './zoom';
 
 import './styles.scss';

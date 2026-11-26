@@ -11,20 +11,22 @@ import type {BandColumn} from './band';
 import {getBandBoundaries, getDistanceToBand} from './band';
 import type {AreaTooltipChunk, PreparedAreaData} from './types';
 
-interface AreaGeometry {
+interface AreaHitGeometry {
     columns: BandColumn[];
     /** Runs of the upper line, the only stroked boundary of the area. */
     upper: Point[][];
 }
 
-const geometryCache = new WeakMap<PreparedAreaData, AreaGeometry>();
+const geometryCache = new WeakMap<PreparedAreaData, AreaHitGeometry>();
 
-function getAreaGeometry(item: PreparedAreaData): AreaGeometry {
+function getAreaHitGeometry(item: PreparedAreaData): AreaHitGeometry {
     let geometry = geometryCache.get(item);
     if (!geometry) {
-        const columns = item.points.map<BandColumn>((p) =>
-            p.y === null || p.hiddenInLine ? null : {x: p.x, y0: p.y0, y1: p.y},
-        );
+        const columns =
+            item.geometry?.columns ??
+            item.points.map<BandColumn>((p) =>
+                p.y === null || p.hiddenInLine ? null : {x: p.x, y0: p.y0, y1: p.y},
+            );
         geometry = {columns, upper: getBandBoundaries(columns).upper};
         geometryCache.set(item, geometry);
     }
@@ -33,7 +35,7 @@ function getAreaGeometry(item: PreparedAreaData): AreaGeometry {
 
 /** Distance to the filled band, its stroked upper line (round caps and joins) and markers. */
 function getDistanceToArea(item: PreparedAreaData, point: Point) {
-    const {columns, upper} = getAreaGeometry(item);
+    const {columns, upper} = getAreaHitGeometry(item);
     let distance = getDistanceToBand({point, columns});
     for (let i = 0; i < upper.length && distance > 0; i++) {
         distance = Math.min(

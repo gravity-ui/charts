@@ -19,6 +19,92 @@ test.describe('Waterfall series', () => {
         await expect(component.locator('svg')).toHaveScreenshot();
     });
 
+    test('Labels stay on visible columns and shift at the edge by default', async ({mount}) => {
+        const createData = (placement?: 'auto'): ChartData => ({
+            xAxis: {type: 'linear', min: 0, max: 10},
+            yAxis: [{min: 0, max: 40}],
+            legend: {enabled: false},
+            series: {
+                data: [
+                    {
+                        type: 'waterfall',
+                        name: 'Customers',
+                        dataLabels: {
+                            placement,
+                            placementFallback: placement ? 'show' : 'hide',
+                            allowOverlap: true,
+                        },
+                        data: [
+                            {x: -100, y: 10, label: 'Hidden step'},
+                            {x: -50, y: 0, label: 'Hidden zero'},
+                            {x: 0, y: -10, label: 'Decrease'},
+                            {x: 7, y: 0, label: placement ? 'Adaptive zero' : 'Visible zero'},
+                        ],
+                    },
+                ],
+            },
+        });
+
+        const component = await mount(<ChartTestStory data={createData()} />);
+        const labels = component.locator('.gcharts-waterfall__label');
+        await expect(labels).toHaveText(['Decrease', 'Visible zero']);
+        const left = await labels
+            .first()
+            .evaluate((label) => (label as SVGGraphicsElement).getBBox().x);
+        expect(left).toBeCloseTo(0, 0);
+
+        await component.update(<ChartTestStory data={createData('auto')} />);
+        await expect(labels).toHaveText(['Decrease', 'Adaptive zero']);
+    });
+
+    test('Adaptive labels move inside at both value ends and honor the fallback', async ({
+        mount,
+    }) => {
+        const longLabel = 'Additional customers '.repeat(15).trim();
+        const createData = (placementFallback?: 'hide'): ChartData => ({
+            series: {
+                data: [
+                    {
+                        type: 'waterfall',
+                        name: 'Customers',
+                        dataLabels: {placement: 'auto', placementFallback, allowOverlap: true},
+                        data: [
+                            {x: 'Gains', y: 40, label: '&#x41;&#x42;&#x43;&#x44;'},
+                            {x: 'Losses', y: -80},
+                            {x: 'Total', total: true},
+                            {x: 'Additional', y: 10},
+                            {x: 'Extended', y: 10, label: longLabel},
+                        ],
+                    },
+                ],
+            },
+            xAxis: {
+                type: 'category',
+                categories: ['Gains', 'Losses', 'Total', 'Additional', 'Extended'],
+            },
+            yAxis: [{min: -40, max: 40}],
+            legend: {enabled: false},
+        });
+        const styles = {width: 480, height: 240};
+        const component = await mount(<ChartTestStory data={createData()} styles={styles} />);
+        const labels = component.locator('.gcharts-waterfall__label');
+        const bars = component.locator('.gcharts-waterfall__segment');
+        await expect(labels).toHaveText(['ABCD', '-80', '-40', '10', longLabel]);
+        for (let index = 0; index < 3; index++) {
+            const bar = await getLocatorBoundingBox(bars.nth(index));
+            const label = await getLocatorBoundingBox(labels.nth(index));
+            const gap = index === 0 ? label.y - bar.y : bar.y + bar.height - label.y - label.height;
+            expect(gap).toBeCloseTo(5, 0);
+            expect(label.x + label.width / 2).toBeCloseTo(bar.x + bar.width / 2, 0);
+        }
+        const outside = await getLocatorBoundingBox(labels.nth(3));
+        const bar = await getLocatorBoundingBox(bars.nth(3));
+        expect(bar.y - outside.y - outside.height).toBeCloseTo(5, 0);
+
+        await component.update(<ChartTestStory data={createData('hide')} styles={styles} />);
+        await expect(labels).toHaveText(['ABCD', '-80', '-40', '10']);
+    });
+
     test.describe('Connectors', () => {
         const points: WaterfallSeriesData[] = [
             {x: 'Income', y: 10},
@@ -68,6 +154,189 @@ test.describe('Waterfall series', () => {
                 }
             }
         });
+    });
+
+    test.describe('Zoom', () => {
+        const points: WaterfallSeriesData[] = [
+            {x: 'Opening', y: 100},
+            {x: 'Expense', y: -20},
+            {x: 'Total', total: true},
+        ];
+        const cases = [
+            {type: 'x', yRange: [-30, 120], expenseIndex: 0},
+            {type: 'y', yRange: [85, 110], expenseIndex: 1},
+            {type: 'xy', yRange: [70, 95], expenseIndex: 0},
+        ] as const;
+
+        for (const {type, yRange, expenseIndex} of cases) {
+            test(`${type} zoom preserves the running balance and clips visible columns`, async ({
+                mount,
+                page,
+            }) => {
+                const component = await mount(
+                    <ChartTestStory
+                        data={{
+                            chart: {zoom: {enabled: true, type}},
+                            legend: {enabled: false},
+                            xAxis: {type: 'category', categories: ['Opening', 'Expense', 'Total']},
+                            yAxis: [{type: 'linear', min: -30, max: 120}],
+                            series: {
+                                data: [
+                                    {
+                                        type: 'waterfall',
+                                        name: 'Cash balance',
+                                        data: points,
+                                        dataLabels: {placement: 'auto', placementFallback: 'hide'},
+                                    },
+                                ],
+                            },
+                        }}
+                        styles={{width: 600, height: 360}}
+                    />,
+                );
+                const bars = component.locator('.gcharts-waterfall__segment');
+                const overlay = component.locator('.gcharts-brush .overlay');
+                await expect(bars).toHaveCount(3);
+                const plot = await getLocatorBoundingBox(overlay);
+                const [min, max] = yRange;
+                const brushY = (value: number) => plot.y + (plot.height * (120 - value)) / 150;
+                await page.mouse.move(
+                    plot.x + plot.width * 0.45,
+                    type === 'x' ? brushY(50) : brushY(max),
+                );
+                await page.mouse.down();
+                await page.mouse.move(
+                    plot.x + plot.width * 0.9,
+                    type === 'x' ? brushY(50) : brushY(min),
+                    {steps: 4},
+                );
+                await page.mouse.up();
+                await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+                await expect(bars).toHaveCount(2);
+
+                const zoomedPlot = await getLocatorBoundingBox(overlay);
+                const expectInterval = async (index: number, start: number, end: number) => {
+                    const box = await getLocatorBoundingBox(bars.nth(index));
+                    expect((box.y - zoomedPlot.y) / zoomedPlot.height).toBeCloseTo(
+                        (max - Math.min(max, end)) / (max - min),
+                        1,
+                    );
+                    expect((box.y + box.height - zoomedPlot.y) / zoomedPlot.height).toBeCloseTo(
+                        (max - Math.max(min, start)) / (max - min),
+                        1,
+                    );
+                    return box;
+                };
+
+                const expense = await expectInterval(expenseIndex, 80, 100);
+                const expenseLabel = component
+                    .locator('.gcharts-waterfall__label')
+                    .filter({hasText: /^-20$/});
+                await expect(expenseLabel).toBeVisible();
+                const label = await getLocatorBoundingBox(expenseLabel);
+                const expenseBottom = expense.y + expense.height;
+                if (type === 'y') {
+                    expect(label.y).toBeGreaterThan(expense.y);
+                    expect(label.y + label.height).toBeLessThan(expenseBottom);
+                } else {
+                    expect(label.y).toBeGreaterThan(expenseBottom);
+                }
+
+                const connector = component.locator('.gcharts-waterfall__connector');
+                await expect(connector).toHaveCount(1);
+                const line = await connector.evaluate((element) => {
+                    const path = element as SVGPathElement;
+                    const matrix = path.getScreenCTM();
+                    if (!matrix) throw new Error('Connector transform is unavailable');
+                    return {
+                        start: path.getPointAtLength(0).matrixTransform(matrix).y,
+                        end: path.getPointAtLength(path.getTotalLength()).matrixTransform(matrix).y,
+                    };
+                });
+                expect(line.start).toBeCloseTo(line.end, 2);
+                expect(line.start).toBeCloseTo(
+                    type === 'y' ? expense.y : expense.y + expense.height,
+                    0,
+                );
+
+                await page.mouse.move(
+                    expense.x + expense.width / 2,
+                    expense.y + expense.height / 2,
+                );
+                const tooltip = page.locator('.gcharts-tooltip');
+                await expect(
+                    tooltip.getByRole('row', {name: 'Subtotal 80', exact: true}),
+                ).toBeVisible();
+
+                if (type !== 'y') {
+                    const total = await expectInterval(1, 0, 80);
+                    await page.mouse.move(total.x + total.width / 2, total.y + total.height / 2);
+                    await expect(
+                        tooltip.getByRole('row', {name: 'Total 80', exact: true}),
+                    ).toBeVisible();
+                }
+            });
+        }
+    });
+
+    test('legend visibility updates the balance before applying X zoom', async ({mount, page}) => {
+        const points: WaterfallSeriesData[] = [
+            {x: 'Opening', y: 100},
+            {x: 'Expense', y: -20},
+            {x: 'Income', y: 25},
+            {x: 'Total', total: true},
+        ];
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    chart: {zoom: {enabled: true, type: 'x'}},
+                    legend: {enabled: true},
+                    xAxis: {type: 'category', categories: points.map((point) => String(point.x))},
+                    yAxis: [{min: 0, max: 150}],
+                    series: {
+                        data: [
+                            {
+                                type: 'waterfall',
+                                name: 'Balance',
+                                data: points,
+                                legend: {itemText: {negative: 'Expenses'}},
+                            },
+                        ],
+                    },
+                }}
+                styles={{width: 600, height: 360}}
+            />,
+        );
+        const bars = component.locator('.gcharts-waterfall__segment');
+        const legendItem = component
+            .locator('.gcharts-legend')
+            .getByText('Expenses', {exact: true});
+        const tooltip = page.locator('.gcharts-tooltip');
+        const expectTotal = async (value: number) => {
+            const {x, y, width, height} = await getLocatorBoundingBox(bars.last());
+            await page.mouse.move(x + width / 2, y + height / 2);
+            await expect(
+                tooltip.getByRole('row', {name: `Total ${value}`, exact: true}),
+            ).toBeVisible();
+        };
+
+        await expect(bars).toHaveCount(4);
+        await legendItem.click({modifiers: ['ControlOrMeta']});
+        await expect(bars).toHaveCount(3);
+        await expectTotal(125);
+
+        const plot = await getLocatorBoundingBox(component.locator('.gcharts-brush .overlay'));
+        const brushY = plot.y + plot.height / 2;
+        await page.mouse.move(plot.x + plot.width * 0.45, brushY);
+        await page.mouse.down();
+        await page.mouse.move(plot.x + plot.width * 0.9, brushY, {steps: 4});
+        await page.mouse.up();
+        await expect(component.locator('.gcharts-chart__reset-zoom-button')).toBeVisible();
+        await expect(bars).toHaveCount(2);
+        await expectTotal(125);
+
+        await legendItem.click({modifiers: ['ControlOrMeta']});
+        await expectTotal(105);
     });
 
     test.describe('Tooltip', () => {

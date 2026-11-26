@@ -13,8 +13,8 @@ import type {
     LineSeriesDataLabelPlacementFallback,
     LineSeriesDataLabelPlacementPosition,
     LineSeriesDataLabels,
-    LineSeriesInterpolation,
     LinearGradient,
+    SeriesInterpolation,
     ValueFormat,
 } from '../../types';
 
@@ -58,7 +58,7 @@ export type PreparedLineSeries = {
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
-    interpolation?: LineSeriesInterpolation;
+    interpolation?: SeriesInterpolation;
     opacity: number | null;
     gradient?: LinearGradient;
     yAxis: number;

@@ -37,10 +37,7 @@ export interface SeriesPlugin<TTypes extends SeriesPluginTypes = SeriesPluginTyp
     axes?: boolean | SeriesPluginAxes<TTypes>;
     colorScale?: SeriesPluginColorScale<TTypes>;
     layers: SeriesPluginLayers<TTypes>;
-    zoom?: SeriesPluginZoomOptions<
-        TTypes['raw'] | TTypes['prepared'],
-        TTypes['raw']['data'][number]
-    >;
+    zoom?: SeriesPluginZoomOptions<TTypes['prepared']>;
     interaction?: SeriesPluginInteraction<TTypes>;
     tooltip?: SeriesPluginTooltip<TTypes>;
 }
@@ -136,13 +133,15 @@ export interface GetTooltipValueArgs<TTooltipChunk = PluginTooltipChunk> {
     yAxis?: ChartYAxis;
 }
 
-export interface SeriesPluginZoomOptions<TSeries = PluginSeries, TPoint = unknown> {
+export interface SeriesPluginZoomOptions<TSeries = PluginSeries> {
     /** Supported brush directions. */
     types: ZoomType[];
     /** Preferred direction when chart.zoom.type is omitted. */
     defaultType?: ZoomType;
     /** Omit for scalar point filtering; return original points separately from retained shape anchors. */
-    filterData?(args: FilterSeriesDataArgs<TSeries>): SeriesDataSelection<TPoint>;
+    filterData?(
+        args: FilterSeriesDataArgs<TSeries>,
+    ): SeriesDataSelection<TSeries extends {data: readonly (infer TPoint)[]} ? TPoint : never>;
 }
 
 export interface RenderLayerArgs<TShape = object, TOptions = object> {

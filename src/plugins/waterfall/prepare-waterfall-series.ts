@@ -10,26 +10,32 @@ import type {ChartSeriesOptions} from '~core/types';
 import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
-import type {WaterfallSeries, WaterfallSeriesData} from '../../types';
+import type {WaterfallSeries} from '../../types';
+import {resolveBarLabelPlacement} from '../bar-label-placement';
 
-import type {PreparedWaterfallSeries} from './prepared-series';
+import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from './prepared-series';
 
-function prepareSeriesData(series: WaterfallSeries): WaterfallSeriesData[] {
-    const nullMode = series.nullMode ?? 'skip';
-    const data = series.data;
+export function prepareWaterfallPoints(series: WaterfallSeries): PreparedWaterfallSeriesData[] {
+    const nullAsZero = series.nullMode === 'zero';
+    const points: PreparedWaterfallSeriesData[] = [];
 
-    switch (nullMode) {
-        case 'zero':
-            return data.map((d) =>
-                withSourcePoint(d, {
-                    ...d,
-                    y: d.total ? d.y : (d.y ?? 0),
-                }),
-            );
-        case 'skip':
-        default:
-            return data.filter((d) => d.y !== null);
-    }
+    series.data.forEach((point) => {
+        if (point.y === null && !nullAsZero) return;
+
+        const y = !point.total && nullAsZero ? (point.y ?? 0) : point.y;
+        // A point without y can still reserve a position on the X axis.
+        if (!point.total && y !== undefined && !Number.isFinite(y)) return;
+
+        points.push(
+            withSourcePoint(point, {
+                ...point,
+                ...(y === point.y ? {} : {y}),
+                index: points.length,
+            }),
+        );
+    });
+
+    return points;
 }
 
 export function prepareWaterfallSeries(
@@ -45,7 +51,7 @@ export function prepareWaterfallSeries(
         legend: {enabled: series.legend?.enabled ?? legend.enabled},
         symbol: prepareLegendSymbol(series),
     });
-    const common: PreparedWaterfallSeries = {
+    const common: Omit<PreparedWaterfallSeries, 'fullData'> = {
         ...metadata,
         type: series.type,
         connectors: {
@@ -53,6 +59,8 @@ export function prepareWaterfallSeries(
         },
         dataLabels: {
             enabled: series.dataLabels?.enabled ?? true,
+            placement: resolveBarLabelPlacement(series.dataLabels?.placement),
+            placementFallback: series.dataLabels?.placementFallback ?? 'show',
             style: Object.assign({}, DEFAULT_DATALABELS_STYLE, series.dataLabels?.style),
             allowOverlap: series.dataLabels?.allowOverlap || false,
             padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
@@ -67,7 +75,7 @@ export function prepareWaterfallSeries(
     };
 
     const positiveName = series.legend?.itemText?.positive ?? `${series.name} ↑`;
-    const positive: PreparedWaterfallSeries = {
+    const positive = {
         ...common,
         name: positiveName,
         legend: {
@@ -77,10 +85,10 @@ export function prepareWaterfallSeries(
         },
         id: getUniqId(),
         color: series.positiveColor || positiveColor,
-        data: [],
+        data: [] as PreparedWaterfallSeriesData[],
     };
     const negativeName = series.legend?.itemText?.negative ?? `${series.name} ↓`;
-    const negative: PreparedWaterfallSeries = {
+    const negative = {
         ...common,
         name: negativeName,
         legend: {
@@ -90,11 +98,11 @@ export function prepareWaterfallSeries(
         },
         id: getUniqId(),
         color: series.negativeColor || negativeColor,
-        data: [],
+        data: [] as PreparedWaterfallSeriesData[],
     };
 
     const totalsName = series.legend?.itemText?.totals ?? series.name;
-    const totals: PreparedWaterfallSeries = {
+    const totals = {
         ...common,
         name: totalsName,
         legend: {
@@ -103,23 +111,18 @@ export function prepareWaterfallSeries(
             itemText: series.legend?.itemText?.totals ?? totalsName,
         },
         id: getUniqId(),
-        data: [],
+        data: [] as PreparedWaterfallSeriesData[],
     };
 
-    const preparedData = prepareSeriesData(series);
-
-    preparedData.forEach((d, index) => {
-        const value = d?.y ?? 0;
-        const dataItem = withSourcePoint(d, {...d, index});
-
-        if (d?.total) {
-            totals.data.push(dataItem);
-        } else if (value >= 0) {
-            positive.data.push(dataItem);
-        } else if (value < 0) {
-            negative.data.push(dataItem);
+    for (const point of prepareWaterfallPoints(series)) {
+        if (point.total) {
+            totals.data.push(point);
+        } else if ((point.y ?? 0) < 0) {
+            negative.data.push(point);
+        } else {
+            positive.data.push(point);
         }
-    }, []);
+    }
 
-    return [positive, negative, totals];
+    return [positive, negative, totals].map((item) => ({...item, fullData: item.data}));
 }

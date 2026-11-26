@@ -267,7 +267,12 @@ export function checkAssociatedTypes(
             },
             padding: {getXDomainReserve: (series) => series.data[0]?.at ?? 0},
         },
-        zoom: {types: ['x'], filterData: ({series}) => ({data: series.data})},
+        zoom: {
+            types: ['x'],
+            filterData: ({series, seriesGroup = [series]}) => ({
+                data: seriesGroup.some((peer) => peer.legend.enabled) ? series.data : [],
+            }),
+        },
         layers: {
             ...sampleShapesPlugin.layers,
             prepareGradientGeometry: ({series}) =>

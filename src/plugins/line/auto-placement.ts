@@ -9,12 +9,15 @@ import {
     getTextSizeFn,
     isPointDataLabelEnabled,
 } from '~core/utils';
+import {evaluateCubicBezier} from '~core/utils/bezier';
 import type {SymbolBounds} from '~core/utils/symbol';
 import {getSymbolBounds} from '~core/utils/symbol';
 
 import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '../../types';
 
 import {hasNormalMarker} from './normal-marker';
+import {getLinePathPointFilter} from './path';
+import type {LinePathPoint} from './path';
 import type {PreparedLineSeries} from './prepared-series';
 import type {PointData} from './types';
 
@@ -89,17 +92,6 @@ export interface PlacementSegment {
     yMin: number;
 }
 
-interface LinePoint {
-    x: number | null;
-    y: number | null;
-    hiddenInLine?: boolean;
-}
-
-/** Mirrors the d3 line `defined()` predicate from the line renderer */
-export function isDrawnPoint<T extends LinePoint>(p: T): p is T & {x: number; y: number} {
-    return p.x !== null && p.y !== null && !p.hiddenInLine;
-}
-
 function makeSegment(
     x1: number,
     y1: number,
@@ -135,9 +127,9 @@ class SegmentCollector {
     private x = 0;
     private y = 0;
     private pointIndex = -1;
-    private readonly points?: readonly LinePoint[];
+    private readonly points?: readonly LinePathPoint[];
 
-    constructor(halfWidth: number, points?: readonly LinePoint[]) {
+    constructor(halfWidth: number, points?: readonly LinePathPoint[]) {
         this.halfWidth = halfWidth;
         this.points = points;
     }
@@ -174,12 +166,10 @@ class SegmentCollector {
         const {x: x0, y: y0} = this;
         for (let i = 1; i <= CURVE_STEPS; i++) {
             const t = i / CURVE_STEPS;
-            const mt = 1 - t;
-            const a = mt * mt * mt;
-            const b = 3 * mt * mt * t;
-            const c = 3 * mt * t * t;
-            const d = t * t * t;
-            this.append(a * x0 + b * cp1x + c * cp2x + d * x, a * y0 + b * cp1y + c * cp2y + d * y);
+            this.append(
+                evaluateCubicBezier(x0, cp1x, cp2x, x, t),
+                evaluateCubicBezier(y0, cp1y, cp2y, y, t),
+            );
         }
         this.setPointIndices(start, x, y);
     }
@@ -233,7 +223,8 @@ export function getLineSegments(
     data: Array<{
         curveFactory?: CurveFactory;
         lineWidth: number;
-        points: LinePoint[];
+        /** Projected points in one series' observation order. */
+        points: LinePathPoint[];
         /** Track endpoints for curves interpolating the input points (linear, cardinal, monotone). */
         trackPointIndices?: boolean;
     }>,
@@ -241,13 +232,14 @@ export function getLineSegments(
     const segments: PlacementSegment[] = [];
     for (const d of data) {
         const halfWidth = d.lineWidth / 2;
+        const isPathPoint = getLinePathPointFilter(d.points[0]?.series);
         if (d.curveFactory || !d.trackPointIndices) {
             const collector = new SegmentCollector(
                 halfWidth,
                 d.trackPointIndices ? d.points : undefined,
             );
-            lineGenerator<LinePoint>()
-                .defined(isDrawnPoint)
+            lineGenerator<LinePathPoint>()
+                .defined(isPathPoint)
                 .x((p) => p.x as number)
                 .y((p) => p.y as number)
                 .curve(d.curveFactory ?? curveLinear)
@@ -261,7 +253,7 @@ export function getLineSegments(
         for (let i = 1; i < d.points.length; i++) {
             const p1 = d.points[i - 1];
             const p2 = d.points[i];
-            if (isDrawnPoint(p1) && isDrawnPoint(p2)) {
+            if (isPathPoint(p1) && isPathPoint(p2)) {
                 const segment = makeSegment(p1.x, p1.y, p2.x, p2.y, halfWidth);
                 if (d.trackPointIndices) segment.pointIndices = [i - 1, i];
                 segments.push(segment);

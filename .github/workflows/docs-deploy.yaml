@@ -1,9 +1,7 @@
 name: Documentation Deploy
 
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
 
 permissions:
   contents: read
@@ -13,24 +11,28 @@ permissions:
 concurrency:
   group: pages
   cancel-in-progress: false
+  queue: max
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    outputs:
+      deploy-version: ${{ steps.npm.outputs.deploy-version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: npm
-      - name: Install tsconfig
-        run: npm i @gravity-ui/tsconfig
       - name: Install dependencies
+        run: npm ci
+      - name: Install docs dependencies
         run: npm run docs:deps
         shell: bash
       - name: Setup Pages
@@ -43,15 +45,36 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist-docs
+      - name: Check npm latest
+        id: npm
+        run: |
+          package_version=$(node -p 'require("./package.json").version')
+          latest=$(npm view @gravity-ui/charts@latest version --registry=https://registry.npmjs.org --prefer-online)
+          if [ "$package_version" = "$latest" ]; then
+            echo "deploy-version=$package_version" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skipping docs for $package_version. npm latest is $latest."
+          fi
 
   deploy:
     name: Deploy
     needs: build
+    if: needs.build.outputs.deploy-version != ''
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # A deploy-only rerun reuses the version check from the original build.
+      - name: Verify npm latest before publishing
+        env:
+          DEPLOY_VERSION: ${{ needs.build.outputs.deploy-version }}
+        run: |
+          latest=$(npm view @gravity-ui/charts@latest version --registry=https://registry.npmjs.org --prefer-online)
+          if [ "$DEPLOY_VERSION" != "$latest" ]; then
+            echo "::error::Cannot publish docs for $DEPLOY_VERSION. npm latest is $latest."
+            exit 1
+          fi
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

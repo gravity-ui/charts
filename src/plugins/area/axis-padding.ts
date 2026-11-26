@@ -4,6 +4,7 @@ import {collectMarkerPadding} from '../marker-axis-padding';
 
 import {projectAreaData} from './prepare-data';
 import type {PreparedAreaSeries} from './prepared-series';
+import {createAreaCategoryXProjector} from './projection';
 
 export function getAreaAxisPadding(
     args: PrepareAxisPaddingArgs<PreparedAreaSeries>,
@@ -12,6 +13,7 @@ export function getAreaAxisPadding(
         ...args,
         series: args.series,
         isOutsideBounds: () => false,
+        projectX: createAreaCategoryXProjector(args),
     });
     return collectMarkerPadding(args, projected);
 }

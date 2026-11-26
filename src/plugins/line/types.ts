@@ -6,8 +6,8 @@ import type {TooltipDataChunkLine} from '~core/types';
 import type {
     LabelData,
     LineSeriesData,
-    LineSeriesInterpolation,
     LineSeriesLineBaseStyle,
+    SeriesInterpolation,
 } from '../../types';
 
 import type {PlacementSegment} from './auto-placement';
@@ -30,6 +30,11 @@ export interface PreparedLineData
     annotations: AnnotationAnchor[];
     id: string;
     points: PointData[];
+    /**
+     * Top and bottom edges of the series' plot, in pixels from the top of the chart's plotting area.
+     * In a split chart, this keeps a smooth curve with offscreen anchors out of adjacent plots.
+     */
+    clipYRange?: readonly [top: number, bottom: number];
     markers: MarkerItem[];
     /**
      * Straight pieces of the drawn line (curves flattened), built on first use and cached.
@@ -44,7 +49,7 @@ export interface PreparedLineData
     dashStyle: DashStyle;
     linecap: LineCap;
     linejoin: LineJoin;
-    interpolation?: LineSeriesInterpolation;
+    interpolation?: SeriesInterpolation;
 }
 
 export interface LineTooltipChunk extends Omit<TooltipDataChunkLine, 'series'> {

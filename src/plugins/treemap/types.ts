@@ -17,6 +17,8 @@ export type TreemapLabelData = {
 export type PreparedTreemapData = {
     labelData: TreemapLabelData[];
     leaves: HierarchyRectangularNode<TreemapSeriesData<any>>[];
+    /** Resolved fill of each leaf: point color, then level color, then series color. */
+    colors: Map<HierarchyRectangularNode<TreemapSeriesData>, string>;
     series: PreparedTreemapSeries;
 } & Pick<ShapeLabels, 'htmlLabels'>;
 

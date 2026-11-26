@@ -1,21 +1,29 @@
-import type {ShapeLabels} from '~core/shapes/types';
 import type {TooltipDataChunkWaterfall} from '~core/types';
 
-import type {LabelData, WaterfallSeriesData} from '../../types';
+import type {LabelData} from '../../types';
 
-import type {PreparedWaterfallSeries} from './prepared-series';
+import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from './prepared-series';
 
-export type PreparedWaterfallData = {
+export interface WaterfallInterval {
+    start: number;
+    end: number;
+    previousIndex: number | undefined;
+}
+
+export interface PreparedWaterfallData {
     x: number;
     y: number;
     width: number;
     height: number;
+    /** Running balance in plot coordinates, before clipping the column. */
+    endY: number;
+    previousIndex: number | undefined;
     opacity: number | null;
     series: PreparedWaterfallSeries;
-    data: WaterfallSeriesData;
+    data: PreparedWaterfallSeriesData;
     label?: LabelData;
     subTotal: number;
-} & Pick<ShapeLabels, 'htmlLabels'>;
+}
 
 export interface WaterfallTooltipChunk extends Omit<TooltipDataChunkWaterfall, 'series'> {
     series: PreparedWaterfallSeries;

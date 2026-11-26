@@ -117,6 +117,7 @@ export function prepareAreaSeries(args: PrepareSeriesArgs<AreaSeries, ChartSerie
             },
             rangeSlider: Object.assign({}, seriesRangeSliderOptionsDefaults, series.rangeSlider),
             nullMode: series.nullMode,
+            interpolation: series.interpolation,
             gradient,
             fillColor,
             fillGradient,

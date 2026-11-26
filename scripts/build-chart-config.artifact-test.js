@@ -41,7 +41,7 @@ describe('chart config artifacts', () => {
         expect(Buffer.byteLength(declaration)).toBeLessThan(150_000);
     });
 
-    test('step interpolation is available only on line series', () => {
+    test('line and area share interpolation while area-range stays unchanged', () => {
         expect(() =>
             validateDeclaration(
                 path.resolve(__dirname, 'line-step-usage.ts'),
@@ -55,16 +55,23 @@ describe('chart config artifacts', () => {
                 series.interpolation = {type: 'step', position: 'start'};
                 // @ts-expect-error Step position belongs to step interpolation.
                 series.interpolation = {type: 'linear', position: 'after'};
-                // @ts-expect-error Area interpolation is not supported.
                 const area: AreaSeries = {type: 'area', name: 'Price', data: [], interpolation: {type: 'step'}};
-                void [series, area];
+                const shared: SeriesInterpolation = {type: 'cardinal', tension: 0.5};
+                series.interpolation = shared;
+                area.interpolation = shared;
+                // @ts-expect-error Area-range interpolation is outside the supported contract.
+                const range: AreaRangeSeries = {type: 'area-range', name: 'Range', data: [], interpolation: shared};
+                void [series, area, range];
             `,
             ),
         ).not.toThrow();
 
-        const step = schema.definitions.LineSeriesInterpolation.anyOf.find(
+        const step = schema.definitions.SeriesInterpolation.anyOf.find(
             (option) => option.properties.type.const === 'step',
         );
+        expect(schema.definitions.LineSeriesInterpolation).toEqual({
+            $ref: '#/definitions/SeriesInterpolation',
+        });
         expect(step.properties.position).toMatchObject({
             enum: ['middle', 'before', 'after'],
             default: 'after',
@@ -76,21 +83,32 @@ describe('chart config artifacts', () => {
         });
 
         const validate = createSchemaValidator().compile(schema);
-        for (const position of [undefined, 'middle', 'before', 'after', 'start', null, 0, {}]) {
+        for (const type of ['line', 'area']) {
             expect(
-                validate({
-                    series: {
-                        data: [
-                            {
-                                type: 'line',
-                                name: 'Price',
-                                data: [],
-                                interpolation: {type: 'step', position},
-                            },
-                        ],
-                    },
-                }),
-            ).toBe(position === undefined || ['middle', 'before', 'after'].includes(position));
+                schema.definitions[`${type === 'line' ? 'Line' : 'Area'}Series<JsonValue>`]
+                    .properties.interpolation.$ref,
+            ).toBe('#/definitions/SeriesInterpolation');
+            for (const interpolation of [
+                undefined,
+                {type: 'linear'},
+                {type: 'monotone'},
+                {type: 'cardinal'},
+                {type: 'cardinal', tension: 0.5},
+                {type: 'step'},
+                {type: 'step', position: 'middle'},
+                {type: 'step', position: 'before'},
+                {type: 'step', position: 'after'},
+                {type: 'step', position: 'start'},
+                {type: 'cardinal', tension: -0.1},
+                {type: 'cardinal', tension: 1.1},
+            ]) {
+                expect(
+                    validate({series: {data: [{type, name: 'Price', data: [], interpolation}]}}),
+                ).toBe(
+                    interpolation?.position !== 'start' &&
+                        !(interpolation?.tension < 0 || interpolation?.tension > 1),
+                );
+            }
         }
     });
 
@@ -391,13 +409,14 @@ describe('chart config artifacts', () => {
                     `
                 const horizontal: BarYSeries = {type: 'bar-y', name: 'Orders', data: [], dataLabels: {placement: ['outside', 'inside-end', 'inside-center'], placementFallback: 'hide'}};
                 const vertical: BarXSeries = {type: 'bar-x', name: 'Orders', data: [], dataLabels: {placement: 'auto'}};
+                const waterfall: WaterfallSeries = {type: 'waterfall', name: 'Balance', data: [], dataLabels: {placement: 'auto', placementFallback: 'hide'}};
                 // @ts-expect-error Center must explicitly refer to inside placement.
                 horizontal.dataLabels!.placement = ['center'];
                 // @ts-expect-error Candidates must be an array.
                 vertical.dataLabels!.placement = 'outside';
                 // @ts-expect-error This feature is not a base label option.
                 const base: BaseDataLabels = {placement: 'auto'};
-                void [horizontal, vertical, base];
+                void [horizontal, vertical, waterfall, base];
             `,
             ),
         ).not.toThrow();
@@ -407,7 +426,7 @@ describe('chart config artifacts', () => {
             'inside-center',
         ]);
         const validate = createSchemaValidator().compile(schema);
-        for (const type of ['bar-x', 'bar-y']) {
+        for (const type of ['bar-x', 'bar-y', 'waterfall']) {
             for (const [dataLabels, valid] of [
                 [{}, true],
                 [{placement: 'auto', placementFallback: 'hide'}, true],

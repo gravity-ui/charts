@@ -7,7 +7,7 @@ import type {PreparedAreaData} from '../../../plugins/area/types';
 import type {PreparedAreaRangeData} from '../../../plugins/area-range/types';
 import type {PreparedBarXData} from '../../../plugins/bar-x/types';
 import type {PreparedBarYData} from '../../../plugins/bar-y/types';
-import {getCurveFactory} from '../../../plugins/line/interpolation';
+import {getCurveFactory} from '../../../plugins/interpolation';
 import {prepareLineData} from '../../../plugins/line/prepare-data';
 import {prepareLineSeries} from '../../../plugins/line/prepare-line-series';
 import type {PreparedPieData} from '../../../plugins/pie/types';
