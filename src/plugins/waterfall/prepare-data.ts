@@ -3,6 +3,7 @@ import get from 'es-toolkit/compat/get';
 import sortBy from 'es-toolkit/compat/sortBy';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
+import {seriesOptionsDefaults} from '~core/constants';
 import type {ChartScale} from '~core/scales/types';
 import type {
     PreparedSeriesOptions,
@@ -122,7 +123,7 @@ export const prepareWaterfallData = async (args: {
     const canPlaceLabels = bounds.width > 0 && bounds.height > 0;
     const measureLabel = createLabelMeasurer();
     const reversedYAxis = rangeStart < rangeEnd;
-    const {barMaxWidth, barPadding} = seriesOptions.waterfall;
+    const {barMaxWidth, barPadding} = seriesOptions.waterfall ?? seriesOptionsDefaults.waterfall;
 
     const data = sortBy<DataItem>(
         series.flatMap((s) => s.data.map((d) => ({data: d, series: s}))),

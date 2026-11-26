@@ -86,6 +86,15 @@ test('a single column on an unzoomed linear X axis is centered and uses the defa
     expect(shapes).toEqual([expect.objectContaining({x: 125, width: 50})]);
 });
 
+test('a null waterfall options object uses the default column width', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall([{x: 5, y: 10}], {
+        // @ts-expect-error JSON input can contain null.
+        waterfall: null,
+    });
+
+    expect(shapes.map(({width}) => width)).toEqual([50]);
+});
+
 test.each([
     [{}, 50],
     [{barPadding: 0.9}, 40],
