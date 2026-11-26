@@ -97,15 +97,6 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
         );
     });
 
-    test('rejects an unknown stack label mode', () => {
-        const {data} = config();
-        Object.assign(data.series.options?.[type]?.stackLabels ?? {}, {mode: 'single'});
-
-        expect(() => validateData(data)).toThrow(
-            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
-        );
-    });
-
     test('rejects invalid aggregation on a disabled series', () => {
         const {series, data} = config();
         series[1].stackLabels = {enabled: false};
@@ -147,6 +138,35 @@ describe.each(['bar-x', 'bar-y', 'area'] as const)('%s stack label validation', 
         );
     });
 });
+
+test.each(['plugin defaults', 'series settings'])(
+    'rejects an unknown stack label mode in %s',
+    (location) => {
+        const stackLabels: StackLabelsOptions = {enabled: true};
+        Object.assign(stackLabels, {mode: 'single'});
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'bar-x',
+                        name: 'Sales',
+                        stacking: 'normal',
+                        data: [{x: 0, y: 10}],
+                        stackLabels: location === 'series settings' ? stackLabels : undefined,
+                    },
+                ],
+                options: location === 'plugin defaults' ? {'bar-x': {stackLabels}} : undefined,
+            },
+        };
+
+        expect(() => validateData(data)).toThrow(
+            expect.objectContaining({
+                code: CHART_ERROR_CODE.INVALID_DATA,
+                message: expect.stringContaining('stackLabels.mode'),
+            }),
+        );
+    },
+);
 
 test.each(['bar-x', 'area'] as const)(
     '%s allows different total styles on different value axes',

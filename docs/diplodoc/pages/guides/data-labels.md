@@ -74,17 +74,7 @@ series: {
 
 For `bar-x`, `bar-y` and `area`, set `stackLabels: {enabled: true}` on a series or in `series.options[type]`. Totals are disabled by default. Series settings override plugin options; `style` is merged property by property.
 
-Totals use points from **visible series with stack labels enabled** and update when you show or hide a series in the legend. The default aggregation uses raw values, including on percent stacks.
-
-Participants with the same type, `stackId` and value axis must have matching effective `mode`, `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
-
-**Stack totals take priority over segment labels of the same series type.** An overlapping segment label is hidden unless its `dataLabels.allowOverlap` is `true`. Overlap between stack totals is controlled by `stackLabels.allowOverlap` (default: `false`). See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
-
-<div data-chart-example="data-labels/stack-labels"></div>
-
-### Show a single total for positive and negative values
-
-To show net sales on a stacked column with `100` in sales and `-30` in refunds, set `mode` to `'allSigns'`. The default sum shows one label of `70`.
+By default (`'perSign'`), `100` in sales and `-30` in refunds produce two labels. Set `mode: 'allSigns'` to show one total of `70` for the stack at that category or X value.
 
 ```ts
 stackLabels: {
@@ -93,8 +83,13 @@ stackLabels: {
 }
 ```
 
-- `'perSign'` (default) calculates separate totals for positive and negative values. In the example, the labels are `100` and `-30`.
-- `'allSigns'` calculates one total per stack, value axis, and category or X value.
+Totals use points from **visible series with stack labels enabled** and update when you show or hide a series in the legend. The default aggregation uses raw values, including on percent stacks.
+
+Participants with the same type, `stackId` and value axis must have matching effective `mode`, `aggregation`, `style`, `format`, `padding` and `allowOverlap`; otherwise validation fails. Custom aggregations and formats must share the same callback function.
+
+**Stack totals take priority over segment labels of the same series type.** An overlapping segment label is hidden unless its `dataLabels.allowOverlap` is `true`. Overlap between stack totals is controlled by `stackLabels.allowOverlap` (default: `false`). See [Value Formatting](./value-formatting.md#stack-totals) for `format`.
+
+<div data-chart-example="data-labels/stack-labels"></div>
 
 The combined label uses the outer edge of the positive part of the stack when available. For stacks with only negative values, it uses the negative edge. See [Area gaps and isolated points](#area-gaps-and-isolated-points) for placement at gaps.
 
@@ -102,7 +97,7 @@ In `'perSign'` mode, a separate zero total is hidden when the same stack has neg
 
 ### Custom stack totals
 
-Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. The points passed to the callback depend on [`stackLabels.mode`](#show-a-single-total-for-positive-and-negative-values). The default aggregation is `'sum'`.
+Set `stackLabels.aggregation` to a callback receiving `{points}` to calculate totals from custom data. The points passed to the callback depend on [`stackLabels.mode`](#stack-total-labels). The default aggregation is `'sum'`.
 
 Here, stack height shows revenue while the total label sums `custom.orders`. Formatting and positioning stay unchanged.
 
@@ -116,4 +111,4 @@ Returning `0` from the callback does not by itself hide the label. For example, 
 
 Both the default sum and custom aggregation include real points on both sides of an area gap, including points isolated between two nulls. Synthetic points added during layout are excluded.
 
-In `'allSigns'` mode, a visible marker on an isolated positive point anchors the label when there is no positive area boundary. If both are absent, the label can use the negative edge. If neither an eligible marker nor an area boundary is available at that X, the total label is hidden.
+In `'allSigns'` mode, the label uses the positive area boundary or a visible positive marker. If both are absent, it uses the negative area boundary or a visible negative marker. Isolated points without a visible marker can contribute to the total even when they cannot anchor its label.

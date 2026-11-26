@@ -498,6 +498,53 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 });
 
 describe('area stack labels', () => {
+    test('shows a zero combined total at the only visible negative marker', async () => {
+        const values = [
+            [null, 30, null],
+            [null, -30, null],
+        ];
+        const {args, result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([, negative]) => {
+                if (negative.type === 'area') {
+                    negative.marker = {radius: 4};
+                    negative.data[1].marker = {states: {normal: {enabled: true}}};
+                }
+            },
+        );
+
+        expect(
+            getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args),
+        ).toMatchObject([{x: 200, y: 134, total: 0, direction: 'bottom'}]);
+    });
+
+    test('uses the visible negative edge for isolated positive points at the ends of a series', async () => {
+        const values = [
+            [30, null, null, 30],
+            [-10, -10, -10, -10],
+        ];
+        const {args, result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([positive]) => {
+                if (positive.type === 'area') positive.lineWidth = 0;
+            },
+        );
+        const anchors = getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args);
+
+        expect(anchors.filter(({x}) => x === 100 || x === 400)).toMatchObject([
+            {x: 100, y: 110, total: 20, direction: 'bottom'},
+            {x: 400, y: 110, total: 20, direction: 'bottom'},
+        ]);
+    });
+
     test('anchors a combined total outside a visible marker at an area gap', async () => {
         const values = [
             [null, 30, null],

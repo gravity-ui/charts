@@ -24,7 +24,7 @@ interface StackBoundary {
     plotIndex: number;
     prev?: Boundary;
     next?: Boundary;
-    positiveMarker?: Boundary;
+    marker?: Boundary;
     hasPositiveBoundary?: boolean;
 }
 
@@ -64,8 +64,8 @@ function getAllSignsAnchor(
     const negative = boundariesBySign.get(true);
     const positiveBoundary = positive?.hasPositiveBoundary
         ? getOuterBoundary(positive)
-        : positive?.positiveMarker;
-    const negativeBoundary = getOuterBoundary(negative);
+        : positive?.marker;
+    const negativeBoundary = getOuterBoundary(negative) ?? negative?.marker;
     const useNegative = !positiveBoundary && Boolean(negativeBoundary);
     const stack = useNegative ? negative : positive;
     const boundary = useNegative
@@ -94,35 +94,27 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
         const positiveExtendsUp = range
             ? range[0] > range[range.length - 1]
             : DEFAULT_POSITIVE_EXTENDS_UP;
-        const pickOuterPositiveY = positiveExtendsUp ? Math.min : Math.max;
         const plotIndex = args.yAxis?.[item.series.yAxis]?.plotIndex ?? 0;
-        const markerYByPoint =
+        const markersByPoint =
             options.mode === 'allSigns' && item.markers.length
-                ? new Map<unknown, number>()
+                ? group(
+                      item.markers.filter(
+                          ({clipped, radius, strokeWidth}) => !clipped && radius + strokeWidth > 0,
+                      ),
+                      (marker) => marker.data,
+                  )
                 : undefined;
-        if (markerYByPoint) {
-            const {radius, borderWidth, symbol} = item.series.marker.states.normal;
-            const bounds = getSymbolBounds({
-                radius: radius + borderWidth,
-                strokeWidth: borderWidth,
-                symbolType: symbol,
-            });
-            const plot = args.split?.plots[plotIndex];
-            const top = plot?.top ?? 0;
-            const bottom = top + (plot?.height ?? args.boundsHeight);
-            for (const marker of item.markers) {
-                if (marker.clipped || marker.radius + marker.strokeWidth <= 0) continue;
-
-                const edgeY = positiveExtendsUp
-                    ? Math.max(top, marker.cy - bounds.top)
-                    : Math.min(bottom, marker.cy + bounds.bottom);
-                const previousY = markerYByPoint.get(marker.data);
-                markerYByPoint.set(
-                    marker.data,
-                    previousY === undefined ? edgeY : pickOuterPositiveY(previousY, edgeY),
-                );
-            }
-        }
+        const {radius, borderWidth, symbol} = item.series.marker.states.normal;
+        const markerBounds = markersByPoint?.size
+            ? getSymbolBounds({
+                  radius: radius + borderWidth,
+                  strokeWidth: borderWidth,
+                  symbolType: symbol,
+              })
+            : undefined;
+        const plot = args.split?.plots[plotIndex];
+        const top = plot?.top ?? 0;
+        const bottom = top + (plot?.height ?? args.boundsHeight);
         const rawPoints = new Set(item.series.data);
         // A step may have two points at the same X, one for each adjoining section.
         const pointsByX = Array.from(group(item.points, (point) => point.x).values());
@@ -161,27 +153,33 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
             const contributingPoints = allSignsPoints ?? stack.points;
             contributingPoints.push(point.data);
 
-            const markerY = value > 0 ? markerYByPoint?.get(point.data) : undefined;
-            if (markerY !== undefined) {
-                const previousY = stack.positiveMarker?.y;
-                stack.positiveMarker = {
-                    y: previousY === undefined ? markerY : pickOuterPositiveY(previousY, markerY),
-                };
+            const pickOuterY = stack.extendsUp ? Math.min : Math.max;
+            const markers = value === 0 ? undefined : markersByPoint?.get(point.data);
+            if (markers && markerBounds) {
+                for (const marker of markers) {
+                    const edgeY = stack.extendsUp
+                        ? Math.max(top, marker.cy - markerBounds.top)
+                        : Math.min(bottom, marker.cy + markerBounds.bottom);
+                    stack.marker = {y: pickOuterY(stack.marker?.y ?? edgeY, edgeY)};
+                }
             }
 
             for (const side of ['prev', 'next'] as const) {
-                const neighbor = pointsByX[index + (side === 'prev' ? -1 : 1)]?.[0];
+                const neighborPoints = pointsByX[index + (side === 'prev' ? -1 : 1)];
+                const neighbor = neighborPoints?.[side === 'prev' ? neighborPoints.length - 1 : 0];
+                if (allSignsPoints && (!neighbor || neighbor.y === null || neighbor.hiddenInLine)) {
+                    continue;
+                }
                 // Explicit nulls open a gap; synthetic missing points are zero-height sections.
                 if (neighbor?.data.y === null && item.series.nullMode !== 'zero') continue;
                 const boundaryPoint = side === 'prev' ? point : points[points.length - 1];
-                if (boundaryPoint.y === null) continue;
+                if (boundaryPoint.y === null || (allSignsPoints && boundaryPoint.hiddenInLine)) {
+                    continue;
+                }
                 if (allSignsPoints && value > 0) stack.hasPositiveBoundary = true;
                 const boundary = stack[side];
                 if (boundary) {
-                    boundary.y = (stack.extendsUp ? Math.min : Math.max)(
-                        boundary.y,
-                        boundaryPoint.y,
-                    );
+                    boundary.y = pickOuterY(boundary.y, boundaryPoint.y);
                 } else {
                     stack[side] = {y: boundaryPoint.y};
                 }
