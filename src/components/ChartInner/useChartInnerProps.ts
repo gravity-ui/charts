@@ -11,7 +11,7 @@ import {collectYAxisDomainValues} from '~core/series/axis-domain';
 import {finalizePreparedLegend, getPreparedLegend} from '~core/series/prepare-legend';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import {getActiveLegendItems, getAllLegendItems} from '~core/series/utils';
-import type {TooltipItemData} from '~core/shapes/types';
+import type {SeriesLookupItem} from '~core/shapes/types';
 import {createIsOutsideBounds} from '~core/shapes/utils';
 import {
     getEffectiveXRange,
@@ -118,7 +118,7 @@ type ChartState = {
     preparedSplit: PreparedSplit;
     rendering?: Promise<void>;
     shapes: React.ReactElement[];
-    shapesData: TooltipItemData[];
+    shapesData: SeriesLookupItem[];
     xAxis: PreparedXAxis | null;
     xScale: ChartScale | undefined;
     yAxis: PreparedYAxis[];

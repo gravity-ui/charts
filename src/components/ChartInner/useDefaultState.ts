@@ -1,10 +1,9 @@
 import React from 'react';
 
 import type {Dispatch} from 'd3-dispatch';
-import get from 'es-toolkit/compat/get';
 
 import type {ChartScale} from '~core/scales/types';
-import type {TooltipItemData} from '~core/shapes/types';
+import type {SeriesLookupItem} from '~core/shapes/types';
 import {EventType} from '~core/utils';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 import {getHoveredPlots} from '~core/utils/get-hovered-plots';
@@ -22,7 +21,7 @@ type Props = {
     defaultState?: {hoveredPosition?: {x: number | string; y: number | string}};
     dispatcher: Dispatch<object>;
     layerIndexes: Map<string, number>;
-    shapesData: TooltipItemData[];
+    shapesData: SeriesLookupItem[];
     shapesReady: boolean;
     svgRef: React.RefObject<SVGSVGElement | null>;
     xAxis: PreparedXAxis | null;
@@ -70,14 +69,10 @@ export function useDefaultState(props: Props) {
                 return;
             }
 
-            const shapesDataWithTooltipEnabled = shapesData.filter((d) =>
-                get(d, 'series.tooltip.enabled', true),
-            );
-
             const closest = getClosestPoints({
                 position: [x, y],
                 layerIndexes,
-                shapesData: shapesDataWithTooltipEnabled,
+                shapesData,
                 boundsHeight,
                 boundsWidth,
             });

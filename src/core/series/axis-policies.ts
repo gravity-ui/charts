@@ -41,6 +41,12 @@ export function getSeriesAxis(series: {type: string}, direction: 'x' | 'y') {
     return axes === true ? scalarAxis : (axes[direction] ?? scalarAxis);
 }
 
+/** Measurement hooks are separate from per-axis padding defaults. */
+export function getSeriesAxisPadding(type: string) {
+    const axes = getSeriesPlugin(type).axes;
+    return typeof axes === 'object' ? axes.padding : undefined;
+}
+
 export function getAxisSeriesGroups(
     series: readonly UnknownSeries[],
     direction: 'x' | 'y',

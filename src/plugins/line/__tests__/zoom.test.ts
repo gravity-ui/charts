@@ -1,7 +1,7 @@
 import type {DomainViewport} from '~core/series/axis-contract';
-import {getLineSegments, segmentIntersectsRect} from '~core/shapes/line/auto-placement';
 
 import type {LineSeries} from '../../../types';
+import {getLineSegments, segmentIntersectsRect} from '../auto-placement';
 import * as interpolation from '../interpolation';
 import {filterLineData} from '../zoom';
 

@@ -34,8 +34,8 @@ export function ReflowFailure({mode}: {mode: 'awaited' | 'ignored' | 'no-reflow'
 
     React.useEffect(() => {
         const plugin = getSeriesPlugin('line');
-        const original = plugin.prepareShapeData;
-        plugin.prepareShapeData = async (args) => {
+        const original = plugin.layers.prepareData;
+        plugin.layers.prepareData = async (args) => {
             await Promise.resolve();
             if (fail.current) throw failure;
             return original(args);
@@ -45,7 +45,7 @@ export function ReflowFailure({mode}: {mode: 'awaited' | 'ignored' | 'no-reflow'
         };
         window.addEventListener('unhandledrejection', onUnhandled);
         return () => {
-            plugin.prepareShapeData = original;
+            plugin.layers.prepareData = original;
             window.removeEventListener('unhandledrejection', onUnhandled);
         };
     }, [failure]);

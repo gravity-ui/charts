@@ -4,25 +4,27 @@ import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
-import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
+import type {PrepareLayerArgs} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
-import type {PreparedLegend} from '~core/series/types';
-import type {PreparedAreaData} from '~core/shapes/area/types';
-import type {PreparedBarXData} from '~core/shapes/bar-x/types';
-import type {BarYShapesArgs, PreparedBarYData} from '~core/shapes/bar-y/types';
+import {getSeriesPlugin} from '~core/series/seriesRegistry';
+import type {RegisteredSeriesPlugin} from '~core/series/seriesRegistry';
+import type {PreparedLegend, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import type {SvgLabel} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
 
 import type {ChartSeries, StackLabelsAggregationArgs, StackLabelsOptions} from '../../types';
-import {areaPlugin} from '../area';
 import {getAreaStackLabelAnchors} from '../area/stack-labels';
-import {barXPlugin} from '../bar-x';
+import type {PreparedAreaData} from '../area/types';
 import {getBarXStackLabelAnchors} from '../bar-x/stack-labels';
-import {barYPlugin} from '../bar-y';
+import type {PreparedBarXData} from '../bar-x/types';
 import {getBarYStackLabelAnchors} from '../bar-y/stack-labels';
-import {prepareStackLabels} from '../stack-labels';
+import type {BarYShapesArgs, PreparedBarYData} from '../bar-y/types';
 import type {StackLabelAnchor} from '../stack-labels';
+import {prepareStackLabels} from '../stack-labels';
 
+const areaPlugin = getSeriesPlugin('area');
+const barXPlugin = getSeriesPlugin('bar-x');
+const barYPlugin = getSeriesPlugin('bar-y');
 const plugins = [barXPlugin, barYPlugin, areaPlugin];
 
 beforeEach(() => {
@@ -36,7 +38,7 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 async function prepare(
-    plugin: SeriesPlugin,
+    plugin: RegisteredSeriesPlugin,
     values: (number | null)[][],
     stacking: 'normal' | 'percent' = 'normal',
     options: StackLabelsOptions = {enabled: true},
@@ -62,7 +64,7 @@ async function prepare(
     raw.forEach((series, index) => Object.assign(series, {stackLabels: perSeriesOptions[index]}));
     configure?.(raw);
     const original = JSON.stringify(raw);
-    const series = await plugin.prepareSeries({
+    const series = await plugin.series.prepare({
         series: raw,
         colorScale: scaleOrdinal([] as string[], ['#000']),
         colors: [],
@@ -75,7 +77,7 @@ async function prepare(
         .domain([0, 4])
         .range(horizontal ? [200, 0] : [0, 400]);
     if (stacking === 'percent') valueScale.domain([0, 100]);
-    const args: PrepareShapeDataArgs = {
+    const args: PrepareLayerArgs<PreparedSeries, PreparedSeriesOptions> = {
         series,
         seriesOptions: getPreparedOptions({[plugin.type]: {stackLabels: options}}),
         xAxis: {type: 'linear'} as PreparedXAxis,
@@ -86,20 +88,20 @@ async function prepare(
         boundsWidth: 400,
         split: {plots: [{top: 0, height: 200}]} as PreparedSplit,
     };
-    const result = await plugin.prepareShapeData(args);
+    const result = await plugin.layers.prepareData(args);
     expect(JSON.stringify(raw)).toBe(original);
     return {args, result, raw};
 }
 
-function texts(labels: SvgLabel[] = []) {
-    return labels.map((label) => label.text).sort();
+function texts(svgLabels: SvgLabel[] = []) {
+    return svgLabels.map((label) => label.text).sort();
 }
 
 describe('bar-x stack label anchors', () => {
     test('follows both value ends on a reversed axis', async () => {
         const {args} = await prepare(barXPlugin, [[20], [-10], [5], [-3]]);
         args.yScale = [scaleLinear().domain([-100, 100]).range([0, 200])];
-        const {renderData} = await barXPlugin.prepareShapeData(args);
+        const {renderData} = await barXPlugin.layers.prepareData(args);
         const anchors = getBarXStackLabelAnchors(renderData as PreparedBarXData[], args);
         expect(anchors).toMatchObject([
             {direction: 'bottom', y: 125, total: 25},
@@ -117,7 +119,7 @@ describe('bar-x stack label anchors', () => {
                     .domain([0, 100])
                     .range(reversed ? [0, 100] : [100, 0]),
             ];
-            const {renderData} = await barXPlugin.prepareShapeData(args);
+            const {renderData} = await barXPlugin.layers.prepareData(args);
             const anchors = getBarXStackLabelAnchors(renderData as PreparedBarXData[], args);
             expect(anchors).toMatchObject([
                 {direction: reversed ? 'bottom' : 'top', y: reversed ? 130 : 30, total: 4},
@@ -150,7 +152,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             args.seriesOptions = getPreparedOptions({
                 [plugin.type]: {stackLabels: {enabled: true}},
             });
-            const summed = await plugin.prepareShapeData(args);
+            const summed = await plugin.layers.prepareData(args);
             const geometry = (data: typeof result.renderData) => {
                 if (plugin.type === 'area') {
                     return (data as PreparedAreaData[]).map((item) =>
@@ -166,17 +168,17 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 
             const points = aggregation.mock.calls[0][0].points;
 
-            expect(texts(result.labels)).toEqual(['20 orders']);
+            expect(texts(result.svgLabels)).toEqual(['20 orders']);
             expect(aggregation).toHaveBeenCalledTimes(1);
             expect(points).toHaveLength(2);
             raw.forEach((series) => expect(points).toContain(series.data[0]));
             expect(geometry(result.renderData)).toEqual(geometry(summed.renderData));
-            expect(result.labels?.map(({y}) => y)).toEqual(summed.labels?.map(({y}) => y));
+            expect(result.svgLabels?.map(({y}) => y)).toEqual(summed.svgLabels?.map(({y}) => y));
             if (plugin.type === 'bar-y') {
                 const bars = (result.renderData as BarYShapesArgs[]).flatMap((item) => item.shapes);
                 const boundaryX = Math.max(...bars.map((bar) => bar.x + bar.width));
 
-                for (const label of [...(result.labels ?? []), ...(summed.labels ?? [])]) {
+                for (const label of [...(result.svgLabels ?? []), ...(summed.svgLabels ?? [])]) {
                     if (stacking === 'percent') {
                         expect(label.x + label.size.width).toBeCloseTo(args.boundsWidth);
                     } else {
@@ -207,7 +209,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             },
         );
 
-        expect(texts(result.labels)).toEqual(['0', '7', '7']);
+        expect(texts(result.svgLabels)).toEqual(['0', '7', '7']);
         expect(aggregation).toHaveBeenCalledTimes(3);
         for (const [{points}] of aggregation.mock.calls) {
             const signs = new Set(
@@ -230,9 +232,9 @@ describe.each(plugins)('$type stack labels', (plugin) => {
         // Shape preparation receives visible series from the chart's series pipeline.
         args.series = args.series.filter((series) => series.name !== '1');
 
-        const result = await plugin.prepareShapeData(args);
+        const result = await plugin.layers.prepareData(args);
 
-        expect(texts(result.labels)).toEqual(['1']);
+        expect(texts(result.svgLabels)).toEqual(['1']);
         expect(aggregation).toHaveBeenCalledTimes(1);
         expect(aggregation.mock.calls[0][0].points).toEqual([raw[2].data[0]]);
         expect(aggregation.mock.calls[0][0].points[0]).toBe(raw[2].data[0]);
@@ -263,7 +265,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             {aggregation: 'sum'},
         ]);
 
-        expect(texts(result.labels)).toEqual(['10']);
+        expect(texts(result.svgLabels)).toEqual(['10']);
         expect(aggregation).not.toHaveBeenCalled();
     });
 
@@ -274,7 +276,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 
             const {result} = await prepare(plugin, [[10]], 'normal', options);
 
-            expect(result.labels).toEqual([]);
+            expect(result.svgLabels).toEqual([]);
         },
     );
 
@@ -287,7 +289,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
                 format: {type: 'custom', formatter},
             });
             expect(formatter).toHaveBeenCalledWith({value: 0.3});
-            expect(texts(result.labels)).toEqual(['0.3']);
+            expect(texts(result.svgLabels)).toEqual(['0.3']);
         },
     );
 
@@ -302,7 +304,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
                 ],
                 stacking,
             );
-            expect(texts(result.labels)).toEqual(['30', '50', '70']);
+            expect(texts(result.svgLabels)).toEqual(['30', '50', '70']);
         },
     );
 
@@ -313,7 +315,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             [-15, 0, null],
             [-25, 0, null],
         ]);
-        expect(texts(result.labels)).toEqual(['-40', '0', '30']);
+        expect(texts(result.svgLabels)).toEqual(['-40', '0', '30']);
     });
 
     test('does not show a zero total alongside a negative stack', async () => {
@@ -326,7 +328,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             'normal',
             {enabled: true, allowOverlap: true},
         );
-        expect(texts(result.labels)).toEqual(['-10', '-25']);
+        expect(texts(result.svgLabels)).toEqual(['-10', '-25']);
     });
 
     test('keeps zero totals in a separate stack', async () => {
@@ -335,17 +337,19 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             allowOverlap: true,
         });
         Object.assign(args.series[1], {stackId: 'zero'});
-        expect(texts((await plugin.prepareShapeData(args)).labels)).toEqual(['-10', '0']);
+        expect(texts((await plugin.layers.prepareData(args)).svgLabels)).toEqual(['-10', '0']);
     });
 
     test('disabled by default, for unstacked series and in range slider', async () => {
         const {args, result} = await prepare(plugin, [[10], [20]], 'normal', {});
-        expect(result.labels).toEqual([]);
+        expect(result.svgLabels).toEqual([]);
         const unstacked = await prepare(plugin, [[10]]);
         Object.assign(unstacked.args.series[0], {stacking: undefined});
-        expect((await plugin.prepareShapeData(unstacked.args)).labels).toEqual([]);
+        expect((await plugin.layers.prepareData(unstacked.args)).svgLabels).toEqual([]);
         args.seriesOptions = getPreparedOptions({[plugin.type]: {stackLabels: {enabled: true}}});
-        expect((await plugin.prepareShapeData({...args, isRangeSlider: true})).labels).toEqual([]);
+        expect((await plugin.layers.prepareData({...args, isRangeSlider: true})).svgLabels).toEqual(
+            [],
+        );
     });
 
     test('calculates each stack independently', async () => {
@@ -356,12 +360,12 @@ describe.each(plugins)('$type stack labels', (plugin) => {
         args.seriesOptions = getPreparedOptions({
             [plugin.type]: {stackLabels: {enabled: true, allowOverlap: true}},
         });
-        expect(texts((await plugin.prepareShapeData(args)).labels)).toEqual(['10', '20']);
+        expect(texts((await plugin.layers.prepareData(args)).svgLabels)).toEqual(['10', '20']);
     });
 
     test('keeps totals outside the visible value range hidden', async () => {
         const {result} = await prepare(plugin, [[60], [70]]);
-        expect(result.labels).toEqual([]);
+        expect(result.svgLabels).toEqual([]);
     });
 
     test.each(['normal', 'percent'] as const)(
@@ -379,13 +383,13 @@ describe.each(plugins)('$type stack labels', (plugin) => {
                 {},
                 plugin.type === 'area' ? [{enabled: true}] : [undefined, {enabled: true}],
             );
-            expect(texts(selected.labels)).toEqual(
+            expect(texts(selected.svgLabels)).toEqual(
                 plugin.type === 'area' ? ['10', '20'] : ['20', '30'],
             );
             // The selected outer series keeps its cumulative position, including the
             // disabled inner series. Only the displayed sum changes.
-            expect(selected.labels?.map(({x, y}) => ({x, y}))).toEqual(
-                all.labels?.map(({x, y}) => ({x, y})),
+            expect(selected.svgLabels?.map(({x, y}) => ({x, y}))).toEqual(
+                all.svgLabels?.map(({x, y}) => ({x, y})),
             );
         },
     );
@@ -401,12 +405,12 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             {enabled: true},
             [{enabled: false}],
         );
-        expect(texts(result.labels)).toEqual(['-20', '0', '20']);
+        expect(texts(result.svgLabels)).toEqual(['-20', '0', '20']);
         const {result: disabled} = await prepare(plugin, [[10], [20]], 'normal', {enabled: true}, [
             {enabled: false},
             {enabled: false},
         ]);
-        expect(disabled.labels).toEqual([]);
+        expect(disabled.svgLabels).toEqual([]);
     });
 
     test('inherits styles and format while honoring per-series overrides', async () => {
@@ -420,8 +424,8 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             },
             [{enabled: true, style: {fontColor: 'blue'}}],
         );
-        expect(texts(result.labels)).toEqual(['10 units']);
-        expect(result.labels?.[0].style).toMatchObject({fontSize: '18px', fontColor: 'blue'});
+        expect(texts(result.svgLabels)).toEqual(['10 units']);
+        expect(result.svgLabels?.[0].style).toMatchObject({fontSize: '18px', fontColor: 'blue'});
     });
 
     test('positions subtotals at the outer participating series', async () => {
@@ -433,7 +437,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             plugin.type === 'area' ? [undefined, {enabled: true}] : [{enabled: true}],
         );
         const {result: inner} = await prepare(plugin, [[plugin.type === 'area' ? 20 : 10]]);
-        expect(selected.labels).toEqual(inner.labels);
+        expect(selected.svgLabels).toEqual(inner.svgLabels);
     });
 
     test('renders separate stacks with their own styles and formats', async () => {
@@ -447,8 +451,8 @@ describe.each(plugins)('$type stack labels', (plugin) => {
             },
         ]);
         Object.assign(args.series[1], {stackId: 'other'});
-        const result = await plugin.prepareShapeData(args);
-        expect(result.labels).toEqual(
+        const result = await plugin.layers.prepareData(args);
+        expect(result.svgLabels).toEqual(
             expect.arrayContaining([
                 expect.objectContaining({
                     text: '10',
@@ -460,7 +464,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
                 }),
             ]),
         );
-        expect(result.labels).toHaveLength(2);
+        expect(result.svgLabels).toHaveLength(2);
     });
 });
 
@@ -472,7 +476,7 @@ describe('area stack labels', () => {
             .range(reversed ? [0, 200] : [200, 0]);
         args.yScale = [yScale];
 
-        const {renderData} = await areaPlugin.prepareShapeData(args);
+        const {renderData} = await areaPlugin.layers.prepareData(args);
         const anchors = getAreaStackLabelAnchors(renderData as PreparedAreaData[], args);
 
         expect(anchors).toHaveLength(2);
@@ -503,7 +507,7 @@ describe('area stack labels', () => {
                 .range(reversed ? [0, 200] : [200, 0]);
             args.yScale = [yScale];
 
-            const {renderData} = await areaPlugin.prepareShapeData(args);
+            const {renderData} = await areaPlugin.layers.prepareData(args);
             const anchors = getAreaStackLabelAnchors(renderData as PreparedAreaData[], args);
             const extendsUp = reversed ? sign < 0 : sign > 0;
 
@@ -527,7 +531,7 @@ describe('area stack labels', () => {
                     .range(reversed ? [0, 200] : [200, 0]),
             ];
 
-            const {renderData} = await areaPlugin.prepareShapeData(args);
+            const {renderData} = await areaPlugin.layers.prepareData(args);
             const anchors = getAreaStackLabelAnchors(renderData as PreparedAreaData[], args);
 
             expect(anchors).toMatchObject([
@@ -584,7 +588,7 @@ describe('area stack labels', () => {
                 expect(
                     getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args),
                 ).toEqual([]);
-                expect(result.labels).toEqual([]);
+                expect(result.svgLabels).toEqual([]);
             }
 
             expect(aggregation).not.toHaveBeenCalled();
@@ -722,7 +726,7 @@ describe.each([barXPlugin, barYPlugin])('$type stack overlays', (plugin) => {
                 .range(increases ? [0, 400] : [400, 0]);
             if (horizontal) args.xScale = valueScale;
             else args.yScale = [valueScale];
-            const {renderData} = await plugin.prepareShapeData(args);
+            const {renderData} = await plugin.layers.prepareData(args);
             const shapes = horizontal
                 ? (renderData[0] as BarYShapesArgs).shapes
                 : (renderData as PreparedBarXData[]);
@@ -774,7 +778,7 @@ test('hides overlapping totals unless allowOverlap is enabled', async () => {
 
 test('passes the raw total to a custom formatter', async () => {
     const formatter = jest.fn(({value}) => `Total ${value}`);
-    const labels = await prepareStackLabels({
+    const svgLabels = await prepareStackLabels({
         anchors: [
             {
                 x: 50,
@@ -788,7 +792,7 @@ test('passes the raw total to a custom formatter', async () => {
         boundsWidth: 100,
         boundsHeight: 100,
     });
-    expect(texts(labels)).toEqual(['Total 30']);
+    expect(texts(svgLabels)).toEqual(['Total 30']);
     expect(formatter).toHaveBeenCalledWith({value: 30});
 });
 

@@ -7,6 +7,7 @@ import {getNormalizedXAxis} from '../../../components/ChartInner/utils/normalize
 import {createScales} from '../../../hooks/useAxisScales';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import type {PreparedSplit} from '../../layout/split-types';
+import {getSeriesAxisPadding} from '../../series/axis-policies';
 import {getPreparedOptions} from '../../series/prepare-options';
 import {getSeriesPlugin} from '../../series/seriesRegistry';
 import type {PreparedLegend, PreparedSeries} from '../../series/types';
@@ -28,7 +29,7 @@ async function prepare(raw: ChartSeries[] = [line], options?: ChartSeriesOptions
     const series: PreparedSeries[] = [];
     for (const type of new Set(raw.map((s) => s.type))) {
         series.push(
-            ...(await getSeriesPlugin(type).prepareSeries({
+            ...(await getSeriesPlugin(type).series.prepare({
                 series: raw.filter((s) => s.type === type),
                 seriesOptions: options,
                 colors: [],
@@ -381,7 +382,7 @@ describe('axis padding', () => {
             },
         ]);
         args.yAxis[0].padding = allAuto;
-        const measurement = jest.spyOn(getSeriesPlugin('area'), 'getAxisPadding');
+        const measurement = jest.spyOn(getSeriesAxisPadding('area')!, 'getPaintExtents');
         try {
             applyAxisPadding(args);
             expect(measurement).not.toHaveBeenCalled();

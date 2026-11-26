@@ -1,7 +1,7 @@
 import type React from 'react';
 
 import type {ChartTooltipContent} from '../../../index';
-import {piePlugin} from '../../../plugins/pie';
+import {getSeriesPlugin} from '../../series/seriesRegistry';
 import type {
     AreaSeries,
     AreaValueFormat,
@@ -154,7 +154,7 @@ describe('series-specific format contexts', () => {
         };
         const hovered: React.ComponentProps<typeof ChartTooltipContent>['hovered'] = [chunk];
         expect(hovered).toEqual([chunk]);
-        expect(piePlugin.tooltip.getValueFormatContext?.(chunk)).toEqual({
+        expect(getSeriesPlugin('pie').tooltip?.getValueFormatContext?.(chunk)).toEqual({
             percentage: undefined,
             name: 'A',
             data: chunk.data,

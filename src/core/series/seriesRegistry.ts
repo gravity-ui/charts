@@ -1,15 +1,27 @@
 import {ChartError} from '../../libs';
-import type {ChartSeries} from '../../types';
+import type {MeaningfulAny} from '../../types';
 
-import type {SeriesPlugin} from './plugin';
+import type {SeriesPlugin, SeriesPluginTypes} from './plugin';
 
-const registry = new Map<string, SeriesPlugin>();
+/** Heterogeneous storage erases payload types; each plugin checks its own hooks before registration. */
+export type RegisteredSeriesPlugin = SeriesPlugin<{
+    [Key in keyof Required<SeriesPluginTypes>]: MeaningfulAny;
+}>;
 
-export function registerSeriesPlugin<T extends ChartSeries>(plugin: SeriesPlugin<T>) {
+interface PluginRegistration extends Omit<RegisteredSeriesPlugin, 'series'> {
+    series: Omit<RegisteredSeriesPlugin['series'], 'prepare'> &
+        Pick<SeriesPlugin['series'], 'prepare'>;
+}
+
+const registry = new Map<string, RegisteredSeriesPlugin>();
+
+// Check preparation against common metadata before erasing concrete plugin types
+// in storage. The chart's public input is still built-in.
+export function registerSeriesPlugin<T extends PluginRegistration>(plugin: T) {
     registry.set(plugin.type, plugin);
 }
 
-export function getSeriesPlugin(type: string): SeriesPlugin {
+export function getSeriesPlugin(type: string): RegisteredSeriesPlugin {
     const plugin = registry.get(type);
     if (!plugin) {
         throw new ChartError({message: `Unknown series type: "${type}"`});

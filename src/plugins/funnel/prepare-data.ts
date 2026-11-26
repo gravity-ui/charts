@@ -1,0 +1,297 @@
+import {path} from 'd3-path';
+
+import {
+    calculateNumericProperty,
+    getFormattedValue,
+    getLabelsSize,
+    getMultilineTextInfo,
+    getTextSizeFn,
+    isPointDataLabelEnabled,
+} from '~core/utils';
+
+import type {PreparedFunnelSeries} from './prepared-series';
+import type {PreparedFunnelData} from './types';
+
+type Args = {
+    series: PreparedFunnelSeries[];
+    boundsWidth: number;
+    boundsHeight: number;
+};
+
+type LabelInfo = {
+    text: string;
+    lines?: string[];
+    lineHeight?: number;
+    width: number;
+    height: number;
+    hangingOffset: number;
+    series: PreparedFunnelSeries;
+};
+
+function getHtmlLabelStyle(series: PreparedFunnelSeries) {
+    return series.dataLabels.preserveLineBreaks
+        ? {...series.dataLabels.style, whiteSpace: 'pre-line' as const}
+        : series.dataLabels.style;
+}
+
+function getLineConnectorPaths(args: {points: [number, number][]}) {
+    const {points} = args;
+
+    const leftPath = path();
+    leftPath.moveTo(...points[0]);
+    leftPath.lineTo(...points[3]);
+
+    const rightPath = path();
+    rightPath.moveTo(...points[1]);
+    rightPath.lineTo(...points[2]);
+
+    return [leftPath, rightPath];
+}
+
+function getAreaConnectorPath(args: {points: [number, number][]}) {
+    const {points} = args;
+
+    const p = path();
+
+    p.moveTo(...points[points.length - 1]);
+    points.forEach((point) => p.lineTo(...point));
+    p.closePath();
+
+    return p;
+}
+
+export async function prepareFunnelData(args: Args): Promise<PreparedFunnelData> {
+    const {series, boundsWidth, boundsHeight} = args;
+
+    const items: PreparedFunnelData['items'] = [];
+    const svgLabels: PreparedFunnelData['svgLabels'] = [];
+    const htmlLabels: PreparedFunnelData['htmlLabels'] = [];
+    const connectors: PreparedFunnelData['connectors'] = [];
+
+    const maxValue = Math.max(...series.map((s) => s.data.value));
+    const itemBandSpace = boundsHeight / series.length;
+    const connectorHeight =
+        calculateNumericProperty({
+            value: series[0].connectors?.height,
+            base: itemBandSpace,
+        }) ?? 0;
+    const itemHeight = (boundsHeight - connectorHeight * (series.length - 1)) / series.length;
+    const getTextSize = getTextSizeFn({style: series[0].dataLabels.style});
+
+    const getSegmentY = (index: number) => index * (itemHeight + connectorHeight);
+
+    // measure labels and accumulate max outside-label widths per side.
+    let rawLeftOffset = 0;
+    let rawRightOffset = 0;
+    const labelInfos: (LabelInfo | null)[] = [];
+
+    for (let index = 0; index < series.length; index++) {
+        const s = series[index];
+
+        if (!isPointDataLabelEnabled({data: s.data, series: s})) {
+            labelInfos.push(null);
+            continue;
+        }
+
+        const d = s.data;
+        const labelContent =
+            d.label ?? getFormattedValue({value: d.value, format: s.dataLabels.format});
+
+        const {preserveLineBreaks} = s.dataLabels;
+        const hasLineBreaks = preserveLineBreaks && labelContent.includes('\n');
+
+        let width: number;
+        let height: number;
+        let hangingOffset: number;
+        let lines: string[] | undefined;
+        let lineHeight: number | undefined;
+
+        if (s.dataLabels.html) {
+            const size = await getLabelsSize({
+                labels: [labelContent],
+                style: getHtmlLabelStyle(s),
+                html: true,
+            });
+            width = size.maxWidth;
+            height = size.maxHeight;
+            hangingOffset = 0;
+        } else if (hasLineBreaks) {
+            const info = await getMultilineTextInfo({text: labelContent, getTextSize});
+            width = info.width;
+            height = info.height;
+            hangingOffset = info.hangingOffset;
+            lines = info.lines;
+            lineHeight = info.lineHeight;
+        } else {
+            ({width, height, hangingOffset} = await getTextSize(labelContent));
+        }
+
+        labelInfos.push({
+            text: labelContent,
+            lines,
+            lineHeight,
+            width,
+            height,
+            hangingOffset,
+            series: s,
+        });
+
+        const {inside, align, padding} = s.dataLabels;
+        if (!inside) {
+            // Minimum offset so this label stays within the plot boundary.
+            // Accounts for the fact that narrower segments are already indented from the edge.
+            const ratio = s.data.value / maxValue;
+            const minOffset = (2 * (width + padding) - boundsWidth * (1 - ratio)) / (1 + ratio);
+            if (align === 'left') {
+                rawLeftOffset = Math.max(rawLeftOffset, minOffset);
+            } else if (align === 'right') {
+                rawRightOffset = Math.max(rawRightOffset, minOffset);
+            }
+        }
+    }
+
+    // reserveSpace=true → inset only the labelled side so labels don't overlap segments.
+    // reserveSpace=false → no inset; labels overlap segments.
+    const {reserveSpace} = series[0].dataLabels;
+    const segmentLeftOffset = reserveSpace ? rawLeftOffset : 0;
+    const segmentRightOffset = reserveSpace ? rawRightOffset : 0;
+
+    // compute shapes and label positions in a single pass.
+    // centerX is constant across all segments — hoist it out of the loop.
+    const segmentMaxWidth = boundsWidth - segmentLeftOffset - segmentRightOffset;
+    const isTrapezoid = series[0].shape === 'trapezoid';
+    const centerX = segmentLeftOffset + segmentMaxWidth / 2;
+
+    const getItemWidth = (index: number) => (segmentMaxWidth * series[index].data.value) / maxValue;
+
+    for (let index = 0; index < series.length; index++) {
+        const s = series[index];
+        const itemWidth = getItemWidth(index);
+        const segmentY = getSegmentY(index);
+
+        const isLastSegment = index === series.length - 1;
+        const bottomWidth = isTrapezoid && !isLastSegment ? getItemWidth(index + 1) : itemWidth;
+        const points: [number, number][] = [
+            [centerX - itemWidth / 2, segmentY],
+            [centerX + itemWidth / 2, segmentY],
+            [centerX + bottomWidth / 2, segmentY + itemHeight],
+            [centerX - bottomWidth / 2, segmentY + itemHeight],
+        ];
+
+        const item = {
+            x: centerX - itemWidth / 2,
+            y: segmentY,
+            width: itemWidth,
+            height: itemHeight,
+            points,
+            color: s.color,
+            series: s,
+            data: s.data,
+            borderColor: '',
+            borderWidth: 0,
+            cursor: s.cursor,
+            opacity: s.opacity,
+        };
+        items.push(item);
+
+        const prevSeries = series[index - 1];
+        const prevItem = items[index - 1];
+        if (prevSeries && prevItem && prevSeries.connectors?.enabled) {
+            // Use the actual bottom corners of the previous segment (points[3]/[2]) so that
+            // trapezoid segments (whose bottom edge differs from the top edge) are handled correctly.
+            const connectorPoints: [number, number][] = [
+                prevItem.points[3],
+                prevItem.points[2],
+                item.points[1],
+                item.points[0],
+            ];
+            connectors.push({
+                linePath: getLineConnectorPaths({points: connectorPoints}),
+                areaPath: getAreaConnectorPath({points: connectorPoints}),
+                lineWidth: prevSeries.connectors.lineWidth,
+                lineColor: prevSeries.connectors.lineColor,
+                lineOpacity: prevSeries.connectors.lineOpacity,
+                areaColor: prevSeries.connectors.areaColor,
+                areaOpacity: prevSeries.connectors.areaOpacity,
+                dashStyle: prevSeries.connectors.lineDashStyle,
+            });
+        }
+
+        const info = labelInfos[index];
+        if (!info) continue;
+
+        const {text, lines, lineHeight, width, height, hangingOffset} = info;
+        const {anchor, inside, padding} = s.dataLabels;
+        const y = segmentY + itemHeight / 2 - height / 2 + hangingOffset;
+
+        let x: number;
+        if (inside) {
+            switch (s.dataLabels.align) {
+                case 'left':
+                    x = item.x + padding;
+                    break;
+                case 'right':
+                    x = item.x + item.width - width - padding;
+                    break;
+                default:
+                    x = item.x + item.width / 2 - width / 2;
+                    break;
+            }
+        } else {
+            switch (s.dataLabels.align) {
+                case 'left': {
+                    const edge = 0;
+                    if (anchor === 'plot') {
+                        x = edge;
+                    } else {
+                        x = Math.max(edge, item.x - width - padding);
+                    }
+
+                    break;
+                }
+                case 'right': {
+                    const edge = boundsWidth - width;
+                    if (anchor === 'plot') {
+                        x = edge;
+                    } else {
+                        x = Math.min(edge, item.x + item.width + padding);
+                    }
+                    break;
+                }
+                default:
+                    x = boundsWidth / 2 - width / 2;
+                    break;
+            }
+        }
+
+        if (s.dataLabels.html) {
+            htmlLabels.push({
+                x,
+                y,
+                content: text,
+                size: {width, height},
+                style: getHtmlLabelStyle(s),
+            });
+        } else {
+            svgLabels.push({
+                x,
+                y,
+                text,
+                lines,
+                lineHeight,
+                style: s.dataLabels.style,
+                size: {width, height, hangingOffset},
+                textAnchor: 'start',
+                series: s,
+            });
+        }
+    }
+
+    return {
+        type: 'funnel',
+        items,
+        svgLabels,
+        htmlLabels,
+        connectors,
+    };
+}

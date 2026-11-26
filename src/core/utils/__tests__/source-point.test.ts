@@ -36,7 +36,7 @@ test.each(cases)(
     '$series.type exposes original points while retaining resolved legacy data',
     async ({series, field}) => {
         const source = series.data[0];
-        const prepared = await getSeriesPlugin(series.type).prepareSeries({
+        const prepared = await getSeriesPlugin(series.type).series.prepare({
             series: [series],
             seriesOptions: {},
             colors: ['red', 'green', 'blue'],
@@ -45,7 +45,7 @@ test.each(cases)(
         });
         const points = prepared.flatMap((item) => {
             const data = Array.isArray(item.data) ? item.data : [item.data];
-            return data.map((point) => ({point, series: item}) as ChartInteractionItem);
+            return data.map((point: object) => ({point, series: item}) as ChartInteractionItem);
         });
         expect(points).toHaveLength(1);
         const item = points[0];

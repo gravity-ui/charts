@@ -6,8 +6,11 @@ export function randomString(length: number, chars: string) {
     return result;
 }
 
+let nextId = 0;
+
 export function getUniqId() {
-    return `gravity-chart.${randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz')}`;
+    // A random fragment alone can collide when several layers generate series and SVG IDs.
+    return `gravity-chart.${randomString(5, '0123456789abcdefghijklmnopqrstuvwxyz')}-${nextId++}`;
 }
 
 /**

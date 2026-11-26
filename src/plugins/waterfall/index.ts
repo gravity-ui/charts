@@ -1,34 +1,42 @@
 import sortBy from 'es-toolkit/compat/sortBy';
 
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedWaterfallSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/waterfall/get-tooltip-data';
-import {prepareWaterfallData} from '~core/shapes/waterfall/prepare-data';
-import {renderWaterfall} from '~core/shapes/waterfall/renderer';
-import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterOverlappingLabels} from '~core/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
+import type {WaterfallSeries} from '../../types';
 
+import {waterfallDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {WaterfallInteractionItem} from './interaction-types';
+import {prepareWaterfallData} from './prepare-data';
 import {prepareWaterfallSeries} from './prepare-waterfall-series';
+import type {PreparedWaterfallSeries} from './prepared-series';
+import {renderWaterfall} from './renderer';
+import type {PreparedWaterfallData, WaterfallTooltipChunk} from './types';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedWaterfallSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<PreparedWaterfallData, PreparedWaterfallData>> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale} = args;
 
     if (!xAxis || !xScale || !yScale?.length) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareWaterfallData({
-        series: series as PreparedWaterfallSeries[],
+        series: series,
         seriesOptions,
         xAxis,
         xScale,
@@ -45,15 +53,53 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
                 {...first, htmlLabels: filtered},
                 ...rest.map((d) => ({...d, htmlLabels: [] as typeof d.htmlLabels})),
             ];
-            return {renderData: filteredData, tooltipItems: filteredData};
+            return {
+                renderData: filteredData,
+                htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+                labelLayout: filteredData,
+                lookupItems: filteredData,
+            };
         }
     }
 
-    return {renderData: data, tooltipItems: data};
+    return {
+        renderData: data,
+        htmlLabels: data.flatMap((item) => item.htmlLabels),
+        labelLayout: data,
+        lookupItems: data,
+    };
 }
 
-export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
+export const waterfallPlugin = {
     type: 'waterfall',
+    series: {
+        optionsDefaults: waterfallDefaults,
+        validate: ({series}) => {
+            const {connectors} = series;
+            if (connectors === undefined) {
+                return;
+            }
+
+            if (
+                typeof connectors !== 'object' ||
+                connectors === null ||
+                Array.isArray(connectors)
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: 'waterfall.connectors must be an object',
+                });
+            }
+
+            if (connectors.enabled !== undefined && typeof connectors.enabled !== 'boolean') {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: 'waterfall.connectors.enabled must be a boolean',
+                });
+            }
+        },
+        prepare: prepareWaterfallSeries,
+    },
     axes: {
         y: {
             baseline: 0,
@@ -75,41 +121,29 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
             },
         },
     },
+    colorScale: {
+        getValue: (d) => d.y,
+    },
+    layers: {
+        prepareData: prepareLayer,
+        render: function ({
+            plot,
+            labelsPlot,
+            renderData,
+            seriesOptions,
+            dispatcher,
+        }: RenderLayerArgs<PreparedWaterfallData, PreparedSeriesOptions>) {
+            const allowOverlap = renderData.some((d) => d.series.dataLabels.allowOverlap);
+            return renderWaterfall(
+                {plot, labelsPlot},
+                renderData,
+                seriesOptions,
+                allowOverlap,
+                dispatcher,
+            );
+        },
+    },
     zoom: {types: ['x', 'xy', 'y'], defaultType: 'x'},
-    prepareSeries: prepareWaterfallSeries,
-    validate: ({series}) => {
-        const {connectors} = series;
-        if (connectors === undefined) {
-            return;
-        }
-
-        if (typeof connectors !== 'object' || connectors === null || Array.isArray(connectors)) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'waterfall.connectors must be an object',
-            });
-        }
-
-        if (connectors.enabled !== undefined && typeof connectors.enabled !== 'boolean') {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'waterfall.connectors.enabled must be a boolean',
-            });
-        }
-    },
-    getColorValue: (d) => d.y,
-    prepareShapeData,
-    renderShapes: function ({
-        plot,
-        labelsPlot,
-        preparedData,
-        seriesOptions,
-        dispatcher,
-    }: RenderShapesArgs) {
-        const data = preparedData as PreparedWaterfallData[];
-        const allowOverlap = data.some((d) => d.series.dataLabels.allowOverlap);
-        return renderWaterfall({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);
-    },
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -119,8 +153,7 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
         getValue: getTooltipYValue,
         header: {getValue: getTooltipXValue, axis: 'x'},
         rows: (chunk) => {
-            const c = chunk as TooltipDataChunkWaterfall;
-            if (c.data.total) {
+            if (chunk.data.total) {
                 return [
                     {
                         id: 'totals',
@@ -174,4 +207,13 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
             ];
         },
     },
-};
+} satisfies SeriesPlugin<{
+    raw: WaterfallSeries;
+    prepared: PreparedWaterfallSeries;
+    shape: PreparedWaterfallData;
+    options: ChartSeriesOptions;
+    tooltipChunk: WaterfallTooltipChunk;
+    interaction: WaterfallInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

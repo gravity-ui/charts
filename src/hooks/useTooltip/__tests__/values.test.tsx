@@ -5,9 +5,8 @@ import {ThemeProvider} from '@gravity-ui/uikit';
 import {act, render} from '@testing-library/react';
 import {dispatch} from 'd3-dispatch';
 
-import {getSeriesPlugin} from '~core/series/seriesRegistry';
-
 import {TooltipContent} from '../../../components/Tooltip/ChartTooltipContent';
+import {linePlugin} from '../../../plugins/line';
 import type {TooltipDataChunkLine} from '../../../types';
 import type {PreparedTooltip} from '../../types';
 import {useTooltip} from '../index';
@@ -18,7 +17,7 @@ it('resolves each hovered value once for sorting and totals, then reuses it on r
         enabled: true,
         sorting: {key: 'value', direction: 'asc'},
     } as PreparedTooltip;
-    const getValue = jest.spyOn(getSeriesPlugin('line').tooltip, 'getValue');
+    const getValue = jest.spyOn(linePlugin.tooltip, 'getValue');
     const totalFormatter = jest.fn(({value}) => String(value));
     const hovered: TooltipDataChunkLine[] = [
         {data: {x: 0, y: 30}, series: {type: 'line', id: 'large', name: 'Large'}},

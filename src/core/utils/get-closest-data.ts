@@ -3,17 +3,17 @@ import get from 'es-toolkit/compat/get';
 import type {ChartInteractionItem, TooltipDataChunk} from '~core/types';
 
 import {getSeriesPlugin, hasSeriesPlugin} from '../series/seriesRegistry';
-import type {TooltipItemData} from '../shapes/types';
+import type {SeriesLookupItem} from '../shapes/types';
 
 import {groupBy} from './array';
 import {toPublicInteractionItem} from './chart-interaction';
 import {getNearestItem} from './nearest-point';
-import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';
 import type {LayerIndexes, ShapePoint, TooltipCandidate} from './tooltip-helpers';
+import {getClosestPointsByXValue, getSeriesLayer, isPointTooltipEnabled} from './tooltip-helpers';
 
 interface GetClosestPointsArgs {
     position: [number, number];
-    shapesData: TooltipItemData[];
+    shapesData: SeriesLookupItem[];
     boundsHeight: number;
     boundsWidth: number;
     /** Render layer of each series; without it the ties are resolved by the first candidate. */
@@ -25,14 +25,6 @@ interface Contender {
     /** Distance to the drawn shape; `Infinity` when the plugin did not measure it. */
     distance: number;
     layer: number;
-}
-
-function getSeriesType(shapeData: TooltipItemData) {
-    return (
-        get(shapeData, 'series.type') ||
-        get(shapeData, 'point.series.type') ||
-        get(shapeData, 'type')
-    );
 }
 
 export type {ShapePoint} from './tooltip-helpers';
@@ -83,19 +75,18 @@ export function getClosestPoints(args: GetClosestPointsArgs): TooltipDataChunk[]
 
     const result: TooltipCandidate[] = [];
     const contenders: Contender[] = [];
-    const xLookupPoints: ShapePoint[] = [];
-    const groups = groupBy(shapesData, getSeriesType);
+    const xLookupPoints: ShapePoint<TooltipDataChunk['data'], TooltipDataChunk['series']>[] = [];
+    const groups = Object.entries(groupBy(shapesData, (item) => item.type)).filter(
+        ([type]) => hasSeriesPlugin(type) && getSeriesPlugin(type).tooltip,
+    );
     // With a single series type there is nothing to arbitrate between.
-    const measureDistance = Object.keys(groups).length > 1;
+    const measureDistance = groups.length > 1;
 
-    for (const [seriesType, list] of Object.entries(groups)) {
-        if (!hasSeriesPlugin(seriesType)) {
-            continue;
-        }
-        const plugin = getSeriesPlugin(seriesType);
-
-        const {chunks, xLookupPoints: seriesXLookupPoints} = plugin.tooltip.prepareData({
-            data: list,
+    for (const [seriesType, list] of groups) {
+        const tooltip = getSeriesPlugin(seriesType).tooltip;
+        if (!tooltip) continue;
+        const {chunks = [], xLookupPoints: seriesXLookupPoints} = tooltip.prepareData({
+            data: list.map((item) => item.data),
             position,
             boundsWidth,
             boundsHeight,
@@ -174,13 +165,13 @@ interface GetChartClosestArgs extends GetClosestPointsArgs {
 
 export function getChartClosest(args: GetChartClosestArgs): ChartInteractionItem | null {
     if (args.mode === 'chart') {
-        const candidates = Object.entries(groupBy(args.shapesData, getSeriesType)).flatMap(
-            ([seriesType, data]) => {
+        const candidates = Object.entries(groupBy(args.shapesData, (item) => item.type)).flatMap(
+            ([seriesType, items]) => {
                 if (!hasSeriesPlugin(seriesType)) return [];
                 const plugin = getSeriesPlugin(seriesType);
                 return (
                     plugin.interaction?.prepareNearestData({
-                        data,
+                        data: items.map((item) => item.data),
                         position: args.position,
                         boundsWidth: args.boundsWidth,
                         boundsHeight: args.boundsHeight,

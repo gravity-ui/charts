@@ -6,11 +6,11 @@ import {dispatch} from 'd3-dispatch';
 import {DAY} from '~core/constants';
 import {EventType} from '~core/utils';
 
-import type {PreparedAreaData} from '../../../core/shapes/area/types';
-import type {PreparedBarXData} from '../../../core/shapes/bar-x/types';
-import type {PreparedBarYData} from '../../../core/shapes/bar-y/types';
 import * as shapes from '../../../hooks/useShapes';
 import * as zoom from '../../../hooks/useZoom';
+import type {PreparedAreaData} from '../../../plugins/area/types';
+import type {PreparedBarXData} from '../../../plugins/bar-x/types';
+import type {PreparedBarYData} from '../../../plugins/bar-y/types';
 import type {ChartData} from '../../../types';
 import * as gradientReference from '../prepareGradientReference';
 import {useChartInnerProps} from '../useChartInnerProps';
@@ -353,7 +353,7 @@ describe('legend and domain updates', () => {
             const {result} = renderHook(useChartInnerProps, {initialProps: props});
             await waitFor(() => expect(result.current.shapesReady).toBe(true));
             expect(result.current.shapesData).toHaveLength(2);
-            for (const shape of result.current.shapesData as (
+            for (const shape of result.current.shapesData.map((item) => item.data) as (
                 | PreparedBarXData
                 | PreparedBarYData
             )[]) {
@@ -385,7 +385,7 @@ describe('legend and domain updates', () => {
         expect(
             Math.min(...(result.current.yScale?.[0]?.domain() ?? []).map(Number)),
         ).toBeGreaterThan(-100);
-        const area = result.current.shapesData[0] as PreparedAreaData;
+        const area = result.current.shapesData[0].data as PreparedAreaData;
         expect(area.points.map((point) => point.data.y)).toEqual([-75]);
     });
 

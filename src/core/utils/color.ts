@@ -9,15 +9,15 @@ export function getDomainForContinuousColorScale(args: {
 }): number[] {
     const {series} = args;
     const values = series.flatMap((s) => {
-        const {getColorValue} = getSeriesPlugin(s.type);
+        const getValue = getSeriesPlugin(s.type).colorScale?.getValue;
 
-        if (!getColorValue) {
+        if (!getValue) {
             throw Error(
                 `The method for calculation a domain for a continuous color scale for the "${s.type}" series is not defined`,
             );
         }
 
-        return s.data.map((d) => Number(getColorValue(d)));
+        return s.data.map((d) => Number(getValue(d)));
     });
 
     return [Math.min(...values), Math.max(...values)];

@@ -6,10 +6,10 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
-import type {PreparedAreaData} from '~core/shapes/area/types';
 import * as textUtils from '~core/utils/text';
 
 import {areaPlugin} from '..';
+import type {PreparedAreaData} from '../types';
 
 afterEach(() => jest.restoreAllMocks());
 
@@ -24,7 +24,7 @@ describe('area stack label priority', () => {
             });
             jest.spyOn(textUtils, 'getTextSizeFn').mockReturnValue(measure);
 
-            const series = await areaPlugin.prepareSeries({
+            const series = await areaPlugin.series.prepare({
                 series: [20, 1].map((y) => ({
                     type: 'area',
                     name: String(y),
@@ -36,7 +36,7 @@ describe('area stack label priority', () => {
                 colors: [],
                 legend: {enabled: false} as PreparedLegend,
             });
-            const result = await areaPlugin.prepareShapeData({
+            const result = await areaPlugin.layers.prepareData({
                 series,
                 seriesOptions: getPreparedOptions({area: {stackLabels: {enabled: true}}}),
                 xAxis: {type: 'linear'} as PreparedXAxis,
@@ -51,7 +51,7 @@ describe('area stack label priority', () => {
                 (item) => item.svgLabels,
             );
 
-            expect(result.labels?.map((label) => label.text)).toEqual(['21']);
+            expect(result.svgLabels?.map((label) => label.text)).toEqual(['21']);
             expect(pointLabels.map((label) => label.text).sort()).toEqual(
                 allowOverlap ? ['1', '20'] : ['1'],
             );

@@ -14,14 +14,14 @@ describe('marker halo defaults', () => {
                 colors: ['red'],
                 legend: {enabled: false} as PreparedLegendOptions,
             };
-            await getSeriesPlugin(type).prepareSeries({
+            await getSeriesPlugin(type).series.prepare({
                 ...args,
                 series: [{type, name: 'Customized', data: []}],
                 seriesOptions: {
                     [type]: {states: {hover: {marker: {halo: {size: 20, opacity: 0.9}}}}},
                 },
             });
-            const [scatter] = await getSeriesPlugin('scatter').prepareSeries({
+            const [scatter] = await getSeriesPlugin('scatter').series.prepare({
                 ...args,
                 series: [{type: 'scatter', name: 'Default', data: []}],
             });

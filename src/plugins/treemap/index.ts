@@ -1,49 +1,57 @@
 import {i18n} from '~core/i18n';
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedTreemapSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/treemap/get-tooltip-data';
-import {prepareTreemapData} from '~core/shapes/treemap/prepare-data';
-import {renderTreemap} from '~core/shapes/treemap/renderer';
-import type {PreparedTreemapData} from '~core/shapes/treemap/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {TooltipDataChunkTreemap, TreemapSeries} from '../../types';
+import type {TreemapSeries} from '../../types';
 
+import {treemapDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {TreemapInteractionItem} from './interaction-types';
+import {prepareTreemapData} from './prepare-data';
 import {prepareTreemap} from './prepare-treemap-series';
+import type {PreparedTreemapSeries} from './prepared-series';
+import {renderTreemap} from './renderer';
+import type {PreparedTreemapData, TreemapTooltipChunk} from './types';
 
-async function prepareShapeData({
+import './styles.scss';
+
+async function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+}: PrepareLayerArgs<PreparedTreemapSeries, PreparedSeriesOptions, PreparedSeries>): Promise<
+    PrepareLayerResult<PreparedTreemapData, PreparedTreemapData>
+> {
     const data = await prepareTreemapData({
-        series: series[0] as PreparedTreemapSeries,
+        series: series[0],
         width: boundsWidth,
         height: boundsHeight,
     });
-    return {renderData: [data], tooltipItems: [data]};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        labelLayout: [data],
+        lookupItems: [data],
+    };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderTreemap(
-        {plot, labelsPlot},
-        preparedData[0] as PreparedTreemapData,
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderLayerArgs<PreparedTreemapData, PreparedSeriesOptions>) {
+    return renderTreemap({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
 }
 
 function validateTreemapData(series: TreemapSeries) {
@@ -95,24 +103,30 @@ function validateTreemapData(series: TreemapSeries) {
     });
 }
 
-export const treemapPlugin: SeriesPlugin<TreemapSeries, TooltipDataChunkTreemap> = {
+export const treemapPlugin = {
     type: 'treemap',
-    getClipPath: () => false,
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
-    validate: ({series, allSeries}) => {
-        const treemapCount = allSeries.filter((s) => s.type === 'treemap').length;
-        if (treemapCount > 1) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'It looks like you are trying to define more than one "treemap" series.',
-            });
-        }
+    series: {
+        optionsDefaults: treemapDefaults,
+        validate: ({series, allSeries}) => {
+            const treemapCount = allSeries.filter((s) => s.type === 'treemap').length;
+            if (treemapCount > 1) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message:
+                        'It looks like you are trying to define more than one "treemap" series.',
+                });
+            }
 
-        validateTreemapData(series);
+            validateTreemapData(series);
+        },
+        prepare: ({series, seriesOptions, legend, colorScale}) =>
+            prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),
     },
-    prepareShapeData,
-    renderShapes,
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -139,4 +153,13 @@ export const treemapPlugin: SeriesPlugin<TreemapSeries, TooltipDataChunkTreemap>
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: TreemapSeries;
+    prepared: PreparedTreemapSeries;
+    shape: PreparedTreemapData;
+    options: ChartSeriesOptions;
+    tooltipChunk: TreemapTooltipChunk;
+    interaction: TreemapInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

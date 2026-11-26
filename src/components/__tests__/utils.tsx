@@ -14,7 +14,10 @@ export function renderChart(ui: React.ReactElement, options?: {width?: number; h
     Object.defineProperty(container, 'clientHeight', {value: height, configurable: true});
     document.body.appendChild(container);
 
-    return render(<ThemeProvider theme="light">{ui}</ThemeProvider>, {container});
+    return render(ui, {
+        container,
+        wrapper: ({children}) => <ThemeProvider theme="light">{children}</ThemeProvider>,
+    });
 }
 
 export function timeout(ms: number) {

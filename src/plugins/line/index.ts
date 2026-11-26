@@ -1,15 +1,12 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedLineSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
-import {prepareLineData, projectLineData} from '~core/shapes/line/prepare-data';
-import {renderLine} from '~core/shapes/line/renderer';
-import type {PreparedLineData} from '~core/shapes/line/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -18,16 +15,27 @@ import {
     validateXYSeries,
 } from '~core/validation/helpers';
 
-import type {LineSeries, TooltipDataChunkLine} from '../../types';
+import type {LineSeries} from '../../types';
 
 import {getLineAxisPadding} from './axis-padding';
+import {lineDefaults} from './defaults';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {LineInteractionItem} from './interaction-types';
 import {getCurveFactory} from './interpolation';
+import {prepareLineData, projectLineData} from './prepare-data';
 import {prepareLineSeries} from './prepare-line-series';
+import type {PreparedLineSeries} from './prepared-series';
+import {renderLine} from './renderer';
+import type {LineTooltipChunk, PreparedLineData} from './types';
 import {validateInterpolation, validateLabelAnchor} from './validation';
 import {filterLineData, getLineAxisData} from './zoom';
 
-async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
+import './styles.scss';
+
+async function prepareLayer(
+    args: PrepareLayerArgs<PreparedLineSeries, PreparedSeriesOptions, PreparedSeries>,
+): Promise<PrepareLayerResult<PreparedLineData, PreparedLineData>> {
     const {
         series,
         seriesOptions,
@@ -38,16 +46,16 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         split,
         isOutsideBounds,
         isRangeSlider,
-        otherLayers,
+        otherLabelLayouts,
         allSeries,
     } = args;
 
     if (!xAxis || !xScale || !yScale?.length || !split) {
-        return {renderData: [], tooltipItems: []};
+        return {renderData: [], lookupItems: []};
     }
 
     const data = await prepareLineData({
-        series: series as PreparedLineSeries[],
+        series: series,
         seriesOptions,
         xAxis,
         xScale,
@@ -56,67 +64,74 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
         split,
         isOutsideBounds: isOutsideBounds ?? (() => false),
         isRangeSlider,
-        otherLayers,
+        otherLabelLayouts,
         allSeries,
         getCurveFactory,
     });
 
-    const filteredData = filterLayerLabels(data, otherLayers ?? []);
+    const filteredData = filterLayerLabels(data, otherLabelLayouts ?? []);
     return {
         renderData: filteredData,
-        tooltipItems: filteredData,
+        markers: filteredData.flatMap((item) => item.markers),
+        annotations: filteredData.flatMap((item) => item.annotations),
+        htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+        getHoverMarkers: (hovered) => filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
+        labelLayout: filteredData,
+        lookupItems: filteredData,
         gradientGeometry: getGradientGeometry(filteredData),
     };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderLine(
-        {plot, labelsPlot, getCurveFactory},
-        preparedData as PreparedLineData[],
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderLayerArgs<PreparedLineData, PreparedSeriesOptions>) {
+    return renderLine({plot, labelsPlot, getCurveFactory}, renderData, seriesOptions, dispatcher);
 }
 
-export const linePlugin: SeriesPlugin<LineSeries> = {
+export const linePlugin = {
     type: 'line',
+    series: {
+        optionsDefaults: lineDefaults,
+        validate: ({series, xAxis, yAxis}) => {
+            validateAxisPlotValues({series, xAxis, yAxis});
+            validateInterpolation({series});
+            validateLabelAnchor({series});
+            validateSeriesColor({color: series.color, seriesName: series.name});
+            validateXYSeries({series, xAxis, yAxis});
+        },
+        prepare: prepareLineSeries,
+    },
     axes: {
         x: {singleValueDomain: 'center'},
         y: {singleValueDomain: 'center', getData: getLineAxisData},
+        padding: {getPaintExtents: getLineAxisPadding},
     },
-    getAxisPadding: getLineAxisPadding,
-    getLayerKey: ({seriesKey}) => seriesKey,
-    getClipPath: ({isRangeSlider, yAxis, zoomState}) => {
-        if (isRangeSlider) return 'bounds';
-        const hasMinOrMax = yAxis.some(
-            (axis) => typeof axis?.min === 'number' || typeof axis?.max === 'number',
-        );
-        const hasZoom = zoomState && Object.keys(zoomState).length > 0;
-        return hasZoom || hasMinOrMax ? 'bounds' : 'horizontal';
+    colorScale: {
+        getValue: (d) => d.y,
+    },
+    layers: {
+        getKey: ({seriesKey}) => seriesKey,
+        getClipMode: ({isRangeSlider, yAxis, zoomState}) => {
+            if (isRangeSlider) return 'bounds';
+            const hasMinOrMax = yAxis.some(
+                (axis) => typeof axis?.min === 'number' || typeof axis?.max === 'number',
+            );
+            const hasZoom = zoomState && Object.keys(zoomState).length > 0;
+            return hasZoom || hasMinOrMax ? 'bounds' : 'horizontal';
+        },
+        prepareData: prepareLayer,
+        prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
+        render: renderLayer,
     },
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
         filterData: filterLineData,
     },
-    prepareGradientGeometry: createGradientGeometryPreparer(projectLineData),
-    prepareSeries: prepareLineSeries,
-    validate: ({series, xAxis, yAxis}) => {
-        validateAxisPlotValues({series, xAxis, yAxis});
-        validateInterpolation({series});
-        validateLabelAnchor({series});
-        validateSeriesColor({color: series.color, seriesName: series.name});
-        validateXYSeries({series, xAxis, yAxis});
-    },
-    getColorValue: (d) => d.y,
-    prepareShapeData,
-    renderShapes,
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -129,7 +144,7 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
         // reach on its own — so the rows are built per chunk and close over them. `source` stays
         // a plain value lookup, which is what a custom `rowRenderer` receives as `color`.
         rows: (chunk) => {
-            const s = (chunk as TooltipDataChunkLine).series as PreparedLineSeries;
+            const s = chunk.series;
 
             return [
                 {
@@ -156,4 +171,13 @@ export const linePlugin: SeriesPlugin<LineSeries> = {
             ];
         },
     },
-};
+} satisfies SeriesPlugin<{
+    raw: LineSeries;
+    prepared: PreparedLineSeries;
+    shape: PreparedLineData;
+    options: ChartSeriesOptions;
+    tooltipChunk: LineTooltipChunk;
+    interaction: LineInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;
