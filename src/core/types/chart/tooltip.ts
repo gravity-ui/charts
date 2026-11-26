@@ -107,6 +107,8 @@ export interface TooltipDataChunkAreaRange<T = MeaningfulAny> {
 
 export interface TooltipDataChunkTreemap<T = MeaningfulAny> {
     data: TreemapSeriesData<T>;
+    /** Resolved fill color of the hovered tile: point color, then level color, then series color. */
+    color?: string;
     series: TreemapSeries<T>;
 }
 

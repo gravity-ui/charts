@@ -204,6 +204,12 @@ export async function prepareTreemapData(args: {
         return levelOptions?.padding ?? DEFAULT_PADDING;
     })(hierarchy);
     const leaves = root.leaves();
+    const colors = new Map(
+        leaves.map((d) => [
+            d,
+            d.data.color || series.levels?.find((l) => l.index === d.depth)?.color || series.color,
+        ]),
+    );
     let labelData: TreemapLabelData[] = [];
     const htmlLabels: HtmlItem[] = [];
 
@@ -233,6 +239,7 @@ export async function prepareTreemapData(args: {
     return {
         labelData,
         leaves,
+        colors,
         series,
         htmlLabels,
         markers: [],
