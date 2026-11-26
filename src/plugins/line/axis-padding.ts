@@ -2,12 +2,13 @@ import {extent} from 'd3-array';
 
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {PreparedLineSeries} from '~core/series/types';
-import {hasSmoothInterpolation} from '~core/shapes/line/path';
-import {projectLineData} from '~core/shapes/line/prepare-data';
 
 import {getCurveFactory} from '../interpolation';
 import {collectMarkerPadding} from '../marker-axis-padding';
 import {getVisiblePathYValues} from '../path-domain';
+
+import {hasSmoothInterpolation} from './path';
+import {projectLineData} from './prepare-data';
 
 export function getLineAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
     const projected = projectLineData({

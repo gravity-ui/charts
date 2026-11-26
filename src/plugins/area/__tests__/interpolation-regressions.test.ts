@@ -4,9 +4,6 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import {createXScale} from '~core/scales/x-scale';
 import type {PreparedLegend} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
-import {projectAreaData} from '~core/shapes/area/prepare-data';
-import type {AreaGeometry} from '~core/shapes/area/types';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 
 import type {AreaSeries} from '../../../types';
@@ -14,8 +11,11 @@ import {evaluateAtX} from '../../interpolation/curves';
 import {collectSections} from '../curves';
 import {getAreaAxisData} from '../domain';
 import {buildAreaGeometry} from '../geometry';
+import {getTooltipData} from '../get-tooltip-data';
 import {prepareAreaSeries} from '../prepare-area-series';
+import {projectAreaData} from '../prepare-data';
 import {getAreaProjectionArgs} from '../projection';
+import type {AreaGeometry} from '../types';
 import {filterAreaData} from '../zoom';
 
 type ProjectionArgs = Parameters<typeof getAreaProjectionArgs>[0];

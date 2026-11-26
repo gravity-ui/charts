@@ -6,10 +6,10 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
-import type {PreparedAreaData} from '~core/shapes/area/types';
 import * as textUtils from '~core/utils/text';
 
 import {areaPlugin} from '..';
+import type {PreparedAreaData} from '../types';
 
 afterEach(() => jest.restoreAllMocks());
 

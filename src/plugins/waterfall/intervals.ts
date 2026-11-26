@@ -1,7 +1,8 @@
 import sortBy from 'es-toolkit/compat/sortBy';
 
 import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from '~core/series/types';
-import type {WaterfallInterval} from '~core/shapes/waterfall/types';
+
+import type {WaterfallInterval} from './types';
 
 export function resolveWaterfallIntervals(points: readonly PreparedWaterfallSeriesData[]) {
     const intervals = new Map<PreparedWaterfallSeriesData, WaterfallInterval>();

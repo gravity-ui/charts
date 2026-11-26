@@ -8,11 +8,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedAreaRangeSeries} from '~core/series/types';
-import {formatAreaRange, getAreaRangeWidth} from '~core/shapes/area-range/format';
-import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
-import {prepareAreaRangeData, projectAreaRangeData} from '~core/shapes/area-range/prepare-data';
-import {renderAreaRange} from '~core/shapes/area-range/renderer';
-import type {PreparedAreaRangeData} from '~core/shapes/area-range/types';
 import {getTooltipColorSymbol, getTooltipXValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
@@ -27,8 +22,13 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaRangeSeries, AreaRangeSeriesData, TooltipDataChunkAreaRange} from '../../types';
 
 import {getAreaRangeAxisPadding} from './axis-padding';
+import {formatAreaRange, getAreaRangeWidth} from './format';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
+import {prepareAreaRangeData, projectAreaRangeData} from './prepare-data';
+import {renderAreaRange} from './renderer';
+import type {PreparedAreaRangeData} from './types';
 
 function isAreaRangePointDefined(point: AreaRangeSeriesData) {
     return point.y0 !== null && point.y1 !== null;

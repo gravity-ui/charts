@@ -6,10 +6,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedAreaSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
-import {prepareAreaData, projectAreaData} from '~core/shapes/area/prepare-data';
-import {renderArea} from '~core/shapes/area/renderer';
-import type {PreparedAreaData} from '~core/shapes/area/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
@@ -30,10 +26,14 @@ import {getPercentStackDomain} from '../stacked-axis';
 
 import {getAreaAxisPadding} from './axis-padding';
 import {getAreaAxisData} from './domain';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
+import {prepareAreaData, projectAreaData} from './prepare-data';
 import {getAreaProjectionArgs} from './projection';
+import {renderArea} from './renderer';
 import {getAreaStackLabelAnchors} from './stack-labels';
+import type {PreparedAreaData} from './types';
 import {validateAreaInterpolation} from './validation';
 import {filterAreaData} from './zoom';
 

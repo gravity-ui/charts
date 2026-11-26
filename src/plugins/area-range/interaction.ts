@@ -1,5 +1,3 @@
-import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
-import type {PreparedAreaRangeData} from '~core/shapes/area-range/types';
 import {
     getInteractionElements,
     getMarkerInteractionElements,
@@ -9,7 +7,9 @@ import type {InteractionElement, InteractionElementsArgs} from '~core/utils/char
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getPointCandidates} from '~core/utils/nearest-point';
 
+import {getTooltipData} from './get-tooltip-data';
 import type {AreaRangeInteractionItem} from './interaction-types';
+import type {PreparedAreaRangeData} from './types';
 
 export function getTargetElements({
     plot,

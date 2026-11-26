@@ -3,7 +3,10 @@
 import {scaleBand, scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import {prepareBarXSeries} from '../../../plugins/bar-x/prepare-bar-x-series';
+import {prepareBarXData} from '../../../plugins/bar-x/prepare-data';
+import {getBarXPaths} from '../../../plugins/bar-x/utils';
 import {prepareBarYSeries} from '../../../plugins/bar-y/prepare-bar-y-series';
+import {prepareBarYData} from '../../../plugins/bar-y/prepare-data';
 import type {BarXSeries, BarYSeries} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
 import {seriesOptionsDefaults} from '../../constants';
@@ -11,9 +14,6 @@ import type {PreparedSplit} from '../../layout/split-types';
 import type {PreparedBarXSeries, PreparedLegend} from '../../series/types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '../../utils/common';
 import {getClosestPoints} from '../../utils/get-closest-data';
-import {prepareBarXData} from '../bar-x/prepare-data';
-import {getBarXPaths} from '../bar-x/utils';
-import {prepareBarYData} from '../bar-y/prepare-data';
 
 interface SeriesInput {
     value: number | null;

@@ -1,9 +1,9 @@
-import type {MarkerData} from '~core/shapes/scatter/types';
 import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {ScatterInteractionItem} from './interaction-types';
+import type {MarkerData} from './types';
 
 export function getTargetElements({
     plot,

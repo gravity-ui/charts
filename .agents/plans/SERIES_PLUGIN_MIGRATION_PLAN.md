@@ -14,9 +14,9 @@ Move type-specific defaults from [series-options.ts](../../src/core/constants/de
 
 ### 2. Consolidate plugin implementation and types
 
-Plugins currently import much of their implementation from `core/shapes/<series>`. Once shared behavioral dependencies are removed:
+Each plugin now owns its geometry, renderer, and tooltip lookup. The remaining steps are:
 
-- Colocate series-specific geometry, renderers, tooltip lookup, helpers, and styles under `plugins/<series>/`. Include the series-specific rules in [useShapes/styles.scss](../../src/hooks/useShapes/styles.scss).
+- Move the series-specific rules from [useShapes/styles.scss](../../src/hooks/useShapes/styles.scss) into the corresponding plugin stylesheets.
 - Keep reusable label, marker, measurement, and geometry primitives shared.
 - Associate plugin-owned raw series, prepared series, shape data, and interaction/tooltip payloads throughout the complete `SeriesPlugin` contract, without closed built-in unions or implementation imports from core. Split series-specific prepared types out of [series/types.ts](../../src/core/series/types.ts) while preserving existing exports, and verify the contract with a complete custom-plugin fixture using its own data types and the documented interface.
 - Reconcile `getAxisPadding` (paint extents) and `getXAxisPadding` (label-space reserve) into a coherent axis-padding contract. Specify their contexts, units, combination rules, and timing while preserving explicit bounds, zoom, and range-slider behavior.

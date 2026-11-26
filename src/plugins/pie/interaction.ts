@@ -1,11 +1,11 @@
 import type {PieArcDatum} from 'd3-shape';
 
-import type {PreparedPieData, SegmentData} from '~core/shapes/pie/types';
 import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {PieInteractionItem} from './interaction-types';
+import type {PreparedPieData, SegmentData} from './types';
 
 export function getTargetElements({
     plot,

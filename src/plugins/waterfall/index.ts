@@ -5,10 +5,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedWaterfallSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/waterfall/get-tooltip-data';
-import {prepareWaterfallData} from '~core/shapes/waterfall/prepare-data';
-import {renderWaterfall} from '~core/shapes/waterfall/renderer';
-import type {PreparedWaterfallData} from '~core/shapes/waterfall/types';
 import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterOverlappingLabels} from '~core/utils';
 import {filterPoints} from '~core/zoom/filter-data';
@@ -17,9 +13,13 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
 import {validateBarLabelPlacement} from '../bar-label-placement';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {getWaterfallIntervals, resolveWaterfallIntervals} from './intervals';
+import {prepareWaterfallData} from './prepare-data';
 import {prepareWaterfallPoints, prepareWaterfallSeries} from './prepare-waterfall-series';
+import {renderWaterfall} from './renderer';
+import type {PreparedWaterfallData} from './types';
 
 function isPreparedWaterfallSeries(
     series: WaterfallSeries | PreparedWaterfallSeries,

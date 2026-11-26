@@ -5,16 +5,16 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedFunnelSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/funnel/get-tooltip-data';
-import {prepareFunnelData} from '~core/shapes/funnel/prepare-data';
-import {renderFunnel} from '~core/shapes/funnel/renderer';
-import type {PreparedFunnelData} from '~core/shapes/funnel/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import type {FunnelSeries, TooltipDataChunkFunnel} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {prepareFunnelData} from './prepare-data';
 import {prepareFunnelSeries} from './prepare-funnel-series';
+import {renderFunnel} from './renderer';
+import type {PreparedFunnelData} from './types';
 
 async function prepareShapeData({
     series,

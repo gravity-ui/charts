@@ -1,27 +1,27 @@
 import {i18n} from '~core/i18n';
-import {getSeriesStackId} from '~core/series/utils';
-import {getBarXStackKey} from '~core/shapes/bar-x/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../libs';
 import type {BarXSeries, BarYSeries, ChartSeries} from '../types';
 
+type BarSeries = BarXSeries | BarYSeries;
+
 export function validateBarGrouping(args: {
-    series: BarXSeries | BarYSeries;
+    series: BarSeries;
     allSeries: ChartSeries[];
+    getStackKey: (series: BarSeries) => string;
 }) {
-    const {series, allSeries} = args;
+    const {series, allSeries, getStackKey} = args;
     // Check the collection once per plugin, including initially hidden series.
     if (allSeries.find((item) => item.type === series.type) !== series) return;
 
-    const stacks = new Map<string, BarXSeries | BarYSeries>();
-    for (const item of allSeries) {
-        if (item.type !== series.type) continue;
-        const bar = item as BarXSeries | BarYSeries;
+    const stacks = new Map<string, BarSeries>();
+    for (const bar of allSeries) {
+        if (bar.type !== series.type) continue;
         const grouping = bar.grouping ?? true;
         // Non-stacked overlays have independent layout keys even with an explicit stackId.
         if (!bar.stacking && (!bar.stackId || !grouping)) continue;
 
-        const key = bar.type === 'bar-x' ? getBarXStackKey(bar) : getSeriesStackId(bar);
+        const key = getStackKey(bar);
         const previous = stacks.get(key);
         if (previous && (previous.grouping ?? true) !== grouping) {
             throw new ChartError({

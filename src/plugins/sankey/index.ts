@@ -5,18 +5,18 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedSankeySeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/sankey/get-tooltip-data';
-import {prepareSankeyData} from '~core/shapes/sankey/prepare-data';
-import {renderSankey} from '~core/shapes/sankey/renderer';
-import type {PreparedSankeyData} from '~core/shapes/sankey/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {getSourcePoint} from '~core/utils/source-point';
 
 import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import type {SankeyInteractionItem} from './interaction-types';
+import {prepareSankeyData} from './prepare-data';
 import {prepareSankeySeries} from './prepare-sankey-series';
+import {renderSankey} from './renderer';
+import type {PreparedSankeyData} from './types';
 
 function getLinkValue({target, data: source, value}: TooltipDataChunkSankey) {
     return value ?? source.links.find((link) => link.name === target?.name)?.value;
