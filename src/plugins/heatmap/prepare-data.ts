@@ -3,7 +3,6 @@ import type {ScaleLinear, ScaleTime} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedHeatmapSeries} from '~core/series/types';
 import type {CSSProperties} from '~core/types/css';
 import {
     getDomainDataXBySeries,
@@ -20,6 +19,7 @@ import {getBandSize} from '~core/utils/band-size';
 
 import type {BaseTextStyle, HtmlItem} from '../../types';
 
+import type {PreparedHeatmapSeries} from './prepared-series';
 import type {HeatmapItem, HeatmapLabel, PreparedHeatmapData} from './types';
 
 type PrepareHeatmapDataArgs = {

@@ -1,11 +1,11 @@
 import type {PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedAreaRangeSeries} from '~core/series/types';
 import {buildHoverMarkerGetter, getMarkerFill} from '~core/shapes/marker';
 import type {HoveredShapeData, MarkerItem} from '~core/shapes/types';
 
 import type {AreaRangeSeriesData} from '../../types';
 
+import type {PreparedAreaRangeSeries} from './prepared-series';
 import type {AreaRangePointData} from './types';
 
 interface BoundaryPoint {

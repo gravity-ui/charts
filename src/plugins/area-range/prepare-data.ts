@@ -1,7 +1,6 @@
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedAreaRangeSeries} from '~core/series/types';
 import {getXValue, getYValue} from '~core/shapes/utils';
 import {preparePointDataLabels, shouldPrepareSeriesDataLabels} from '~core/utils';
 import {createGradientColorResolver} from '~core/utils/gradient';
@@ -10,6 +9,7 @@ import {applyCapturedPointColors, prepareGradientCoords} from '~core/utils/gradi
 
 import {formatAreaRangeDataLabel} from './format';
 import {prepareAreaRangeMarkers} from './markers';
+import type {PreparedAreaRangeSeries} from './prepared-series';
 import type {AreaRangePointData, PreparedAreaRangeData} from './types';
 import {getRangeBBox, markHiddenRangePoints} from './utils';
 

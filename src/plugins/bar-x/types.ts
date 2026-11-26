@@ -1,7 +1,9 @@
-import type {AnnotationAnchor, PreparedAnnotation, PreparedBarXSeries} from '~core/series/types';
+import type {AnnotationAnchor, PreparedAnnotation} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
 import type {LabelData, TooltipDataChunkBarX} from '../../types';
+
+import type {PreparedBarXSeries} from './prepared-series';
 
 export type PreparedBarXData = Omit<TooltipDataChunkBarX, 'series'> & {
     annotation?: PreparedAnnotation;

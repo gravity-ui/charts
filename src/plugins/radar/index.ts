@@ -4,7 +4,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedRadarSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
@@ -14,6 +13,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareRadarData} from './prepare-data';
 import {prepareRadarSeries} from './prepare-radar-series';
+import type {PreparedRadarSeries} from './prepared-series';
 import {renderRadar} from './renderer';
 import type {PreparedRadarData} from './types';
 

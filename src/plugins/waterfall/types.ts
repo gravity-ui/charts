@@ -1,7 +1,8 @@
-import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
 import type {LabelData} from '../../types';
+
+import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from './prepared-series';
 
 export interface WaterfallInterval {
     start: number;

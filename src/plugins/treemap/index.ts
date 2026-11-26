@@ -5,7 +5,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedTreemapSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
@@ -15,6 +14,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareTreemapData} from './prepare-data';
 import {prepareTreemap} from './prepare-treemap-series';
+import type {PreparedTreemapSeries} from './prepared-series';
 import {renderTreemap} from './renderer';
 import type {PreparedTreemapData} from './types';
 

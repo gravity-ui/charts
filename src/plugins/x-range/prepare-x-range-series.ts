@@ -3,12 +3,13 @@ import get from 'es-toolkit/compat/get';
 import {DASH_STYLE, DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedXRangeSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
 
 import type {XRangeSeries} from '../../types';
+
+import type {PreparedXRangeSeries} from './prepared-series';
 
 export function prepareXRangeSeries(args: PrepareSeriesArgs<XRangeSeries>): PreparedXRangeSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend, xAxis} = args;

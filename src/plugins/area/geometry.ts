@@ -1,7 +1,6 @@
 import {group} from 'd3-array';
 import {area, line} from 'd3-shape';
 
-import type {PreparedAreaSeries} from '~core/series/types';
 import type {BandColumn} from '~core/shapes/band';
 import {getGradientBBox} from '~core/utils/gradient';
 
@@ -17,6 +16,7 @@ import {
 import type {CurvePoint, CurveSection} from '../interpolation/curves';
 
 import {collectSections, intervalKey} from './curves';
+import type {PreparedAreaSeries} from './prepared-series';
 import type {AreaGeometry, PointData, PreparedAreaData} from './types';
 import {withAreaGeometryBreaks} from './zoom';
 

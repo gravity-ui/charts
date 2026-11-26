@@ -18,7 +18,7 @@ Each plugin now owns its geometry, renderer, and tooltip lookup. The remaining s
 
 - Move the series-specific rules from [useShapes/styles.scss](../../src/hooks/useShapes/styles.scss) into the corresponding plugin stylesheets.
 - Keep reusable label, marker, measurement, and geometry primitives shared.
-- Associate plugin-owned raw series, prepared series, shape data, and interaction/tooltip payloads throughout the complete `SeriesPlugin` contract, without closed built-in unions or implementation imports from core. Split series-specific prepared types out of [series/types.ts](../../src/core/series/types.ts) while preserving existing exports, and verify the contract with a complete custom-plugin fixture using its own data types and the documented interface.
+- Associate plugin-owned raw series, prepared series, shape data, and interaction/tooltip payloads throughout the complete `SeriesPlugin` contract, without closed built-in unions or implementation imports from core. Verify the contract with a complete custom-plugin fixture using its own data types and the documented interface.
 - Reconcile `getAxisPadding` (paint extents) and `getXAxisPadding` (label-space reserve) into a coherent axis-padding contract. Specify their contexts, units, combination rules, and timing while preserving explicit bounds, zoom, and range-slider behavior.
 
 Use small, behavior-preserving moves. Avoid introducing a broad public abstraction solely to reorganize internal code.

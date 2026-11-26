@@ -5,12 +5,13 @@ import {scaleLinear, scaleOrdinal} from 'd3-scale';
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import {seriesOptionsDefaults} from '~core/constants';
 import type {PreparedSplit} from '~core/layout/split-types';
-import type {PreparedBarXSeries, PreparedLegend} from '~core/series/types';
+import type {PreparedLegend} from '~core/series/types';
 import * as textUtils from '~core/utils/text';
 
 import type {BarXSeries, ChartSeriesOptions} from '../../../types';
 import {prepareBarXSeries} from '../prepare-bar-x-series';
 import {prepareBarXData} from '../prepare-data';
+import type {PreparedBarXSeries} from '../prepared-series';
 import {getBarXPaths} from '../utils';
 
 async function prepare(

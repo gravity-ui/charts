@@ -3,7 +3,7 @@ import get from 'es-toolkit/compat/get';
 import type {PreparedAxis, PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedScatterSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import type {LabelRect} from '~core/shapes/types';
 import {createIsOutsideBounds, getXValue, getYValue} from '~core/shapes/utils';
 import {
@@ -21,6 +21,7 @@ import type {HtmlItem, ScatterSeriesData} from '../../types';
 
 import {clusterSeriesData, prepareClusterMarkerSeries} from './cluster';
 import {getScatterMarkerBounds} from './marker-bounds';
+import type {PreparedScatterSeries} from './prepared-series';
 import type {PreparedScatterData, PreparedScatterShapeData, ScatterSvgLabelData} from './types';
 
 function getFilteredLinearScatterData(data: ScatterSeriesData[]) {

@@ -1,9 +1,9 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
-import type {PreparedAreaRangeSeries} from '~core/series/types';
 
 import {collectMarkerPadding} from '../marker-axis-padding';
 
 import {projectAreaRangeData} from './prepare-data';
+import type {PreparedAreaRangeSeries} from './prepared-series';
 
 export function getAreaRangeAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
     const projected = projectAreaRangeData({

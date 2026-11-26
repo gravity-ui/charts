@@ -13,6 +13,8 @@ Compare existing plugins and document each capability as **Supported**, **Limite
 
 Match established config names, units, defaults, and precedence. Keep specialized fields out of `Base*`. Define series, point, prepared-data, and tooltip types; update the built-in unions and public exports where needed. Keep registry boundaries typed.
 
+Define the prepared series in `src/plugins/<type>/prepared-series.ts` and include it in the `PreparedSeries` union in `src/core/series/types.ts`.
+
 ## 2. Prepare data and geometry
 
 Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts): `prepareSeries`, `prepareShapeData`, `renderShapes`, and tooltip lookup/rows. Add validation and optional capabilities as needed. Keep series-specific geometry in `plugins/<type>/` alongside its renderer and tooltip lookup.

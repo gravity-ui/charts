@@ -4,7 +4,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedHeatmapSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import type {HeatmapSeries, TooltipDataChunkHeatmap} from '../../types';
@@ -13,6 +12,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareHeatmapData} from './prepare-data';
 import {prepareHeatmapSeries} from './prepare-heatmap-series';
+import type {PreparedHeatmapSeries} from './prepared-series';
 import {renderHeatmap} from './renderer';
 import type {PreparedHeatmapData} from './types';
 

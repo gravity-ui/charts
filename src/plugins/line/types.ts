@@ -1,5 +1,5 @@
 import type {DashStyle, LineCap, LineJoin} from '~core/constants';
-import type {AnnotationAnchor, PreparedAnnotation, PreparedLineSeries} from '~core/series/types';
+import type {AnnotationAnchor, PreparedAnnotation} from '~core/series/types';
 import type {GradientShapeData, MarkerItem, SeriesShapeData} from '~core/shapes/types';
 
 import type {
@@ -10,6 +10,7 @@ import type {
 } from '../../types';
 
 import type {PlacementSegment} from './auto-placement';
+import type {PreparedLineSeries} from './prepared-series';
 
 export interface PointData {
     annotation?: PreparedAnnotation;

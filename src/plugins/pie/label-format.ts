@@ -1,7 +1,8 @@
-import type {PreparedPieSeries} from '~core/series/types';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {PieSeriesData, PieValueFormat} from '../../types';
+
+import type {PreparedPieSeries} from './prepared-series';
 
 export function getPiePercentages(
     series: Array<Pick<PreparedPieSeries, 'id' | 'value'>>,

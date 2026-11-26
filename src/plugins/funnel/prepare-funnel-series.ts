@@ -3,11 +3,13 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedFunnelSeries, PreparedLegendOptions, PreparedSeries} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 
 import type {ChartSeriesOptions, FunnelSeries} from '../../types';
+
+import type {PreparedFunnelSeries} from './prepared-series';
 
 type PrepareFunnelSeriesArgs = {
     series: FunnelSeries[];

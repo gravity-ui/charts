@@ -1,9 +1,10 @@
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
-import type {PreparedTreemapSeries} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
 import type {TreemapSeriesData} from '../../types';
+
+import type {PreparedTreemapSeries} from './prepared-series';
 
 export type TreemapLabelData = {
     text: string;
