@@ -122,8 +122,7 @@ export const prepareWaterfallData = async (args: {
     const canPlaceLabels = bounds.width > 0 && bounds.height > 0;
     const measureLabel = createLabelMeasurer();
     const reversedYAxis = rangeStart < rangeEnd;
-    const barMaxWidth = get(seriesOptions, 'waterfall.barMaxWidth');
-    const barPadding = get(seriesOptions, 'waterfall.barPadding');
+    const {barMaxWidth, barPadding} = seriesOptions.waterfall;
 
     const data = sortBy<DataItem>(
         series.flatMap((s) => s.data.map((d) => ({data: d, series: s}))),
@@ -136,7 +135,8 @@ export const prepareWaterfallData = async (args: {
         xScale,
     });
     const rectGap = Math.max(bandWidth * barPadding, MIN_BAR_GAP);
-    const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(bandWidth - rectGap, barMaxWidth));
+    const maxWidth = Math.max(0, Math.min(boundsWidth, bandWidth, barMaxWidth));
+    const rectWidth = Math.min(maxWidth, Math.max(MIN_BAR_WIDTH, bandWidth - rectGap));
 
     const result: PreparedWaterfallData[] = [];
     for (const item of data) {
