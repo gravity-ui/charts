@@ -6,10 +6,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedScatterSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/scatter/get-tooltip-data';
-import {prepareScatterData} from '~core/shapes/scatter/prepare-data';
-import {renderScatter} from '~core/shapes/scatter/renderer';
-import type {PreparedScatterShapeData} from '~core/shapes/scatter/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {calculateNumericProperty} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
@@ -19,8 +15,12 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
 
 import {getScatterAxisPadding} from './axis-padding';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {prepareScatterData} from './prepare-data';
 import {prepareScatterSeries} from './prepare-scatter-series';
+import {renderScatter} from './renderer';
+import type {PreparedScatterShapeData} from './types';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {

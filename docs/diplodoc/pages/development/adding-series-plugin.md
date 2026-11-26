@@ -15,7 +15,7 @@ Match established config names, units, defaults, and precedence. Keep specialize
 
 ## 2. Prepare data and geometry
 
-Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts): `prepareSeries`, `prepareShapeData`, `renderShapes`, and tooltip lookup/rows. Add validation and optional capabilities as needed. Series-specific geometry currently lives in `core/shapes/<type>/`.
+Implement [SeriesPlugin](https://github.com/gravity-ui/charts/blob/main/src/core/series/plugin.ts): `prepareSeries`, `prepareShapeData`, `renderShapes`, and tooltip lookup/rows. Add validation and optional capabilities as needed. Keep series-specific geometry in `plugins/<type>/` alongside its renderer and tooltip lookup.
 
 Keep raw config, points, and callback payloads intact. Store derived values separately, hoist reusable calculations and measurements, and clean up subscriptions. Register derived point copies with `withSourcePoint`; use `getSourcePoint` for nested interaction payloads.
 

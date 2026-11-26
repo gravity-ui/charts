@@ -1,11 +1,12 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {PreparedScatterSeries} from '~core/series/types';
-import {prepareClusterMarkerSeries} from '~core/shapes/scatter/cluster';
-import {getScatterMarkerBounds} from '~core/shapes/scatter/marker-bounds';
 import {getXValue, getYValue} from '~core/shapes/utils';
 import type {ChartMargin} from '~core/types';
 
 import {createPaddingPointFilter} from '../marker-axis-padding';
+
+import {prepareClusterMarkerSeries} from './cluster';
+import {getScatterMarkerBounds} from './marker-bounds';
 
 export function getScatterAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
     const points: AxisPaddingPoint[] = [];

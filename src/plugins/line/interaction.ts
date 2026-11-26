@@ -1,5 +1,3 @@
-import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
-import type {PreparedLineData} from '~core/shapes/line/types';
 import {
     getInteractionElements,
     getMarkerInteractionElements,
@@ -9,7 +7,9 @@ import type {InteractionElement, InteractionElementsArgs} from '~core/utils/char
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getPointCandidates} from '~core/utils/nearest-point';
 
+import {getTooltipData} from './get-tooltip-data';
 import type {LineInteractionItem} from './interaction-types';
+import type {PreparedLineData} from './types';
 
 export function getTargetElements({
     plot,

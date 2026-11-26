@@ -6,10 +6,6 @@ import type {
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedBarXSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/bar-x/get-tooltip-data';
-import {prepareBarXData} from '~core/shapes/bar-x/prepare-data';
-import {renderBarX} from '~core/shapes/bar-x/renderer';
-import type {PreparedBarXData} from '~core/shapes/bar-x/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {
@@ -30,9 +26,13 @@ import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarXSeries} from './prepare-bar-x-series';
+import {prepareBarXData} from './prepare-data';
+import {renderBarX} from './renderer';
 import {getBarXStackLabelAnchors} from './stack-labels';
+import type {PreparedBarXData} from './types';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {

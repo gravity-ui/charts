@@ -3,13 +3,13 @@ import {scaleLinear, scaleOrdinal} from 'd3-scale';
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {PreparedLegend} from '~core/series/types';
-import {getDistanceToBand} from '~core/shapes/area/band';
-import type {BandColumn} from '~core/shapes/area/band';
-import {projectAreaData} from '~core/shapes/area/prepare-data';
 
 import type {AreaSeries, SeriesInterpolation} from '../../../types';
+import {getDistanceToBand} from '../band';
+import type {BandColumn} from '../band';
 import {buildAreaGeometry} from '../geometry';
 import {prepareAreaSeries} from '../prepare-area-series';
+import {projectAreaData} from '../prepare-data';
 import {getAreaProjectionArgs} from '../projection';
 
 type Column = NonNullable<BandColumn>;

@@ -4,7 +4,7 @@ import {expect, test} from '@playwright/experimental-ct-react';
 
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {getStackLabelsData} from '../__stories__/__data__/stack-labels';
-import type {PreparedBarYData} from '../core/shapes/bar-y/types';
+import type {PreparedBarYData} from '../plugins/bar-y/types';
 import type {ChartData} from '../types';
 
 import {AreaStackLabelsGapsTestStory} from './components/AreaStackLabelsGapsTestStory';

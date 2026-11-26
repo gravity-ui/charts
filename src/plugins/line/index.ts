@@ -5,10 +5,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedLineSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/line/get-tooltip-data';
-import {prepareLineData, projectLineData} from '~core/shapes/line/prepare-data';
-import {renderLine} from '~core/shapes/line/renderer';
-import type {PreparedLineData} from '~core/shapes/line/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
@@ -23,8 +19,12 @@ import {getCurveFactory} from '../interpolation';
 import {validateInterpolation} from '../interpolation/validation';
 
 import {getLineAxisPadding} from './axis-padding';
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {prepareLineData, projectLineData} from './prepare-data';
 import {prepareLineSeries} from './prepare-line-series';
+import {renderLine} from './renderer';
+import type {PreparedLineData} from './types';
 import {validateLabelAnchor} from './validation';
 import {filterLineData, getLineAxisData} from './zoom';
 

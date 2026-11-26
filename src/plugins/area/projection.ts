@@ -1,12 +1,12 @@
 import {min} from 'd3-array';
 import round from 'es-toolkit/compat/round';
 
-import type {projectAreaData} from '~core/shapes/area/prepare-data';
 import {getXValue, getYValue} from '~core/shapes/utils';
 import {getDataCategoryValue, isBandScale} from '~core/utils';
 
 import {prepareAreaGeometry} from './geometry';
 import type {AreaGeometryOptions} from './geometry';
+import type {projectAreaData} from './prepare-data';
 
 type CoreProjectionArgs = Parameters<typeof projectAreaData>[0];
 

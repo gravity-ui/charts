@@ -4,17 +4,13 @@ import type {AxisDomainValue, DomainViewport, GetAxisDataArgs} from '~core/serie
 import {getDomainPoints} from '~core/series/domain-points';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
 import {getSeriesStackId} from '~core/series/utils';
-import {
-    createAreaStackAccumulator,
-    getAreaNeighborPoint,
-    getAreaStackContext,
-} from '~core/shapes/area/stack';
 
 import type {AreaSeries, AreaSeriesData} from '../../types';
 import {getCurveFactory} from '../interpolation';
 import {getVisiblePathYValues} from '../path-domain';
 
 import {getAreaGeometryDomain} from './geometry';
+import {createAreaStackAccumulator, getAreaNeighborPoint, getAreaStackContext} from './stack';
 import {withAreaGeometryBreaks} from './zoom';
 
 interface AreaDomainSeries extends Pick<

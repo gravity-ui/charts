@@ -7,15 +7,15 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {PrepareShapeDataArgs, SeriesPlugin} from '~core/series/plugin';
 import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
-import type {PreparedAreaData} from '~core/shapes/area/types';
-import type {PreparedBarXData} from '~core/shapes/bar-x/types';
-import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
 import * as textUtils from '~core/utils/text';
 
 import type {AreaSeries, BarXSeries, ChartSeries} from '../../types';
 import {areaPlugin} from '../area';
+import type {PreparedAreaData} from '../area/types';
 import {barXPlugin} from '../bar-x';
+import type {PreparedBarXData} from '../bar-x/types';
 import {barYPlugin} from '../bar-y';
+import type {BarYShapesArgs} from '../bar-y/types';
 
 beforeEach(() => {
     jest.spyOn(textUtils, 'getTextSizeFn').mockReturnValue(async (text) => ({

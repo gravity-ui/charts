@@ -1,9 +1,9 @@
-import type {PreparedBarYData} from '~core/shapes/bar-y/types';
 import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {BarYInteractionItem} from './interaction-types';
+import type {PreparedBarYData} from './types';
 
 export function getTargetElements({
     plot,

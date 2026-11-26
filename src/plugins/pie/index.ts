@@ -6,17 +6,17 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedPieSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/pie/get-tooltip-data';
-import {preparePieData} from '~core/shapes/pie/prepare-data';
-import {renderPie} from '~core/shapes/pie/renderer';
-import type {PreparedPieData} from '~core/shapes/pie/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {PieFormatContext, PieSeries, TooltipDataChunkPie} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {preparePieData} from './prepare-data';
 import {preparePieSeries} from './prepare-pie-series';
+import {renderPie} from './renderer';
+import type {PreparedPieData} from './types';
 
 async function prepareShapeData({
     series,
