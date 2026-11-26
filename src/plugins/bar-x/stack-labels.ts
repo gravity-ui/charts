@@ -54,8 +54,8 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
                           axisTotal,
                       )
                     : axisTotal;
-            const zeroBesideNegative = axisTotal === 0 && pointsBySign.has(true);
-            if (zeroBesideNegative && total === 0) continue;
+            const isZeroGroup = axisTotal === 0;
+            if (isZeroGroup && total === 0 && pointsBySign.has(true)) continue;
 
             const extendsUp = points[0].extendsUp;
             const outer = points.reduce((end, item) =>
@@ -64,7 +64,12 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
                     : end,
             );
             let y = extendsUp ? outer.y : outer.y + outer.height;
-            if (zeroBesideNegative && yScale && !isBandScale(yScale)) {
+            if (
+                isZeroGroup &&
+                outer.series.stacking === 'normal' &&
+                yScale &&
+                !isBandScale(yScale)
+            ) {
                 y = (args.split?.plots[plotIndex]?.top ?? 0) + yScale(0);
             }
 

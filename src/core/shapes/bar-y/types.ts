@@ -7,6 +7,7 @@ export type PreparedBarYData = Omit<TooltipDataChunkBarY, 'series'> & {
     y: number;
     width: number;
     height: number;
+    stackValueEndX?: number;
     color: string;
     borderWidth: number;
     borderColor: string;

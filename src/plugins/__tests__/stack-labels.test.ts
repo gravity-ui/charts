@@ -730,6 +730,28 @@ describe('area stack labels', () => {
     });
 });
 
+test('bar-y keeps the zero series total when stack labels are disabled for a clipped negative series', async () => {
+    const aggregation = ({points}: StackLabelsAggregationArgs) =>
+        points.reduce((sum, point) => sum + point.custom.orders, 0);
+    const orders = [7, 5];
+    const {args} = await prepare(
+        barYPlugin,
+        [[-10], [0]],
+        'normal',
+        {enabled: true, aggregation},
+        [{enabled: false}],
+        (series) =>
+            series.forEach((item, index) => {
+                item.data[0].custom = {orders: orders[index]};
+            }),
+    );
+    args.xScale = scaleLinear().domain([-5, 5]).range([0, args.boundsWidth]);
+
+    const result = await barYPlugin.prepareShapeData(args);
+
+    expect(texts(result.labels)).toEqual(['5']);
+});
+
 test('bar-y keeps the negative total at the plot edge after a bordered zero segment', async () => {
     const aggregation = ({points}: StackLabelsAggregationArgs) =>
         points.reduce((sum, point) => sum + point.custom.orders, 0);
@@ -754,6 +776,35 @@ test('bar-y keeps the negative total at the plot edge after a bordered zero segm
 
     expect(texts(result.labels)).toEqual(['5', '7']);
 });
+
+test.each([false, true])(
+    'bar-y shows bordered stack totals at the axis limit and hides totals beyond it, reversed=%s',
+    async (reversed) => {
+        const values = [
+            [5, 5],
+            [5, 5.01],
+        ];
+        const {args} = await prepare(
+            barYPlugin,
+            values,
+            'normal',
+            {enabled: true},
+            [],
+            (series) => {
+                series.forEach((item) => {
+                    if (item.type === 'bar-y') item.borderWidth = 2;
+                });
+            },
+        );
+        args.xScale = scaleLinear()
+            .domain([0, 10])
+            .range(reversed ? [args.boundsWidth, 0] : [0, args.boundsWidth]);
+
+        const result = await barYPlugin.prepareShapeData(args);
+
+        expect(texts(result.labels)).toEqual(['10']);
+    },
+);
 
 describe.each([barXPlugin, barYPlugin])('$type stack overlays', (plugin) => {
     test.each([false, true])(

@@ -67,8 +67,8 @@ export function getBarYStackLabelAnchors(
                           axisTotal,
                       )
                     : axisTotal;
-            const zeroBesideNegative = axisTotal === 0 && pointsBySign.has(true);
-            if (zeroBesideNegative && total === 0) continue;
+            const isZeroGroup = axisTotal === 0;
+            if (isZeroGroup && total === 0 && pointsBySign.has(true)) continue;
 
             const extendsRight = negative === reversed;
             const outer = points.reduce((end, item) =>
@@ -77,8 +77,14 @@ export function getBarYStackLabelAnchors(
                     : end,
             );
             let x = extendsRight ? outer.x + outer.width : outer.x;
-            if (zeroBesideNegative && !isBandScale(xScale)) {
+            const {stackValueEndX} = outer;
+            if (isZeroGroup && outer.series.stacking === 'normal' && !isBandScale(xScale)) {
                 x = xScale(0);
+            } else if (
+                stackValueEndX !== undefined &&
+                (Math.min(x, stackValueEndX) < 0 || Math.max(x, stackValueEndX) > boundsWidth)
+            ) {
+                x = stackValueEndX;
             }
 
             // Percent bars may extend beyond the plot due to border compensation.
