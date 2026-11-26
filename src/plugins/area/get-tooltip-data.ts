@@ -1,3 +1,5 @@
+import {getBandBoundaries, getDistanceToBand} from '~core/shapes/band';
+import type {BandColumn} from '~core/shapes/band';
 import {getDistanceToMarkers, getMarkerFill} from '~core/shapes/marker';
 import {getDistanceToStrokedPolyline} from '~core/utils/geometry';
 import type {Point} from '~core/utils/geometry';
@@ -7,8 +9,6 @@ import type {
     ShapePoint,
 } from '~core/utils/tooltip-helpers';
 
-import {getBandBoundaries, getDistanceToBand} from './band';
-import type {BandColumn} from './band';
 import type {PreparedAreaData} from './types';
 
 interface AreaHitGeometry {

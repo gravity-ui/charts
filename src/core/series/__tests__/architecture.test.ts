@@ -59,6 +59,26 @@ function getPluginDependencies(source: string): string[] {
         .filter((fileName) => /(?:^|\/)plugins(?:\/|$)/.test(fileName));
 }
 
+it('keeps built-in plugins independent of other series implementations', () => {
+    const plugins = path.join(sourceRoot, 'plugins');
+    const violations = getRuntimeFiles(plugins).flatMap((file) => {
+        const owner = path.relative(plugins, file).split(path.sep)[0];
+        if (file === path.join(plugins, 'index.ts')) return [];
+
+        return ts
+            .preProcessFile(readFileSync(file, 'utf8'), true, true)
+            .importedFiles.flatMap(({fileName}) => {
+                if (!fileName.startsWith('.')) return [];
+                const target = path.resolve(path.dirname(file), fileName);
+                const dependency = path.relative(plugins, target).split(path.sep)[0];
+                return seriesNames.has(dependency) && dependency !== owner
+                    ? [`${path.relative(sourceRoot, file)}: ${fileName}`]
+                    : [];
+            });
+    });
+    expect(violations).toEqual([]);
+});
+
 it('keeps shared code and public types independent of plugin internals', () => {
     const files = ['core', 'components', 'hooks', 'types'].flatMap((directory) =>
         getRuntimeFiles(path.join(sourceRoot, directory)),

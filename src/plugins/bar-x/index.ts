@@ -33,6 +33,7 @@ import {prepareBarXData} from './prepare-data';
 import {renderBarX} from './renderer';
 import {getBarXStackLabelAnchors} from './stack-labels';
 import type {PreparedBarXData} from './types';
+import {getBarXStackKey} from './utils';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {
@@ -142,7 +143,7 @@ export const barXPlugin: SeriesPlugin<BarXSeries, TooltipDataChunkBarX, BarXForm
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
-        validateBarGrouping({series, allSeries});
+        validateBarGrouping({series, allSeries, getStackKey: getBarXStackKey});
         validatePercentStackingValues({
             series,
             valueKey: 'y',

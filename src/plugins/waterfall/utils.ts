@@ -1,4 +1,5 @@
-import type {PreparedWaterfallSeries} from '../../hooks';
+import type {PreparedWaterfallSeries} from '~core/series/types';
+
 import type {WaterfallSeriesData} from '../../types';
 
 export function getWaterfallPointColor(
