@@ -77,7 +77,7 @@ test('unzoomed columns on a linear X axis use the numeric spacing of points', as
         {x: 120, total: true},
     ]);
 
-    expect(shapes.map(({width}) => width)).toEqual([16, 16, 16, 16]);
+    expect(shapes.map(({width}) => width)).toEqual([14.4, 14.4, 14.4, 14.4]);
 });
 
 test('a single column on an unzoomed linear X axis is centered and uses the default maximum width', async () => {
@@ -97,8 +97,10 @@ test('a null waterfall options object uses the default column width', async () =
 
 test.each([
     [{}, 50],
-    [{barPadding: 0.9}, 40],
-    [{barMaxWidth: 0.5}, 0.5],
+    [JSON.parse('{"barMaxWidth":null,"barPadding":0.9}'), 36],
+    [JSON.parse('{"barPadding":null,"barMaxWidth":17}'), 17],
+    [{barPadding: 0.9}, 36],
+    [{barMaxWidth: 0.5}, 1],
 ] as const)('sizes columns on a fixed linear X axis with options %j', async (waterfall, width) => {
     const {shapes} = await prepareUnzoomedWaterfall(
         [
@@ -115,7 +117,7 @@ test.each([
     expect(shapes.map((shape) => shape.width)).toEqual([width, width]);
 });
 
-test('columns fit between adjacent linear X positions less than a pixel apart', async () => {
+test('columns retain the one-pixel minimum on a dense linear axis', async () => {
     const {shapes} = await prepareUnzoomedWaterfall(
         [
             {x: 2, y: 10},
@@ -124,17 +126,13 @@ test('columns fit between adjacent linear X positions less than a pixel apart', 
         {boundsWidth: 500, xAxis: {type: 'linear', min: 0, max: 1000} as PreparedXAxis},
     );
 
-    expect(shapes.map(({width}) => width)).toEqual([0.5, 0.5]);
+    expect(shapes.map(({width}) => width)).toEqual([1, 1]);
 });
 
-test.each([0, -5])(
-    'a single column has zero width with %s px of plot space',
-    async (boundsWidth) => {
-        const {shapes} = await prepareUnzoomedWaterfall([{x: 2, y: 10}], {boundsWidth});
-
-        expect(shapes.map(({width}) => width)).toEqual([0]);
-    },
-);
+test('a single column retains the bar-x minimum on a zero-width plot', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall([{x: 2, y: 10}], {boundsWidth: 0});
+    expect(shapes.map(({width}) => width)).toEqual([1]);
+});
 
 test('columns and labels follow the value direction on a reversed Y axis', async () => {
     const {shapes} = await prepareUnzoomedWaterfall(

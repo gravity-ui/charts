@@ -11,6 +11,7 @@ import {getFormattedValue} from '~core/utils/format';
 import {filterPoints} from '~core/zoom/filter-data';
 
 import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
+import {validateBarMaxWidth, validateBarPadding} from '../bar-sizing';
 
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -28,6 +29,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 
     const data = await prepareXRangeData({
         series: series as PreparedXRangeSeries[],
+        options: args.seriesOptions['x-range'],
         xAxis,
         xScale,
         yAxis: yAxis ?? [],
@@ -82,6 +84,11 @@ export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = 
                 isXInRange: (point, axis) =>
                     isValueInAxisRange(point.x0, axis) || isValueInAxisRange(point.x1, axis),
             }),
+    },
+    validate: ({seriesOptions}) => {
+        const options = seriesOptions?.['x-range'];
+        validateBarPadding(options?.barPadding ?? undefined);
+        validateBarMaxWidth(options?.barMaxWidth ?? undefined);
     },
     prepareSeries: prepareXRangeSeries,
     // Use bar duration (x1 - x0) as the color value so that longer bars can be

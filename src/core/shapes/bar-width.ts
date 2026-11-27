@@ -1,6 +1,15 @@
 import type {PreparedBarXSeries, PreparedBarYSeries} from '../series/types';
 
-import {MIN_BAR_GAP, MIN_BAR_WIDTH} from './bar-constants';
+import {
+    DEFAULT_BAR_BAND_PADDING,
+    MIN_BAR_GAP,
+    MIN_BAR_GROUP_GAP,
+    MIN_BAR_WIDTH,
+} from './bar-constants';
+
+export function getBarBandContentSize(bandSize: number, padding = DEFAULT_BAR_BAND_PADDING) {
+    return Math.max(0, bandSize - Math.max(bandSize * padding, MIN_BAR_GROUP_GAP));
+}
 
 export function getBarWidth(slotSize: number, padding: number, maxWidth: number) {
     const gap = Math.max(slotSize * padding, MIN_BAR_GAP);
