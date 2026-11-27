@@ -18,6 +18,7 @@ import {getCurveFactory} from '../interpolation';
 import {validateInterpolation} from '../interpolation/validation';
 
 import {getLineAxisPadding} from './axis-padding';
+import {lineDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareLineData, projectLineData} from './prepare-data';
@@ -87,6 +88,7 @@ function renderShapes({
 
 export const linePlugin: SeriesPlugin<LineSeries> = {
     type: 'line',
+    optionsDefaults: lineDefaults,
     axes: {
         x: {singleValueDomain: 'center'},
         y: {singleValueDomain: 'center', getData: getLineAxisData},

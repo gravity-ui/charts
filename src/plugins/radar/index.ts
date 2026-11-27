@@ -9,6 +9,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {RadarSeries, TooltipDataChunkRadar} from '../../types';
 
+import {radarDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareRadarData} from './prepare-data';
@@ -47,6 +48,7 @@ function renderShapes({
 
 export const radarPlugin: SeriesPlugin<RadarSeries, TooltipDataChunkRadar> = {
     type: 'radar',
+    optionsDefaults: radarDefaults,
     getClipPath: () => false,
     validate: ({series, allSeries}) => {
         if (

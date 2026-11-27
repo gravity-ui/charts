@@ -14,6 +14,7 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {ScatterClusterData, ScatterSeries, TooltipDataChunk} from '../../types';
 
 import {getScatterAxisPadding} from './axis-padding';
+import {scatterDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareScatterData} from './prepare-data';
@@ -74,6 +75,7 @@ function renderShapes({
 
 export const scatterPlugin: SeriesPlugin<ScatterSeries> = {
     type: 'scatter',
+    optionsDefaults: scatterDefaults,
     axes: {x: {singleValueDomain: 'center'}, y: {singleValueDomain: 'center'}},
     getAxisPadding: getScatterAxisPadding,
     getClipPath: ({isRangeSlider}) => (isRangeSlider ? 'bounds' : false),

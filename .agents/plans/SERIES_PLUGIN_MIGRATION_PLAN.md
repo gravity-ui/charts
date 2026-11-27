@@ -1,6 +1,6 @@
 # Series plugin migration plan
 
-The main pipeline delegates series preparation, geometry, rendering, validation, tooltip lookup and rows, continuous color values, axis policies, and viewport selection to `SeriesPlugin`. Remaining work concerns series defaults, implementation ownership, and the complete plugin type contract.
+The main pipeline delegates series preparation, geometry, rendering, validation, tooltip lookup and rows, continuous color values, axis policies, and viewport selection to `SeriesPlugin`. Remaining work concerns implementation ownership and the complete plugin type contract.
 
 The goal is to make each plugin own its behavior while the core coordinates plugins and provides reusable primitives. Design contracts for authors who know their own data and the plugin interface, without requiring core internals. Public registration and selective imports remain a separate delivery step.
 
@@ -8,11 +8,9 @@ The goal is to make each plugin own its behavior while the core coordinates plug
 
 Completed tooltip delegation, layer grouping and clipping, axis policies and domains, preprocessing, and viewport/zoom selection. Plugins declare their behavior through optional adapters and policies; core merges contributions and provides reusable primitives while preserving public chart configuration and exports.
 
-### 1. Delegate series defaults
+Built-in plugins now declare series defaults through `optionsDefaults`. Core merges them with user options as described in the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md).
 
-Move type-specific defaults from [series-options.ts](../../src/core/constants/defaults/series-options.ts) into plugins. Keep the merge mechanism shared, preserve option precedence, and document plugin-owned defaults in the [plugin guide](../../docs/diplodoc/pages/development/adding-series-plugin.md).
-
-### 2. Consolidate plugin implementation and types
+### Consolidate plugin implementation and types
 
 Each plugin now owns its geometry, renderer, and tooltip lookup. The remaining steps are:
 

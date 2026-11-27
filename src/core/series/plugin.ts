@@ -137,6 +137,8 @@ export interface SeriesPlugin<
 
     /** Unique series type identifier (e.g. `'line'`, `'bar-x'`). Used for plugin lookup and CSS class generation. */
     type: T['type'];
+    /** Defaults merged with the user's options for this series type. */
+    optionsDefaults?: PreparedSeriesOptions[T['type'] & keyof ChartSeriesOptions];
     /** true enables Cartesian axes with scalar defaults. Omit or use false for series without axes. */
     axes?: boolean | SeriesAxes<T | Extract<PreparedSeries, {type: T['type']}>>;
     /**

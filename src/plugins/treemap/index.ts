@@ -10,6 +10,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkTreemap, TreemapSeries} from '../../types';
 
+import {treemapDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareTreemapData} from './prepare-data';
@@ -97,6 +98,7 @@ function validateTreemapData(series: TreemapSeries) {
 
 export const treemapPlugin: SeriesPlugin<TreemapSeries, TooltipDataChunkTreemap> = {
     type: 'treemap',
+    optionsDefaults: treemapDefaults,
     getClipPath: () => false,
     prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
         prepareTreemap({series: series as TreemapSeries[], seriesOptions, legend, colorScale}),

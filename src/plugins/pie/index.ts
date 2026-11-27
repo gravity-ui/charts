@@ -10,6 +10,7 @@ import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils'
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {PieFormatContext, PieSeries, TooltipDataChunkPie} from '../../types';
 
+import {pieDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {preparePieData} from './prepare-data';
@@ -52,6 +53,7 @@ function renderShapes({
 
 export const piePlugin: SeriesPlugin<PieSeries, TooltipDataChunkPie, PieFormatContext> = {
     type: 'pie',
+    optionsDefaults: pieDefaults,
     getClipPath: () => false,
     prepareSeries: ({series, seriesOptions, legend, colors}) =>
         preparePieSeries({series: series as PieSeries[], seriesOptions, legend, colors}),

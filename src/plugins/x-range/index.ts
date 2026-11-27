@@ -11,6 +11,7 @@ import {filterPoints} from '~core/zoom/filter-data';
 
 import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
 
+import {xRangeDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareXRangeData} from './prepare-data';
@@ -60,6 +61,7 @@ function getXRangeWidth(data: XRangeSeriesData) {
 
 export const xRangePlugin: SeriesPlugin<XRangeSeries, TooltipDataChunkXRange> = {
     type: 'x-range',
+    optionsDefaults: xRangeDefaults,
     axes: {
         x: {
             getData: ({series}) => ({
