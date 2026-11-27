@@ -3,7 +3,6 @@ import type {PieArcDatum} from 'd3-shape';
 import {arc, line as lineGenerator} from 'd3-shape';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
-import type {PreparedPieSeries} from '~core/series/types';
 import {
     calculateNumericProperty,
     getLabelsSize,
@@ -18,6 +17,7 @@ import {merge} from '~core/utils/merge';
 import type {HtmlItem, PieSeries, PointPosition} from '../../types';
 
 import {getPieDataLabelText, getPiePercentages} from './label-format';
+import type {PreparedPieSeries} from './prepared-series';
 import type {
     PieConnectorData,
     PieLabelData,

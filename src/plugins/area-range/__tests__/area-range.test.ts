@@ -5,11 +5,7 @@ import cloneDeep from 'es-toolkit/compat/cloneDeep';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
-import type {
-    PreparedAreaRangeSeries,
-    PreparedLegend,
-    PreparedSeriesOptions,
-} from '~core/series/types';
+import type {PreparedLegend, PreparedSeriesOptions} from '~core/series/types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '~core/utils/common';
 
 import type {AreaRangeSeries, AreaRangeSeriesData, ChartSeriesOptions} from '../../../types';
@@ -17,6 +13,7 @@ import {formatAreaRangeDataLabel} from '../format';
 import {getTooltipData} from '../get-tooltip-data';
 import {prepareAreaRangeSeries} from '../prepare-area-range-series';
 import {prepareAreaRangeData} from '../prepare-data';
+import type {PreparedAreaRangeSeries} from '../prepared-series';
 import {renderAreaRange} from '../renderer';
 import {getRangeBBox} from '../utils';
 

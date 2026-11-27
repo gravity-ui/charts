@@ -5,7 +5,7 @@ import type {BaseType} from 'd3-selection';
 import {line} from 'd3-shape';
 import get from 'es-toolkit/compat/get';
 
-import type {PreparedRadarSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {renderDataLabels} from '~core/shapes/data-labels';
 import {
     getMarkerHaloVisibility,
@@ -20,6 +20,7 @@ import {setActiveState} from '~core/shapes/utils';
 import type {TooltipDataChunkRadar} from '../../types';
 import {block} from '../../utils';
 
+import type {PreparedRadarSeries} from './prepared-series';
 import type {PreparedRadarData, RadarMarkerData, RadarShapeData} from './types';
 
 const b = block('radar');

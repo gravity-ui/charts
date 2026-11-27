@@ -3,16 +3,14 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {
-    PreparedHeatmapSeries,
-    PreparedLegendOptions,
-    PreparedSeries,
-} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, HeatmapSeries, HeatmapSeriesData} from '../../types';
+
+import type {PreparedHeatmapSeries} from './prepared-series';
 
 type PrepareHeatmapSeriesArgs = {
     colorScale: ScaleOrdinal<string, string>;

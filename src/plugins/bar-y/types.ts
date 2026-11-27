@@ -1,7 +1,8 @@
-import type {PreparedBarYSeries} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
 import type {HtmlItem, LabelData, TooltipDataChunkBarY} from '../../types';
+
+import type {PreparedBarYSeries} from './prepared-series';
 
 export type PreparedBarYData = Omit<TooltipDataChunkBarY, 'series'> & {
     x: number;

@@ -6,7 +6,7 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedAreaSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {buildHoverMarkerGetter, getMarkerFill} from '~core/shapes/marker';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '~core/shapes/utils';
 import {
@@ -20,6 +20,7 @@ import {getPositiveShare} from '~core/utils/percentage';
 
 import type {AreaSeriesData} from '../../types';
 
+import type {PreparedAreaSeries} from './prepared-series';
 import {createAreaStackAccumulator, getAreaNeighborPoint, getAreaStackContext} from './stack';
 import type {PointData, PreparedAreaData} from './types';
 import {getAreaBBox} from './utils';

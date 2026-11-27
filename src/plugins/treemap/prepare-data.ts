@@ -11,12 +11,12 @@ import {
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
 import {LayoutAlgorithm} from '~core/constants';
-import type {PreparedTreemapSeries} from '~core/series/types';
 import {getLabelsSize, getTextSizeFn, getTextWithElipsis} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, TreemapSeriesData} from '../../types';
 
+import type {PreparedTreemapSeries} from './prepared-series';
 import type {PreparedTreemapData, TreemapLabelData} from './types';
 
 const DEFAULT_PADDING = 1;

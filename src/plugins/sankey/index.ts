@@ -4,7 +4,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedSankeySeries} from '~core/series/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
 import {getSourcePoint} from '~core/utils/source-point';
 
@@ -15,6 +14,7 @@ import {getTargetElements, prepareNearestData} from './interaction';
 import type {SankeyInteractionItem} from './interaction-types';
 import {prepareSankeyData} from './prepare-data';
 import {prepareSankeySeries} from './prepare-sankey-series';
+import type {PreparedSankeySeries} from './prepared-series';
 import {renderSankey} from './renderer';
 import type {PreparedSankeyData} from './types';
 

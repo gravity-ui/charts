@@ -3,7 +3,6 @@ import get from 'es-toolkit/compat/get';
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
@@ -12,6 +11,7 @@ import {withSourcePoint} from '~core/utils/source-point';
 import type {WaterfallSeries} from '../../types';
 import {resolveBarLabelPlacement} from '../bar-label-placement';
 
+import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from './prepared-series';
 import {getWaterfallPointRole} from './utils';
 
 export function prepareWaterfallPoints(series: WaterfallSeries): PreparedWaterfallSeriesData[] {

@@ -5,7 +5,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedScatterSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {calculateNumericProperty} from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
@@ -19,6 +18,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareScatterData} from './prepare-data';
 import {prepareScatterSeries} from './prepare-scatter-series';
+import type {PreparedScatterSeries} from './prepared-series';
 import {renderScatter} from './renderer';
 import type {PreparedScatterShapeData} from './types';
 

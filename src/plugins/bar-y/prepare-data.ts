@@ -4,7 +4,7 @@ import get from 'es-toolkit/compat/get';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedBarYSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {getBarWidthBySeries} from '~core/shapes/bar-width';
 import type {ShapeLabels} from '~core/shapes/types';
 import {
@@ -21,6 +21,7 @@ import {createLabelMeasurer} from '~core/utils/text';
 import type {LabelData} from '../../types';
 
 import {getBarYLayout, groupBarYDataByYValue} from './layout';
+import type {PreparedBarYSeries} from './prepared-series';
 import type {BarYShapesArgs, PreparedBarYData} from './types';
 import {getBarYRect} from './utils';
 

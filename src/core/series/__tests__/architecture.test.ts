@@ -87,15 +87,32 @@ it('keeps shared code and public types independent of plugin internals', () => {
         const relativePath = path.relative(sourceRoot, file);
         return (
             getPluginDependencies(readFileSync(file, 'utf8'))
-                // The public component entrypoint initializes the built-in registry.
+                // The entry point registers plugins. The prepared union imports their types.
                 .filter(
                     (dependency) =>
-                        !(relativePath === 'components/index.tsx' && dependency === '../plugins'),
+                        !(relativePath === 'components/index.tsx' && dependency === '../plugins') &&
+                        !(
+                            relativePath === 'core/series/types.ts' &&
+                            dependency.endsWith('/prepared-series')
+                        ),
                 )
                 .map((dependency) => `${relativePath}: ${dependency}`)
         );
     });
     expect(violations).toEqual([]);
+});
+
+it('uses type-only imports to aggregate the built-in prepared series', () => {
+    const source = readFileSync(path.join(sourceRoot, 'core/series/types.ts'), 'utf8');
+    const file = ts.createSourceFile('types.ts', source, ts.ScriptTarget.Latest, true);
+    const typeOnlyImports = file.statements
+        .filter(ts.isImportDeclaration)
+        .filter((statement) => statement.importClause?.isTypeOnly)
+        .flatMap((statement) => getPluginDependencies(statement.getText(file)));
+    const expected = [...seriesNames].map((type) => `../../plugins/${type}/prepared-series`).sort();
+
+    expect(typeOnlyImports.sort()).toEqual(expected);
+    expect(getPluginDependencies(source).sort()).toEqual(expected);
 });
 
 it.each([

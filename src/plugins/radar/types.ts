@@ -1,7 +1,8 @@
-import type {PreparedRadarSeries} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
 import type {LabelData, RadarSeriesData} from '../../types';
+
+import type {PreparedRadarSeries} from './prepared-series';
 
 export type RadarLabelData = LabelData & {
     maxWidth: number;

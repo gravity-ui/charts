@@ -1,6 +1,7 @@
-import type {PreparedScatterSeries} from '~core/series/types';
 import type {ChartMargin} from '~core/types';
 import {getSymbolBounds} from '~core/utils/symbol';
+
+import type {PreparedScatterSeries} from './prepared-series';
 
 /** Scatter paints its hover halo as well as its symbol, including on clusters. */
 export function getScatterMarkerBounds(

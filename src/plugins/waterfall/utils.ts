@@ -1,6 +1,6 @@
-import type {PreparedWaterfallSeries} from '~core/series/types';
-
 import type {WaterfallSeriesData} from '../../types';
+
+import type {PreparedWaterfallSeries} from './prepared-series';
 
 export function getWaterfallPointRole(point: WaterfallSeriesData) {
     return point.role ?? (point.total ? 'total' : 'change');

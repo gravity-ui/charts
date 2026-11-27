@@ -1,7 +1,8 @@
-import type {PreparedXRangeSeries} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
 import type {LabelData, TooltipDataChunkXRange} from '../../types';
+
+import type {PreparedXRangeSeries} from './prepared-series';
 
 export type PreparedXRangeData = Omit<TooltipDataChunkXRange, 'series'> & {
     x: number;

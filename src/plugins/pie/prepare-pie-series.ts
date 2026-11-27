@@ -3,12 +3,14 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
-import type {PreparedLegendOptions, PreparedPieSeries, PreparedSeries} from '~core/series/types';
+import type {PreparedLegendOptions, PreparedSeries} from '~core/series/types';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getUniqId} from '~core/utils';
 import {withSourcePoint} from '~core/utils/source-point';
 
 import type {ChartSeriesOptions, PieSeries, PieSeriesData} from '../../types';
+
+import type {PreparedPieSeries} from './prepared-series';
 
 type PreparePieSeriesArgs = {
     series: PieSeries[];

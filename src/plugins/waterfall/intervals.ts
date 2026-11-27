@@ -1,7 +1,6 @@
 import sortBy from 'es-toolkit/compat/sortBy';
 
-import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from '~core/series/types';
-
+import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from './prepared-series';
 import type {WaterfallInterval} from './types';
 import {getWaterfallPointRole} from './utils';
 

@@ -5,7 +5,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedAreaSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
@@ -30,6 +29,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareAreaSeries} from './prepare-area-series';
 import {prepareAreaData, projectAreaData} from './prepare-data';
+import type {PreparedAreaSeries} from './prepared-series';
 import {getAreaProjectionArgs} from './projection';
 import {renderArea} from './renderer';
 import {getAreaStackLabelAnchors} from './stack-labels';

@@ -4,7 +4,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedLineSeries} from '~core/series/types';
 import {getTooltipLineSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
@@ -23,6 +22,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareLineData, projectLineData} from './prepare-data';
 import {prepareLineSeries} from './prepare-line-series';
+import type {PreparedLineSeries} from './prepared-series';
 import {renderLine} from './renderer';
 import type {PreparedLineData} from './types';
 import {validateLabelAnchor} from './validation';

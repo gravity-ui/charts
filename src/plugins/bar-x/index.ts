@@ -5,7 +5,6 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
-import type {PreparedBarXSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterLayerLabels} from '~core/utils';
 import {
@@ -30,6 +29,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarXSeries} from './prepare-bar-x-series';
 import {prepareBarXData} from './prepare-data';
+import type {PreparedBarXSeries} from './prepared-series';
 import {renderBarX} from './renderer';
 import {getBarXStackLabelAnchors} from './stack-labels';
 import type {PreparedBarXData} from './types';
