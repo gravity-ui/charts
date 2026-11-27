@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.2.0](https://github.com/gravity-ui/charts/compare/v2.1.0...v2.2.0) (2026-11-27)
+
+
+### Features
+
+* add adaptive placement for waterfall data labels ([#853](https://github.com/gravity-ui/charts/issues/853)) ([b24c3ad](https://github.com/gravity-ui/charts/commit/b24c3adb160f2a517ef8bb2bbfc136e37460f23e))
+* add an option to show a single total for mixed-sign stacks ([#863](https://github.com/gravity-ui/charts/issues/863)) ([178e5bb](https://github.com/gravity-ui/charts/commit/178e5bb7de9261a8f67a42ca901df17373403556))
+* add area interpolation and fit line Y bounds to curves ([#849](https://github.com/gravity-ui/charts/issues/849)) ([fb6db0d](https://github.com/gravity-ui/charts/commit/fb6db0dc8dd2f1aeb35efea1cdb80ea6a3c5d5a0))
+
+
+### Bug Fixes
+
+* keep treemap point colors on hover ([#864](https://github.com/gravity-ui/charts/issues/864)) ([820aaaa](https://github.com/gravity-ui/charts/commit/820aaaae6598e720aa15000b5f260d6113175bfe))
+* preserve waterfall balances during zoom ([#860](https://github.com/gravity-ui/charts/issues/860)) ([1d32661](https://github.com/gravity-ui/charts/commit/1d326616790f77af7321a77c2f07488e428bc7fc))
+
 ## [2.1.0](https://github.com/gravity-ui/charts/compare/v2.0.0...v2.1.0) (2026-11-19)
 
 
