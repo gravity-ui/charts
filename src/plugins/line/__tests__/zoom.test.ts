@@ -4,11 +4,11 @@ import type {DomainViewport} from '~core/series/axis-contract';
 import {collectYAxisDomainValues} from '~core/series/axis-domain';
 import {getPreparedSeries} from '~core/series/prepareSeries';
 import type {PreparedLegendOptions} from '~core/series/types';
-import {getLineSegments, segmentIntersectsRect} from '~core/shapes/line/auto-placement';
 import {getZoomedSeriesData} from '~core/zoom/zoom';
 
 import type {LineSeries} from '../../../types';
 import * as interpolation from '../../interpolation';
+import {getLineSegments, segmentIntersectsRect} from '../auto-placement';
 import {filterLineData} from '../zoom';
 
 afterEach(() => jest.restoreAllMocks());

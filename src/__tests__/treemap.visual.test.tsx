@@ -77,6 +77,49 @@ test.describe('Treemap series', () => {
         await expect(svg).toHaveScreenshot('point-opacity-initial.png');
     });
 
+    test('Point color', async ({mount, page}) => {
+        const data: ChartData = {
+            series: {
+                data: [
+                    {
+                        type: 'treemap',
+                        name: 'Values',
+                        layoutAlgorithm: 'dice',
+                        levels: [{index: 1, color: '#e5a54b'}],
+                        data: [
+                            {id: 'point', name: 'Point color', value: 10, color: '#4bb4e5'},
+                            {id: 'level', name: 'Level color', value: 10},
+                            {id: 'group', name: 'Group'},
+                            {id: 'series', name: 'Series color', value: 10, parentId: 'group'},
+                        ],
+                        dataLabels: {enabled: true, html: false},
+                    },
+                ],
+                options: {
+                    treemap: {
+                        states: {
+                            hover: {enabled: true, brightness: 0},
+                            inactive: {enabled: false},
+                        },
+                    },
+                },
+            },
+            legend: {enabled: false},
+            tooltip: {enabled: false},
+        };
+
+        const component = await mount(<ChartTestStory data={data} />);
+        const svg = component.locator('svg');
+
+        await expect(svg).toHaveScreenshot('point-color-initial.png');
+        await component.locator('rect[id="point"]').hover({position: {x: 10, y: 10}});
+        await expect(svg).toHaveScreenshot('point-color-initial.png');
+        await component.locator('rect[id="level"]').hover({position: {x: 10, y: 10}});
+        await expect(svg).toHaveScreenshot('point-color-initial.png');
+        await page.mouse.move(0, 0);
+        await expect(svg).toHaveScreenshot('point-color-initial.png');
+    });
+
     test('With special symbols', async ({mount}) => {
         const data: ChartData = {
             series: {

@@ -6,9 +6,7 @@ import type {
 } from '~core/series/plugin';
 import {getStackedDomainValues} from '~core/series/stacked-domain';
 import type {PreparedBarYSeries} from '~core/series/types';
-import {filterBarYDataLabels, prepareBarYData} from '~core/shapes/bar-y/prepare-data';
-import {renderBarY} from '~core/shapes/bar-y/renderer';
-import type {BarYShapesArgs} from '~core/shapes/bar-y/types';
+import {getSeriesStackId} from '~core/series/utils';
 import {getTooltipColorSymbol, getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {hasOutsideOnlyPlacement} from '~core/utils/rect-label-placement';
 import {
@@ -32,7 +30,10 @@ import {getPercentStackDomain} from '../stacked-axis';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarYSeries} from './prepare-bar-y-series';
+import {filterBarYDataLabels, prepareBarYData} from './prepare-data';
+import {renderBarY} from './renderer';
 import {getBarYStackLabelAnchors} from './stack-labels';
+import type {BarYShapesArgs} from './types';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, seriesOptions, xAxis, xScale, yAxis, yScale, boundsHeight, boundsWidth} = args;
@@ -137,7 +138,7 @@ export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYForm
         validateAxisPlotValues({series, xAxis, yAxis});
         validateXYSeries({series, xAxis, yAxis});
         validateStacking({series});
-        validateBarGrouping({series, allSeries});
+        validateBarGrouping({series, allSeries, getStackKey: getSeriesStackId});
         validatePercentStackingValues({series, valueKey: 'x', valueAxisType: xAxis?.type});
     },
     getXAxisPadding: ({dataLabels, stacking}) =>

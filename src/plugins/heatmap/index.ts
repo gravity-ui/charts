@@ -5,16 +5,16 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedHeatmapSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/heatmap/get-tooltip-data';
-import {prepareHeatmapData} from '~core/shapes/heatmap/prepare-data';
-import {renderHeatmap} from '~core/shapes/heatmap/renderer';
-import type {PreparedHeatmapData} from '~core/shapes/heatmap/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import type {HeatmapSeries, TooltipDataChunkHeatmap} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {prepareHeatmapData} from './prepare-data';
 import {prepareHeatmapSeries} from './prepare-heatmap-series';
+import {renderHeatmap} from './renderer';
+import type {PreparedHeatmapData} from './types';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, xAxis, xScale, yAxis, yScale} = args;

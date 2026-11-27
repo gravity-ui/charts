@@ -10,15 +10,15 @@ import type {
     PreparedLegend,
     PreparedSeriesOptions,
 } from '~core/series/types';
-import {formatAreaRangeDataLabel} from '~core/shapes/area-range/format';
-import {getTooltipData} from '~core/shapes/area-range/get-tooltip-data';
-import {prepareAreaRangeData} from '~core/shapes/area-range/prepare-data';
-import {renderAreaRange} from '~core/shapes/area-range/renderer';
-import {getRangeBBox} from '~core/shapes/area-range/utils';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '~core/utils/common';
 
 import type {AreaRangeSeries, AreaRangeSeriesData, ChartSeriesOptions} from '../../../types';
+import {formatAreaRangeDataLabel} from '../format';
+import {getTooltipData} from '../get-tooltip-data';
 import {prepareAreaRangeSeries} from '../prepare-area-range-series';
+import {prepareAreaRangeData} from '../prepare-data';
+import {renderAreaRange} from '../renderer';
+import {getRangeBBox} from '../utils';
 
 function createSeries(
     data: AreaRangeSeriesData[],

@@ -1,6 +1,4 @@
 import type {PreparedAreaSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/area/get-tooltip-data';
-import type {PointData, PreparedAreaData} from '~core/shapes/area/types';
 import {
     getInteractionElements,
     getMarkerInteractionElements,
@@ -12,7 +10,9 @@ import {getPointCandidates} from '~core/utils/nearest-point';
 
 import type {AreaSeriesData} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import type {AreaInteractionItem} from './interaction-types';
+import type {PointData, PreparedAreaData} from './types';
 
 const sourcePoints = new WeakMap<AreaSeriesData[], Set<AreaSeriesData>>();
 const shapePoints = new WeakMap<PreparedAreaData, PointData[]>();

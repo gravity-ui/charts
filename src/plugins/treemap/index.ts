@@ -6,17 +6,17 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedTreemapSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/treemap/get-tooltip-data';
-import {prepareTreemapData} from '~core/shapes/treemap/prepare-data';
-import {renderTreemap} from '~core/shapes/treemap/renderer';
-import type {PreparedTreemapData} from '~core/shapes/treemap/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkTreemap, TreemapSeries} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {prepareTreemapData} from './prepare-data';
 import {prepareTreemap} from './prepare-treemap-series';
+import {renderTreemap} from './renderer';
+import type {PreparedTreemapData} from './types';
 
 async function prepareShapeData({
     series,

@@ -12,6 +12,11 @@ export interface SeriesDataSelection<TPoint = unknown> {
 export interface FilterSeriesDataArgs<TSeries> {
     series: TSeries;
     viewport: DomainViewport;
+    /**
+     * Prepared series of the same type, including the current series, before viewport filtering.
+     * Each series carries its current legend visibility.
+     */
+    seriesGroup?: readonly TSeries[];
 }
 
 interface FilterPointsOptions<TPoint> {

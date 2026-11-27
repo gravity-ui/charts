@@ -6,18 +6,18 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedXRangeSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/x-range/get-tooltip-data';
-import {prepareXRangeData} from '~core/shapes/x-range/prepare-data';
-import {renderXRange} from '~core/shapes/x-range/renderer';
-import type {PreparedXRangeData} from '~core/shapes/x-range/types';
 import {getTooltipColorSymbol, getTooltipYValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 import {filterPoints} from '~core/zoom/filter-data';
 
 import type {TooltipDataChunkXRange, XRangeSeries, XRangeSeriesData} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {prepareXRangeData} from './prepare-data';
 import {prepareXRangeSeries} from './prepare-x-range-series';
+import {renderXRange} from './renderer';
+import type {PreparedXRangeData} from './types';
 
 async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> {
     const {series, xAxis, xScale, yAxis, yScale, boundsWidth, isRangeSlider} = args;

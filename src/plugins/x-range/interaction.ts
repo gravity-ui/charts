@@ -1,9 +1,9 @@
-import type {PreparedXRangeData} from '~core/shapes/x-range/types';
 import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {XRangeInteractionItem} from './interaction-types';
+import type {PreparedXRangeData} from './types';
 
 export function getTargetElements({
     plot,

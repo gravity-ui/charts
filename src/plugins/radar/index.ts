@@ -5,17 +5,17 @@ import type {
     SeriesPlugin,
 } from '~core/series/plugin';
 import type {PreparedRadarSeries} from '~core/series/types';
-import {getTooltipData} from '~core/shapes/radar/get-tooltip-data';
-import {prepareRadarData} from '~core/shapes/radar/prepare-data';
-import {renderRadar} from '~core/shapes/radar/renderer';
-import type {PreparedRadarData} from '~core/shapes/radar/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {RadarSeries, TooltipDataChunkRadar} from '../../types';
 
+import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import {prepareRadarData} from './prepare-data';
 import {prepareRadarSeries} from './prepare-radar-series';
+import {renderRadar} from './renderer';
+import type {PreparedRadarData} from './types';
 
 async function prepareShapeData({
     series,
