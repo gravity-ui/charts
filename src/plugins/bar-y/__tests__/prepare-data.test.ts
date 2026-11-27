@@ -3,7 +3,7 @@
 import {scaleBand, scaleLinear, scaleLog, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
-import {seriesOptionsDefaults} from '~core/constants';
+import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
 import type {ShapeLabels} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
@@ -52,10 +52,7 @@ async function prepare(
         series,
         boundsWidth: width,
         boundsHeight: height,
-        seriesOptions: {
-            ...seriesOptionsDefaults,
-            'bar-y': {...seriesOptionsDefaults['bar-y'], ...options.seriesOptions},
-        },
+        seriesOptions: getPreparedOptions({'bar-y': options.seriesOptions}),
         xAxis: {type: options.logarithmic ? 'logarithmic' : 'linear'} as PreparedXAxis,
         xScale: (options.logarithmic ? scaleLog() : scaleLinear())
             .domain(domain)

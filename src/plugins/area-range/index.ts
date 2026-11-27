@@ -21,6 +21,7 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {AreaRangeSeries, AreaRangeSeriesData, TooltipDataChunkAreaRange} from '../../types';
 
 import {getAreaRangeAxisPadding} from './axis-padding';
+import {areaRangeDefaults} from './defaults';
 import {formatAreaRange, getAreaRangeWidth} from './format';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -41,6 +42,7 @@ function isAreaRangePointInYRange({y0, y1}: AreaRangeSeriesData, {range}: Domain
 
 export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
     type: 'area-range',
+    optionsDefaults: areaRangeDefaults,
     axes: {
         y: {
             getData: ({series, viewport}) => ({

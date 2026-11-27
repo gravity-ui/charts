@@ -24,6 +24,7 @@ import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
 
 import {getAreaAxisPadding} from './axis-padding';
+import {areaDefaults} from './defaults';
 import {getAreaAxisData} from './domain';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -39,6 +40,7 @@ import {filterAreaData} from './zoom';
 
 export const areaPlugin: SeriesPlugin<AreaSeries, TooltipDataChunkArea, AreaFormatContext> = {
     type: 'area',
+    optionsDefaults: areaDefaults,
     axes: {
         x: {singleValueDomain: 'center'},
         y: {

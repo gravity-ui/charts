@@ -153,8 +153,10 @@ it('keeps the migrated tooltip runtime independent of built-in series implementa
     expect(violations).toEqual([]);
 });
 
-it('keeps migrated grouping and clipping independent of built-in series implementations', () => {
+it('keeps defaults, grouping and clipping independent of built-in series implementations', () => {
     const files = [
+        'core/constants/defaults/series-options.ts',
+        'core/series/prepare-options.ts',
         'core/series/layers.ts',
         'core/series/prepareSeries.ts',
         'core/shapes/utils.ts',

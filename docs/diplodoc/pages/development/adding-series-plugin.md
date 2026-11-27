@@ -105,7 +105,7 @@ A missing header value can be replaced by a custom formatter. An omitted header 
 
 ## 6. Register and integrate
 
-Register the plugin in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts) and add applicable [defaults](https://github.com/gravity-ui/charts/blob/main/src/core/constants/defaults/series-options.ts).
+Register the plugin in [plugins/index.ts](https://github.com/gravity-ui/charts/blob/main/src/plugins/index.ts). If the series has default options, define them in its `defaults.ts` and assign them to `optionsDefaults` on the plugin. Chart preparation merges `series.options[type]` over these defaults, including nested fields.
 
 Trace shared axes, scales, layers, zoom, and tooltip consumers. Extend the plugin contract when necessary; keep series-name branches and implementation imports out of shared runtime code.
 

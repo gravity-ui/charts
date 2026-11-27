@@ -12,6 +12,7 @@ import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
 import {validateBarLabelPlacement} from '../bar-label-placement';
 
+import {waterfallDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {getWaterfallIntervals, resolveWaterfallIntervals} from './intervals';
@@ -66,6 +67,7 @@ async function prepareShapeData(args: PrepareShapeDataArgs): Promise<PrepareShap
 
 export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     type: 'waterfall',
+    optionsDefaults: waterfallDefaults,
     axes: {
         y: {
             baseline: 0,

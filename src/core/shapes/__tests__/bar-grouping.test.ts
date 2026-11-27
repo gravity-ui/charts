@@ -10,8 +10,8 @@ import {prepareBarYSeries} from '../../../plugins/bar-y/prepare-bar-y-series';
 import {prepareBarYData} from '../../../plugins/bar-y/prepare-data';
 import type {BarXSeries, BarYSeries} from '../../../types';
 import type {PreparedXAxis, PreparedYAxis} from '../../axes/types';
-import {seriesOptionsDefaults} from '../../constants';
 import type {PreparedSplit} from '../../layout/split-types';
+import {getPreparedOptions} from '../../series/prepare-options';
 import type {PreparedLegend} from '../../series/types';
 import {getDomainDataXBySeries, getDomainDataYBySeries} from '../../utils/common';
 import {getClosestPoints} from '../../utils/get-closest-data';
@@ -55,10 +55,7 @@ describe.each(['bar-x', 'bar-y'] as const)('%s grouping', (type) => {
         const valueScale = scaleLinear()
             .domain(inputs.some((s) => s.stacking === 'percent') ? [0, 100] : [-100, 100])
             .range(increases ? [0, valueSize] : [valueSize, 0]);
-        const seriesOptions = {
-            ...seriesOptionsDefaults,
-            [type]: {...seriesOptionsDefaults[type], ...layoutOptions},
-        };
+        const seriesOptions = getPreparedOptions({[type]: layoutOptions});
         const common = {
             legend,
             seriesOptions,

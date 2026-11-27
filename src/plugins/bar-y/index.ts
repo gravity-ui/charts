@@ -26,6 +26,7 @@ import {prepareStackLabels, renderStackLabels} from '../stack-labels';
 import {validateStackLabelsOptions} from '../stack-labels-options';
 import {getPercentStackDomain} from '../stacked-axis';
 
+import {barYDefaults} from './defaults';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareBarYSeries} from './prepare-bar-y-series';
@@ -93,6 +94,7 @@ function renderShapes({
 
 export const barYPlugin: SeriesPlugin<BarYSeries, TooltipDataChunkBarY, BarYFormatContext> = {
     type: 'bar-y',
+    optionsDefaults: barYDefaults,
     axes: {
         x: {
             baseline: 0,

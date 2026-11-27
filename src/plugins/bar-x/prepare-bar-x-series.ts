@@ -1,10 +1,6 @@
 import get from 'es-toolkit/compat/get';
 
-import {
-    DEFAULT_DATALABELS_STYLE,
-    seriesOptionsDefaults,
-    seriesRangeSliderOptionsDefaults,
-} from '~core/constants';
+import {DEFAULT_DATALABELS_STYLE, seriesRangeSliderOptionsDefaults} from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
 import type {PreparedSeries} from '~core/series/types';
@@ -17,6 +13,7 @@ import type {BarXSeries, BarXSeriesData} from '../../types';
 import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
 
+import {barXDefaults} from './defaults';
 import type {PreparedBarXSeries} from './prepared-series';
 import {getBarXStackKey} from './utils';
 
@@ -63,10 +60,10 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             grouping: series.grouping ?? true,
             barPadding:
                 series.barPadding ??
-                get(seriesOptions, 'bar-x.barPadding', seriesOptionsDefaults['bar-x'].barPadding),
+                get(seriesOptions, 'bar-x.barPadding', barXDefaults.barPadding),
             barMaxWidth:
                 series.barMaxWidth ??
-                get(seriesOptions, 'bar-x.barMaxWidth', seriesOptionsDefaults['bar-x'].barMaxWidth),
+                get(seriesOptions, 'bar-x.barMaxWidth', barXDefaults.barMaxWidth),
             stackLabels: series.stackLabels,
             // Non-stacked overlays need independent domains even with a stackId.
             stackId: getSeriesStackId(series),
