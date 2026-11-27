@@ -88,7 +88,7 @@ export interface BasicInactiveState {
 
 export interface StackLabelsAggregationArgs<T = MeaningfulAny> {
     /**
-     * Original participating points from visible series at the same category or X, grouped by stack and sign.
+     * Original participating points from visible series in the same stack, value axis and category or X.
      * Includes points on both sides of area gaps and real points isolated between nulls; excludes synthetic area points.
      */
     points: (BarXSeriesData<T> | BarYSeriesData<T> | AreaSeriesData<T>)[];
@@ -96,7 +96,7 @@ export interface StackLabelsAggregationArgs<T = MeaningfulAny> {
 
 /**
  * Raw totals of visible stacked series. Participants in one stack and value axis must
- * resolve to identical aggregation, style, format, padding and allowOverlap settings or validation fails.
+ * resolve to identical mode, aggregation, style, format, padding and allowOverlap settings or validation fails.
  */
 export interface StackLabelsOptions<T = MeaningfulAny> {
     /**
@@ -105,9 +105,16 @@ export interface StackLabelsOptions<T = MeaningfulAny> {
      */
     enabled?: boolean;
     /**
-     * Calculate the label value without changing stack geometry or sign grouping.
+     * Control how points are grouped for each stack total.
+     * - `'perSign'`: Calculate separate totals for positive and negative values.
+     * - `'allSigns'`: Calculate one total from all participating values in the stack at each category or X.
+     * @default 'perSign'
+     */
+    mode?: 'perSign' | 'allSigns';
+    /**
+     * Calculate the label value from the points grouped by `mode`.
      * Return a finite number; NaN and infinite results hide the label. Returning zero does not itself hide it.
-     * Area totals include isolated real points, but no label is shown without an area boundary at that X.
+     * Area totals include isolated real points. `allSigns` can anchor the label to a visible marker at a gap.
      * - `'sum'`: Sum raw values (`x` for bar-y, `y` for bar-x and area).
      * @default 'sum'
      */

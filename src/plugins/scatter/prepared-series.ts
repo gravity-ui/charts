@@ -1,8 +1,7 @@
-import type {SymbolType} from '~core/constants';
 import type {
     BasePreparedAxisRelatedSeries,
     BasePreparedSeries,
-    PreparedHaloOptions,
+    PreparedSeriesMarker,
 } from '~core/series/types';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 
@@ -32,24 +31,7 @@ export type PreparedScatterSeries = {
         html: boolean;
         format?: ValueFormat;
     };
-    marker: {
-        states: {
-            normal: {
-                symbol: `${SymbolType}`;
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-            };
-            hover: {
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-                halo: PreparedHaloOptions;
-            };
-        };
-    };
+    marker: PreparedSeriesMarker;
     yAxis: number;
 } & BasePreparedSeries &
     BasePreparedAxisRelatedSeries;
