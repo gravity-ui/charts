@@ -127,21 +127,26 @@ describe('bar-x stack label anchors', () => {
 });
 
 describe.each([barXPlugin, barYPlugin])('$type combined stack labels', (plugin) => {
-    const mixedValues = [
-        [100, 30],
-        [-30, -30],
-    ];
-
-    test('sums both signs and shows a zero total when they cancel out', async () => {
-        const {result} = await prepare(plugin, mixedValues, 'normal', {
+    test('sums both signs and shows zero when fractions cancel in either order', async () => {
+        const values = [
+            [100, 1, 1],
+            [-30, 1 / 3, -1],
+            [null, -1, 1 / 3],
+            [null, -1 / 3, -1 / 3],
+        ];
+        const {result} = await prepare(plugin, values, 'normal', {
             enabled: true,
             mode: 'allSigns',
         });
 
-        expect(texts(result.labels)).toEqual(['0', '70']);
+        expect(texts(result.labels)).toEqual(['0', '0', '70']);
     });
 
     test('passes original points of both signs to the callback once per category', async () => {
+        const mixedValues = [
+            [100, 30],
+            [-30, -30],
+        ];
         const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
         const {raw} = await prepare(plugin, mixedValues, 'normal', {
             enabled: true,

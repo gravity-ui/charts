@@ -1,3 +1,4 @@
+import {fsum} from 'd3-array';
 import isNil from 'es-toolkit/compat/isNil';
 
 import {SIZE_REGEXP} from '../constants/dimensions';
@@ -7,7 +8,7 @@ function shiftDecimal(value: number, places: number): number {
     return Number(`${coefficient}e${Number(exponent) + places}`);
 }
 
-/** Sum decimal values as safe integers; use native addition outside that range. */
+/** Sum decimals as safe integers where possible, with compensated addition for finite values. */
 export function sumDecimals(values: readonly number[]): number {
     const precision = values.reduce((max, value) => {
         const [coefficient, exponent = '0'] = String(value).split('e');
@@ -20,6 +21,11 @@ export function sumDecimals(values: readonly number[]): number {
         const scaled = shiftDecimal(value, precision);
         const next = total + scaled;
         if (!Number.isSafeInteger(scaled) || !Number.isSafeInteger(next)) {
+            if (values.every(Number.isFinite)) {
+                const sum = fsum(values);
+                if (Number.isFinite(sum)) return sum;
+            }
+
             return values.reduce((sum, item) => sum + item, 0);
         }
         total = next;
