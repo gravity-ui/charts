@@ -2,9 +2,8 @@ import {group} from 'd3-array';
 
 import type {PrepareShapeDataArgs} from '~core/series/plugin';
 import {getDataCategoryValue} from '~core/utils';
-import {sumDecimals} from '~core/utils/math';
 
-import {getStackLabelValue} from '../stack-labels';
+import {getStackLabelGroups, getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
@@ -37,18 +36,10 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
         const options = optionsBySeries.get(items[0].series);
         if (!options?.enabled) continue;
         const plotIndex = args.yAxis?.[items[0].series.yAxis]?.plotIndex ?? 0;
-        const pointsBySign = group(
-            items.filter((item) => typeof item.data.y === 'number' && Number.isFinite(item.data.y)),
-            (item) => Number(item.data.y) < 0,
-        );
-        for (const negative of [false, true]) {
-            const points = pointsBySign.get(negative);
-            if (!points?.length) continue;
-            const total = sumDecimals(points.map((item) => Number(item.data.y)));
-            // Zero segments do not add a separate total beside a negative stack.
-            if (total === 0 && pointsBySign.has(true)) continue;
-            const extendsUp = points[0].extendsUp;
-            const outer = points.reduce((end, item) =>
+        const groups = getStackLabelGroups(items, (item) => item.data.y, options.mode);
+        for (const {points, edgePoints, total} of groups) {
+            const extendsUp = edgePoints[0].extendsUp;
+            const outer = edgePoints.reduce((end, item) =>
                 (extendsUp ? item.y < end.y : item.y + item.height > end.y + end.height)
                     ? item
                     : end,

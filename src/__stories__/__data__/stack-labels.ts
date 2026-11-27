@@ -57,3 +57,35 @@ export function getStackLabelsAggregationData(type: 'bar-x' | 'bar-y' | 'area'):
 
     return data;
 }
+
+interface AllSignsStackLabelsDataProps {
+    type: 'bar-x' | 'area';
+    categories: string[];
+    valueAxis: {min: number; max: number};
+    entries: {name: string; values: (number | null)[]; markerIndex?: number}[];
+}
+
+export function getAllSignsStackLabelsData({
+    type,
+    categories,
+    valueAxis,
+    entries,
+}: AllSignsStackLabelsDataProps): ChartData {
+    return {
+        xAxis: {type: 'category', categories},
+        yAxis: [valueAxis],
+        series: {
+            data: entries.map(({name, values, markerIndex}) => ({
+                type,
+                name,
+                stacking: 'normal',
+                data: values.map((y, x) => ({
+                    x,
+                    y,
+                    ...(x === markerIndex && {marker: {states: {normal: {enabled: true}}}}),
+                })),
+            })),
+            options: {[type]: {stackLabels: {enabled: true, mode: 'allSigns'}}},
+        },
+    };
+}

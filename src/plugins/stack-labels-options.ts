@@ -20,6 +20,18 @@ function validateStackLabelsAggregation(aggregation: StackLabelsOptions['aggrega
     });
 }
 
+function validateStackLabelsMode(mode: StackLabelsOptions['mode']) {
+    if (mode === undefined || mode === 'perSign' || mode === 'allSigns') return;
+
+    throw new ChartError({
+        code: CHART_ERROR_CODE.INVALID_DATA,
+        message: i18n('error', 'label_invalid-series-property', {
+            key: 'stackLabels.mode',
+            values: 'perSign or allSigns',
+        }),
+    });
+}
+
 export function resolveStackLabelsOptions(
     defaults?: StackLabelsOptions,
     overrides?: StackLabelsOptions,
@@ -27,6 +39,7 @@ export function resolveStackLabelsOptions(
     return {
         aggregation: overrides?.aggregation ?? defaults?.aggregation ?? 'sum',
         enabled: overrides?.enabled ?? defaults?.enabled ?? false,
+        mode: overrides?.mode ?? defaults?.mode ?? 'perSign',
         format: overrides?.format ?? defaults?.format,
         style: {...DEFAULT_DATALABELS_STYLE, ...defaults?.style, ...overrides?.style},
         padding: overrides?.padding ?? defaults?.padding ?? 5,
@@ -44,6 +57,7 @@ export function validateStackLabelsOptions(args: {
     if (allSeries.find((item) => item.type === series.type) !== series) return;
 
     validateStackLabelsAggregation(options?.aggregation);
+    validateStackLabelsMode(options?.mode);
     const stacks = new Map<
         string,
         {name: string; options: ReturnType<typeof resolveStackLabelsOptions>}
@@ -52,6 +66,7 @@ export function validateStackLabelsOptions(args: {
         if (item.type !== series.type) continue;
         const stacked = item as typeof series;
         validateStackLabelsAggregation(stacked.stackLabels?.aggregation);
+        validateStackLabelsMode(stacked.stackLabels?.mode);
         if (!stacked.stacking) continue;
         const resolved = resolveStackLabelsOptions(options, stacked.stackLabels);
         if (!resolved.enabled) continue;
