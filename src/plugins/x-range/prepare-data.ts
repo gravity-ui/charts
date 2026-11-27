@@ -4,7 +4,8 @@ import get from 'es-toolkit/compat/get';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import {MIN_BAR_WIDTH} from '~core/shapes/bar-constants';
+import type {PreparedSeriesOptions} from '~core/series/types';
+import {getBarBandContentSize, getBarWidth} from '~core/shapes/bar-width';
 import {
     getDataCategoryValue,
     getLabelsSize,
@@ -12,7 +13,7 @@ import {
     getTextWithElipsis,
     isPointDataLabelEnabled,
 } from '~core/utils';
-import {getBandSize} from '~core/utils/band-size';
+import {getBarBandSize} from '~core/utils/band-size';
 import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, LabelData} from '../../types';
@@ -20,9 +21,8 @@ import type {HtmlItem, LabelData} from '../../types';
 import type {PreparedXRangeSeries} from './prepared-series';
 import type {PreparedXRangeData} from './types';
 
-const DEFAULT_BAR_PADDING = 0.2;
-
-type PrepareXRangeDataArgs = {
+interface PrepareXRangeDataArgs {
+    options: PreparedSeriesOptions['x-range'];
     series: PreparedXRangeSeries[];
     xAxis: PreparedXAxis;
     xScale: ChartScale;
@@ -30,7 +30,7 @@ type PrepareXRangeDataArgs = {
     yScale: (ChartScale | undefined)[];
     boundsWidth?: number;
     isRangeSlider?: boolean;
-};
+}
 
 export async function prepareXRangeData(
     args: PrepareXRangeDataArgs,
@@ -49,26 +49,17 @@ export async function prepareXRangeData(
         return [];
     }
 
-    // Collect unique y-domain values
-    const domain: AxisDomain[] = [];
-    const seen = new Set<string | number>();
-    const categories = get(yAxis[0], 'categories', [] as string[]);
-
-    series.forEach((s) => {
-        s.data.forEach((d) => {
-            const key =
-                yAxis[0].type === 'category'
-                    ? getDataCategoryValue({axisDirection: 'y', categories, data: d})
-                    : d.y;
-            if (key !== undefined && !seen.has(key as string | number)) {
-                seen.add(key as string | number);
-                domain.push(key as AxisDomain);
-            }
-        });
-    });
-
-    const bandSize = getBandSize({domain, scale: yScale as AxisScale<AxisDomain>});
-    const barSize = Math.max(MIN_BAR_WIDTH, bandSize * (1 - DEFAULT_BAR_PADDING));
+    const categories = yAxis[0].categories ?? [];
+    const domain =
+        yAxis[0].type === 'category'
+            ? yScale.domain()
+            : series.flatMap((s) => s.data.map((point) => Number(point.y)));
+    const bandSize = getBarBandSize({domain, scale: yScale as AxisScale<AxisDomain>});
+    const barSize = getBarWidth(
+        getBarBandContentSize(bandSize),
+        args.options.barPadding,
+        args.options.barMaxWidth,
+    );
 
     const result: PreparedXRangeData[] = [];
 

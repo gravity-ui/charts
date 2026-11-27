@@ -5,10 +5,10 @@ import sortBy from 'es-toolkit/compat/sortBy';
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedSeriesOptions} from '~core/series/types';
-import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '~core/shapes/bar-constants';
+import {getBarBandContentSize, getBarWidth} from '~core/shapes/bar-width';
 import {PLOT_BOUNDS_PIXEL_TOLERANCE, getXValue, getYValue} from '~core/shapes/utils';
 import {isPointDataLabelEnabled} from '~core/utils';
-import {getBandSize} from '~core/utils/band-size';
+import {getBarBandSize} from '~core/utils/band-size';
 import {getFormattedValue} from '~core/utils/format';
 import {placeRectLabel} from '~core/utils/rect-label-placement';
 import {createLabelMeasurer} from '~core/utils/text';
@@ -77,10 +77,8 @@ function getBandWidth(args: {
     const domain =
         xAxis.type === 'category'
             ? xScale.domain()
-            : [...new Set(series.flatMap((s) => s.data.map((point) => Number(point.x))))]
-                  .filter(Number.isFinite)
-                  .sort((a, b) => a - b);
-    return getBandSize({domain, scale: xScale as AxisScale<AxisDomain>});
+            : series.flatMap((s) => s.data.map((point) => Number(point.x)));
+    return getBarBandSize({domain, scale: xScale as AxisScale<AxisDomain>});
 }
 
 interface DataItem {
@@ -119,8 +117,7 @@ export const prepareWaterfallData = async (args: {
     const canPlaceLabels = bounds.width > 0 && bounds.height > 0;
     const measureLabel = createLabelMeasurer();
     const reversedYAxis = rangeStart < rangeEnd;
-    const barMaxWidth = get(seriesOptions, 'waterfall.barMaxWidth');
-    const barPadding = get(seriesOptions, 'waterfall.barPadding');
+    const {barMaxWidth, barPadding} = seriesOptions.waterfall;
 
     const data = sortBy<DataItem>(
         series.flatMap((s) => s.data.map((d) => ({data: d, series: s}))),
@@ -132,8 +129,7 @@ export const prepareWaterfallData = async (args: {
         xAxis,
         xScale,
     });
-    const rectGap = Math.max(bandWidth * barPadding, MIN_BAR_GAP);
-    const rectWidth = Math.max(MIN_BAR_WIDTH, Math.min(bandWidth - rectGap, barMaxWidth));
+    const rectWidth = getBarWidth(getBarBandContentSize(bandWidth), barPadding, barMaxWidth);
 
     const result: PreparedWaterfallData[] = [];
     for (const item of data) {

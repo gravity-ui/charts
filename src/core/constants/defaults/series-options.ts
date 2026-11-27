@@ -1,3 +1,8 @@
+import {
+    DEFAULT_BAR_BAND_PADDING,
+    DEFAULT_BAR_MAX_WIDTH,
+    DEFAULT_BAR_PADDING,
+} from '../../shapes/bar-constants';
 import type {ChartSeriesOptions, ChartSeriesRangeSliderOptions} from '../../types';
 
 type DefaultBarXSeriesOptions = Partial<ChartSeriesOptions['bar-x']> & {
@@ -16,14 +21,14 @@ export type SeriesOptionsDefaults = Partial<ChartSeriesOptions> &
     DefaultBarXSeriesOptions &
     DefaultBarYSeriesOptions &
     DefaultWaterfallSeriesOptions & {
-        'x-range': {borderRadius: number};
+        'x-range': {barMaxWidth: number; barPadding: number; borderRadius: number};
     };
 
 export const seriesOptionsDefaults: SeriesOptionsDefaults = {
     'bar-x': {
-        barMaxWidth: 50,
-        barPadding: 0.2,
-        groupPadding: 0.1,
+        barMaxWidth: DEFAULT_BAR_MAX_WIDTH,
+        barPadding: DEFAULT_BAR_PADDING,
+        groupPadding: DEFAULT_BAR_BAND_PADDING,
         stackGap: 1,
         states: {
             hover: {
@@ -37,9 +42,9 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
         },
     },
     'bar-y': {
-        barMaxWidth: 50,
-        barPadding: 0.2,
-        groupPadding: 0.1,
+        barMaxWidth: DEFAULT_BAR_MAX_WIDTH,
+        barPadding: DEFAULT_BAR_PADDING,
+        groupPadding: DEFAULT_BAR_BAND_PADDING,
         stackGap: 1,
         states: {
             hover: {
@@ -137,8 +142,8 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
         },
     },
     waterfall: {
-        barMaxWidth: 50,
-        barPadding: 0.2,
+        barMaxWidth: DEFAULT_BAR_MAX_WIDTH,
+        barPadding: DEFAULT_BAR_PADDING,
         states: {
             hover: {
                 enabled: true,
@@ -167,6 +172,8 @@ export const seriesOptionsDefaults: SeriesOptionsDefaults = {
         },
     },
     'x-range': {
+        barMaxWidth: DEFAULT_BAR_MAX_WIDTH,
+        barPadding: DEFAULT_BAR_PADDING,
         borderRadius: 0,
         states: {
             hover: {

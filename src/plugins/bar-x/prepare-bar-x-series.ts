@@ -63,10 +63,12 @@ export function prepareBarXSeries(args: PrepareSeriesArgs<BarXSeries>): Prepared
             grouping: series.grouping ?? true,
             barPadding:
                 series.barPadding ??
-                get(seriesOptions, 'bar-x.barPadding', seriesOptionsDefaults['bar-x'].barPadding),
+                seriesOptions?.['bar-x']?.barPadding ??
+                seriesOptionsDefaults['bar-x'].barPadding,
             barMaxWidth:
                 series.barMaxWidth ??
-                get(seriesOptions, 'bar-x.barMaxWidth', seriesOptionsDefaults['bar-x'].barMaxWidth),
+                seriesOptions?.['bar-x']?.barMaxWidth ??
+                seriesOptionsDefaults['bar-x'].barMaxWidth,
             stackLabels: series.stackLabels,
             // Non-stacked overlays need independent domains even with a stackId.
             stackId: getSeriesStackId(series),

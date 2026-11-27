@@ -2,13 +2,12 @@ import type {AxisDomain, AxisScale} from 'd3-axis';
 
 import {isBandScale} from '../utils';
 
-export function getBandSize({
-    domain,
-    scale,
-}: {
+interface BandSizeArgs {
     domain: AxisDomain[];
     scale: AxisScale<AxisDomain> | undefined;
-}) {
+}
+
+export function getBandSize({domain, scale}: BandSizeArgs) {
     if (!scale || !domain.length) {
         return 0;
     }
@@ -40,4 +39,14 @@ export function getBandSize({
     });
 
     return bandWidth;
+}
+
+/** Bars on continuous axes share the smallest spacing between distinct positions. */
+export function getBarBandSize({domain, scale}: BandSizeArgs) {
+    if (scale && !isBandScale(scale)) {
+        const positions = [...new Set(domain.map(Number).filter(Number.isFinite))];
+        positions.sort((a, b) => a - b);
+        return getBandSize({domain: positions, scale});
+    }
+    return getBandSize({domain, scale});
 }

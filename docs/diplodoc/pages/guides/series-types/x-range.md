@@ -16,6 +16,17 @@ Set `type: 'x-range'`. Each point contains `x0` (start), `x1` (end), and a `y` r
 
 ## Series options
 
+Set `barMaxWidth` in `series.options['x-range']` to cap interval height in pixels (default 50, minimum 1). To adjust spacing, set `barPadding` to a fraction from 0 to 1 (default 0.2). Larger values leave more space between rows.
+
+```ts
+series: {
+    options: {
+        'x-range': {barMaxWidth: 24, barPadding: 0.3},
+    },
+    data: timelineSeries,
+}
+```
+
 Use `borderRadius`, `borderWidth`, `borderColor`, and `borderDashStyle` for bar borders. Set `opacity` on a series or point to control transparency.
 
 ## Data labels

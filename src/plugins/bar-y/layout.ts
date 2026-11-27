@@ -5,10 +5,9 @@ import type {PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import {getSeriesStackId} from '~core/series/utils';
-import {MIN_BAR_GROUP_GAP} from '~core/shapes/bar-constants';
-import {getBarLayout} from '~core/shapes/bar-width';
+import {getBarBandContentSize, getBarLayout} from '~core/shapes/bar-width';
 import {getDataCategoryValue, isBandScale} from '~core/utils';
-import {getBandSize} from '~core/utils/band-size';
+import {getBarBandSize} from '~core/utils/band-size';
 
 import type {BarYSeriesData} from '../../types';
 
@@ -67,12 +66,9 @@ export function getBarYLayout(args: {
     scale: ChartScale | undefined;
 }) {
     const {groupedData, seriesOptions, scale} = args;
-    const barMaxWidth = get(seriesOptions, 'bar-y.barMaxWidth');
-    const barPadding = get(seriesOptions, 'bar-y.barPadding');
-    const groupPadding = get(seriesOptions, 'bar-y.groupPadding');
+    const {barMaxWidth, barPadding, groupPadding} = seriesOptions['bar-y'];
     const domain = Object.keys(groupedData);
-    const bandSize = getBandSize({domain, scale: scale as AxisScale<AxisDomain>});
-    const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
+    const bandSize = getBarBandSize({domain, scale: scale as AxisScale<AxisDomain>});
     const layoutSeries = new Set<PreparedBarYSeries>();
     const categoryDomain = isBandScale(scale) ? new Set(scale.domain().map(String)) : undefined;
     let maxGroupSize = 1;
@@ -87,7 +83,7 @@ export function getBarYLayout(args: {
         }
         maxGroupSize = Math.max(maxGroupSize, groupCount);
     }
-    const groupSize = Math.max(0, bandSize - groupGap);
+    const groupSize = getBarBandContentSize(bandSize, groupPadding);
     const barSlotSize = groupSize / maxGroupSize;
     const {width: barSize, gap: barGap} = getBarLayout(
         layoutSeries,

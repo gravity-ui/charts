@@ -8,10 +8,9 @@ import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
 import type {PreparedSeriesOptions} from '~core/series/types';
-import {MIN_BAR_GROUP_GAP} from '~core/shapes/bar-constants';
-import {getBarLayout, getBarWidthBySeries} from '~core/shapes/bar-width';
+import {getBarBandContentSize, getBarLayout, getBarWidthBySeries} from '~core/shapes/bar-width';
 import {getDataCategoryValue, isPointDataLabelEnabled} from '~core/utils';
-import {getBandSize} from '~core/utils/band-size';
+import {getBarBandSize} from '~core/utils/band-size';
 import {getFormattedValue} from '~core/utils/format';
 import {getPositiveShare} from '~core/utils/percentage';
 import {hasOutsideOnlyPlacement, placeRectLabel} from '~core/utils/rect-label-placement';
@@ -229,15 +228,12 @@ export const prepareBarXData = async (args: {
 
     const result: PreparedBarXData[] = [];
 
-    const barMaxWidth = get(seriesOptions, 'bar-x.barMaxWidth');
-    const barPadding = get(seriesOptions, 'bar-x.barPadding');
-    const groupPadding = get(seriesOptions, 'bar-x.groupPadding');
-    const bandSize = getBandSize({
+    const {barMaxWidth, barPadding, groupPadding} = seriesOptions['bar-x'];
+    const bandSize = getBarBandSize({
         domain: Array.from(domain),
         scale: xScale as AxisScale<AxisDomain>,
     });
-    const groupGap = Math.max(bandSize * groupPadding, MIN_BAR_GROUP_GAP);
-    const groupSize = Math.max(0, bandSize - groupGap);
+    const groupSize = getBarBandContentSize(bandSize, groupPadding);
     const barSlotSize = groupSize / maxGroupSize;
     const {width: rectWidth, gap: rectGap} = getBarLayout(
         layoutSeries,

@@ -444,6 +444,20 @@ export interface ChartSeriesOptions<T = MeaningfulAny> {
     };
     'x-range'?: {
         /**
+         * Maximum interval height in pixels. The interval spans x0 to x1 on the X axis.
+         * @minimum 1
+         * @default 50
+         */
+        barMaxWidth?: number;
+        /**
+         * Vertical padding as a fraction of the space allocated to an interval.
+         * Larger values make thinner intervals centered on the same Y coordinate.
+         * @minimum 0
+         * @maximum 1
+         * @default 0.2
+         */
+        barPadding?: number;
+        /**
          * The corner radius of the border surrounding each bar.
          * @default 0
          */

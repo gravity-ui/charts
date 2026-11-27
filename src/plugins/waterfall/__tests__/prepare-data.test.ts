@@ -6,12 +6,13 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import {seriesOptionsDefaults} from '~core/constants';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
+import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
 import {getVisibleSeries} from '~core/series/utils';
 import * as textUtils from '~core/utils/text';
 import {getZoomedSeriesData} from '~core/zoom';
 
-import type {WaterfallSeriesData} from '../../../types';
+import type {ChartSeriesOptions, WaterfallSeriesData} from '../../../types';
 import {getWaterfallIntervals} from '../intervals';
 import {prepareWaterfallData} from '../prepare-data';
 import {prepareWaterfallSeries} from '../prepare-waterfall-series';
@@ -31,9 +32,20 @@ afterEach(() => {
 
 async function prepareUnzoomedWaterfall(
     data: WaterfallSeriesData[],
-    options: {xAxis?: PreparedXAxis; yMin?: number; yOrder?: PreparedYAxis['order']} = {},
+    options: {
+        waterfall?: ChartSeriesOptions['waterfall'];
+        boundsWidth?: number;
+        xAxis?: PreparedXAxis;
+        yMin?: number;
+        yOrder?: PreparedYAxis['order'];
+    } = {},
 ) {
-    const {xAxis = {type: 'linear'} as PreparedXAxis, yMin = 0, yOrder} = options;
+    const {
+        boundsWidth = 300,
+        xAxis = {type: 'linear'} as PreparedXAxis,
+        yMin = 0,
+        yOrder,
+    } = options;
     const yAxis = {type: 'linear', min: yMin, max: 20, order: yOrder} as PreparedYAxis;
     const series = prepareWaterfallSeries({
         series: [{type: 'waterfall', name: 'Balance', data, dataLabels: {enabled: false}}],
@@ -41,14 +53,14 @@ async function prepareUnzoomedWaterfall(
         colors: [],
         legend: {enabled: false} as PreparedLegend,
     });
-    const xScale = createXScale({axis: xAxis, series, boundsWidth: 300});
+    const xScale = createXScale({axis: xAxis, series, boundsWidth});
     if (!xScale) throw new Error('X scale is unavailable');
     const yScale = createYScale({axis: yAxis, series, boundsHeight: 200});
     const shapes = await prepareWaterfallData({
         series,
         intervals: getWaterfallIntervals(series),
-        seriesOptions: seriesOptionsDefaults,
-        boundsWidth: 300,
+        seriesOptions: getPreparedOptions({waterfall: options.waterfall}),
+        boundsWidth,
         xAxis,
         xScale,
         yAxis: [yAxis],
@@ -66,13 +78,61 @@ test('unzoomed columns on a linear X axis use the numeric spacing of points', as
         {x: 120, total: true},
     ]);
 
-    expect(shapes.map(({width}) => width)).toEqual([16, 16, 16, 16]);
+    expect(shapes.map(({width}) => width)).toEqual([14.4, 14.4, 14.4, 14.4]);
 });
 
 test('a single column on an unzoomed linear X axis is centered and uses the default maximum width', async () => {
     const {shapes} = await prepareUnzoomedWaterfall([{x: 5, y: 10}]);
 
     expect(shapes).toEqual([expect.objectContaining({x: 125, width: 50})]);
+});
+
+test('a null waterfall options object uses the default column width', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall([{x: 5, y: 10}], {
+        // @ts-expect-error JSON input can contain null.
+        waterfall: null,
+    });
+
+    expect(shapes.map(({width}) => width)).toEqual([50]);
+});
+
+test.each([
+    [{}, 50],
+    [JSON.parse('{"barMaxWidth":null,"barPadding":0.9}'), 36],
+    [JSON.parse('{"barPadding":null,"barMaxWidth":17}'), 17],
+    [{barPadding: 0.9}, 36],
+    [{barMaxWidth: 0.5}, 1],
+] as const)('sizes columns on a fixed linear X axis with options %j', async (waterfall, width) => {
+    const {shapes} = await prepareUnzoomedWaterfall(
+        [
+            {x: 2, y: 10},
+            {x: 10, y: 15},
+        ],
+        {
+            boundsWidth: 600,
+            xAxis: {type: 'linear', min: 0, max: 12} as PreparedXAxis,
+            waterfall,
+        },
+    );
+
+    expect(shapes.map((shape) => shape.width)).toEqual([width, width]);
+});
+
+test('columns retain the one-pixel minimum on a dense linear axis', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall(
+        [
+            {x: 2, y: 10},
+            {x: 3, y: 5},
+        ],
+        {boundsWidth: 500, xAxis: {type: 'linear', min: 0, max: 1000} as PreparedXAxis},
+    );
+
+    expect(shapes.map(({width}) => width)).toEqual([1, 1]);
+});
+
+test('a single column retains the bar-x minimum on a zero-width plot', async () => {
+    const {shapes} = await prepareUnzoomedWaterfall([{x: 2, y: 10}], {boundsWidth: 0});
+    expect(shapes.map(({width}) => width)).toEqual([1]);
 });
 
 test('columns and labels follow the value direction on a reversed Y axis', async () => {
