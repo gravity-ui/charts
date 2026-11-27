@@ -3,7 +3,7 @@ import React from 'react';
 import type {DebouncedFunc} from 'lodash';
 import debounce from 'lodash/debounce';
 
-import {i18nFactory} from '~core/i18n';
+import {i18nFactory, setChartLanguage} from '~core/i18n';
 import {validateData} from '~core/validation';
 
 import '../plugins';
@@ -273,7 +273,7 @@ export const Chart = React.forwardRef<ChartRef, ChartProps>(function Chart(props
 
     React.useEffect(() => {
         if (lang && i18nFactory.lang !== lang) {
-            i18nFactory.setLang(lang);
+            setChartLanguage(lang);
         }
     }, [lang]);
 

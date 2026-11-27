@@ -1,4 +1,6 @@
 export {CustomShapeRenderer} from './utils';
+export {registerTranslations} from '~core/i18n';
+export type {ChartTranslationOptions} from '~core/i18n';
 export {getFormattedValue} from '~core/utils';
 export {getDefaultTooltipHeaderFormat} from '~core/utils/tooltip';
 export {getTooltipColorSymbol} from '~core/tooltip/utils';
