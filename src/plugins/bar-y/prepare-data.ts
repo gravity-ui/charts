@@ -134,16 +134,9 @@ function prepareBarYGeometry(args: PrepareBarYDataArgs): BarYPreparationItem[] {
                 ? sort(measureValues, (a, b) => comparator(get(a, sortKey), get(b, sortKey)))
                 : measureValues;
 
-            const percentStack = measureValues.some((item) => item.series.stacking === 'percent');
-            const trackStackEndValues =
-                !percentStack &&
-                base !== baseValue &&
-                measureValues.some((item) => item.series.stacking === 'normal');
-            const stackEndValues = {positive: 0, negative: 0};
-
             let ratio = 1;
             let percentTotal = 0;
-            if (percentStack) {
+            if (measureValues.some((item) => item.series.stacking === 'percent')) {
                 let sum = 0;
                 for (const item of sortedData) {
                     const value = Number(item.data.x);
@@ -208,17 +201,11 @@ function prepareBarYGeometry(args: PrepareBarYDataArgs): BarYPreparationItem[] {
                     itemX += halfBorder;
                 }
 
-                const sign = xValue < 0 ? 'negative' : 'positive';
-                if (trackStackEndValues) {
-                    stackEndValues[sign] += xValue;
-                }
-
                 const shape: PreparedBarYData = {
                     x: itemX,
                     y: y,
                     width: shapeWidth,
                     height,
-                    stackEndValue: trackStackEndValues ? stackEndValues[sign] : undefined,
                     color: data.color || s.color,
                     borderColor: s.borderColor,
                     borderWidth,

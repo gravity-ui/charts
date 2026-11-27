@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */ // eslint-disable-line jsdoc/check-tag-names
 
-import {scaleLinear, scaleLog, scaleOrdinal} from 'd3-scale';
+import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
@@ -752,52 +752,30 @@ test('bar-y keeps the zero series total when stack labels are disabled for a cli
     expect(texts(result.labels)).toEqual(['5']);
 });
 
-const borderedStackLabelCases = [
-    {
-        type: 'linear' as const,
-        domain: [0, 10],
-        values: [
-            [5, 5],
-            [5, 5.01],
-        ],
-        visibleTotal: '10',
-    },
-    {
-        type: 'logarithmic' as const,
-        domain: [10, 60],
-        values: [
-            [12, 12],
-            [48, 50],
-        ],
-        visibleTotal: '60',
-    },
-].flatMap((axis) => [false, true].map((reversed) => ({...axis, reversed})));
+test('bar-y includes a trailing zero in the subtotal anchored to a visible nonzero segment', async () => {
+    const aggregation = ({points}: StackLabelsAggregationArgs) =>
+        points.reduce((sum, point) => sum + point.custom.orders, 0);
+    const orders = [2, 10, 5];
+    const {args} = await prepare(
+        barYPlugin,
+        [[2], [10], [0]],
+        'normal',
+        {enabled: true, aggregation},
+        [undefined, {enabled: false}],
+        (series) =>
+            series.forEach((item, index) => {
+                if (item.type === 'bar-y') {
+                    item.borderWidth = 2;
+                    item.data[0].custom = {orders: orders[index]};
+                }
+            }),
+    );
+    args.xScale = scaleLinear().domain([-1, 5]).range([args.boundsWidth, 0]);
 
-test.each(borderedStackLabelCases)(
-    'bar-y shows only in-bounds bordered stack totals on a $type axis, reversed=$reversed',
-    async ({type, domain, values, visibleTotal, reversed}) => {
-        const {args} = await prepare(
-            barYPlugin,
-            values,
-            'normal',
-            {enabled: true},
-            [],
-            (series) => {
-                series.forEach((item) => {
-                    if (item.type === 'bar-y') item.borderWidth = 2;
-                });
-            },
-        );
-        args.xAxis = {type} as PreparedXAxis;
-        args.xScale = (type === 'logarithmic' ? scaleLog() : scaleLinear())
-            .domain(domain)
-            .range(reversed ? [args.boundsWidth, 0] : [0, args.boundsWidth]);
+    const result = await barYPlugin.prepareShapeData(args);
 
-        const result = await barYPlugin.prepareShapeData(args);
-
-        expect(texts(result.labels)).toEqual([visibleTotal]);
-    },
-);
+    expect(texts(result.labels)).toEqual(['7']);
+});
 
 describe.each([barXPlugin, barYPlugin])('$type stack overlays', (plugin) => {
     test.each([false, true])(
