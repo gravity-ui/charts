@@ -176,6 +176,7 @@ export interface SeriesPlugin<
      * Returns the value of a data point that places it on a continuous color scale.
      * `getDomainForContinuousColorScale` coerces the result to a number and builds the `[min, max]`
      * domain from it, over the raw series data (before shape data is prepared).
+     * Return undefined for points that do not contribute a color value.
      * Omit for types that do not support a continuous color scale (e.g. treemap, sankey, radar).
      */
     getColorValue?(data: T['data'][number]): number | string | null | undefined;

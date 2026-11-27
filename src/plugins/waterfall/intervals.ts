@@ -3,6 +3,7 @@ import sortBy from 'es-toolkit/compat/sortBy';
 import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from '~core/series/types';
 
 import type {WaterfallInterval} from './types';
+import {getWaterfallPointRole} from './utils';
 
 export function resolveWaterfallIntervals(points: readonly PreparedWaterfallSeriesData[]) {
     const intervals = new Map<PreparedWaterfallSeriesData, WaterfallInterval>();
@@ -10,8 +11,9 @@ export function resolveWaterfallIntervals(points: readonly PreparedWaterfallSeri
     let previousIndex: number | undefined;
 
     for (const point of points) {
-        const start = point.total ? 0 : balance;
-        if (!point.total) {
+        const change = getWaterfallPointRole(point) === 'change';
+        const start = change ? balance : 0;
+        if (change) {
             const {y} = point;
             if (typeof y !== 'number') continue;
             balance += y;

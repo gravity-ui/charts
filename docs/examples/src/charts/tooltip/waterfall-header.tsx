@@ -14,7 +14,7 @@ const data: ChartData = {
                 data: [
                     {x: Date.UTC(2025, 0, 1), y: 150},
                     {x: Date.UTC(2025, 0, 2), y: -50},
-                    {x: Date.UTC(2025, 0, 3), total: true},
+                    {x: Date.UTC(2025, 0, 3), role: 'total'},
                 ],
             },
         ],

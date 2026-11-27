@@ -20,6 +20,7 @@ import {createLabelMeasurer} from '~core/utils/text';
 import type {LabelData} from '../../types';
 
 import type {PreparedWaterfallData, WaterfallInterval} from './types';
+import {getWaterfallPointRole} from './utils';
 
 interface PlotBounds {
     x: number;
@@ -41,7 +42,8 @@ async function getLabelData(
         return undefined;
     }
 
-    const value = column.data.total ? column.subTotal : Number(column.data.y);
+    const value =
+        getWaterfallPointRole(column.data) === 'change' ? Number(column.data.y) : column.subTotal;
     const {format, style, padding, placement, placementFallback} = column.series.dataLabels;
     const text = getFormattedValue({value: column.data.label ?? value, format});
     const {width, height, hangingOffset} = await measureLabel(text, style, false);
@@ -179,7 +181,9 @@ export const prepareWaterfallData = async (args: {
         };
 
         if (canPlaceLabels && (preparedData.height > 0 || zeroHeight)) {
-            const towardHigherValues = zeroInterval ? Boolean(item.data.total) : end > start;
+            const towardHigherValues = zeroInterval
+                ? getWaterfallPointRole(item.data) !== 'change'
+                : end > start;
             const endAtMax = zeroHeight ? towardHigherValues === reversedYAxis : endY > startY;
             preparedData.label = await getLabelData(preparedData, bounds, measureLabel, endAtMax);
         }

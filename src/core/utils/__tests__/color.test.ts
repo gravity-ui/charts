@@ -1,4 +1,4 @@
-import type {ChartData} from '../../../types';
+import type {ChartData, WaterfallSeriesData} from '../../../types';
 import {getDomainForContinuousColorScale} from '../color';
 
 type Series = ChartData['series']['data'];
@@ -91,6 +91,25 @@ describe('getDomainForContinuousColorScale', () => {
         const series = [{type, data}] as Series;
 
         expect(getDomainForContinuousColorScale({series})).toEqual(expected);
+    });
+
+    test('waterfall checkpoints contribute no raw value to a continuous color domain', () => {
+        const checkpoints: WaterfallSeriesData[] = [
+            {x: 1, role: 'subtotal'},
+            {x: 3, role: 'subtotal', y: 999},
+        ];
+        const series = {type: 'waterfall' as const, name: 'Balance', data: checkpoints};
+        expect(getDomainForContinuousColorScale({series: [series]})).toEqual([0, 0]);
+        expect(
+            getDomainForContinuousColorScale({
+                series: [
+                    {
+                        ...series,
+                        data: [{x: 0, y: 10}, checkpoints[0], {x: 2, y: 5}, checkpoints[1]],
+                    },
+                ],
+            }),
+        ).toEqual([5, 10]);
     });
 
     test('flattens values across multiple series', () => {

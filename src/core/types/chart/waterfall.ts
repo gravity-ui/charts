@@ -13,16 +13,23 @@ export interface WaterfallSeriesData<T = MeaningfulAny> extends BaseSeriesData<T
      * - x axis category value (for `category` x axis). If the type is a string, then it is a category value itself. If the type is a number, then it is the index of an element in the array of categories described in `xAxis.categories`
      */
     x?: string | number;
-    /**
-     * The `y` value. Depending on the context , it may represents:
-     * - numeric value (for `linear` y axis)
-     */
+    /** Signed change in the balance. Subtotals and totals calculate their own value. */
     y?: number | null;
-    /** Data label value of the point. If not specified, the y value is used. */
+    /** Data label text. Defaults to the change in y or the computed balance for a subtotal or total. */
     label?: string | number;
     /** Individual opacity for the point. */
     opacity?: number;
-    /** When this property is true, the point display the total sum across the entire series. */
+    /**
+     * How the point contributes to the running balance.
+     * - `'change'`: Add the signed y value to the balance.
+     * - `'subtotal'`: Show the current balance from zero, ignoring y.
+     * - `'total'`: Show the current balance from zero. A null y follows the series nullMode.
+     */
+    role?: 'change' | 'subtotal' | 'total';
+    /**
+     * Marks a total when role is omitted. If both fields are set, they must agree.
+     * @deprecated Replace `total: true` with `role: 'total'`. For `total: false`, omit the flag or use `role: 'change'`.
+     */
     total?: boolean;
 }
 
@@ -32,11 +39,11 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
     data: WaterfallSeriesData<T>[];
     /** The name of the series (used in legend, tooltip etc). */
     name: string;
-    /** The main color of the series (hex, rgba). */
+    /** Color of total columns. Defaults to the series palette color. */
     color?: string;
-    /** The color used for positive values. If it is not specified, the general color of the series is used. */
+    /** Color of positive changes. Defaults to the positive waterfall palette color. */
     positiveColor?: string;
-    /** The color used for negative values. If it is not specified, the general color of the series is used. */
+    /** Color of negative changes. Defaults to the negative waterfall palette color. */
     negativeColor?: string;
     dataLabels?: BaseDataLabels & {
         /**
@@ -65,6 +72,22 @@ export interface WaterfallSeries<T = MeaningfulAny> extends BaseSeries {
             /** The legend item text for totals. */
             totals?: string;
         };
+    };
+    /** Shared presentation for points with role `'subtotal'`. */
+    subtotal?: {
+        /** Name used in the legend and tooltip. Defaults to `Subtotal`. */
+        name?: string;
+        /** Column and legend color. Defaults to the resolved total color. */
+        color?: string;
+        /** Override the legend text or hide the entry while keeping the columns visible. */
+        legend?: {
+            enabled?: boolean;
+            itemText?: string;
+        };
+        /** Tooltip settings for checkpoints. Unspecified options inherit from the series. */
+        tooltip?: BaseSeries['tooltip'];
+        /** Label visibility and formatting for checkpoints. Unspecified options inherit from the series. */
+        dataLabels?: Pick<BaseDataLabels, 'enabled' | 'format'>;
     };
     /** Lines connecting adjacent waterfall bars. */
     connectors?: {
