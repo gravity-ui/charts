@@ -1,4 +1,4 @@
-import {group} from 'd3-array';
+import {group, max, min} from 'd3-array';
 
 import type {PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
@@ -34,6 +34,7 @@ export function getBarYStackLabelAnchors(
     );
     const [rangeStart, rangeEnd] = xScale.range();
     const reversed = rangeStart > rangeEnd;
+    const valueScale = isBandScale(xScale) ? undefined : xScale;
     const stacks = group(
         data.filter((item) => item.series.stacking && optionsBySeries.get(item.series)?.enabled),
         (item) =>
@@ -77,14 +78,18 @@ export function getBarYStackLabelAnchors(
                     : end,
             );
             let x = extendsRight ? outer.x + outer.width : outer.x;
-            const {stackValueEndX} = outer;
-            if (isZeroGroup && outer.series.stacking === 'normal' && !isBandScale(xScale)) {
-                x = xScale(0);
+            const stackEndValue =
+                outer.stackEndValue === undefined
+                    ? undefined
+                    : (negative ? min : max)(points, (item) => item.stackEndValue);
+            const stackEndX = stackEndValue === undefined ? undefined : valueScale?.(stackEndValue);
+            if (isZeroGroup && outer.series.stacking === 'normal' && valueScale) {
+                x = valueScale(0);
             } else if (
-                stackValueEndX !== undefined &&
-                (Math.min(x, stackValueEndX) < 0 || Math.max(x, stackValueEndX) > boundsWidth)
+                stackEndX !== undefined &&
+                (Math.min(x, stackEndX) < 0 || Math.max(x, stackEndX) > boundsWidth)
             ) {
-                x = stackValueEndX;
+                x = stackEndX;
             }
 
             // Percent bars may extend beyond the plot due to border compensation.

@@ -131,6 +131,15 @@ test('resolves corner radii without rounding both signed stack ends', async () =
     expect(shapes.map((shape) => shape.borderRadius)).toEqual([0, 0, 0, 3]);
 });
 
+test('starts a bordered negative segment at the same position as a preceding zero segment', async () => {
+    const {shapes} = await prepare([0, -10], 'normal', 400, {
+        series: {borderWidth: 2},
+    });
+    const [zero, negative] = shapes;
+
+    expect(negative.x + negative.width).toBeCloseTo(zero.x + zero.width);
+});
+
 describe('bar-y suppressed borders', () => {
     test.each<{name: string; options: PrepareOptions}>([
         {name: 'shared padding', options: {seriesOptions: {barPadding: 0.94}}},
