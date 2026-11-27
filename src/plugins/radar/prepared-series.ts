@@ -1,5 +1,4 @@
-import type {SymbolType} from '~core/constants';
-import type {BasePreparedSeries, PreparedHaloOptions} from '~core/series/types';
+import type {BasePreparedSeries, PreparedSeriesMarker} from '~core/series/types';
 
 import type {
     BaseTextStyle,
@@ -24,22 +23,5 @@ export type PreparedRadarSeries = {
         html: boolean;
         format?: ValueFormat;
     };
-    marker: {
-        states: {
-            normal: {
-                symbol: `${SymbolType}`;
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-            };
-            hover: {
-                enabled: boolean;
-                radius: number;
-                borderWidth: number;
-                borderColor: string;
-                halo: PreparedHaloOptions;
-            };
-        };
-    };
+    marker: PreparedSeriesMarker;
 } & BasePreparedSeries;
