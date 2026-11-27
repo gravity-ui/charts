@@ -8,10 +8,12 @@ import type {
     ShapePoint,
 } from '~core/utils/tooltip-helpers';
 
-import type {PreparedBarXData} from './types';
+import type {BarXTooltipChunk, PreparedBarXData} from './types';
 import {getBarXRect} from './utils';
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedBarXData>,
+): GetTooltipDataResult<BarXTooltipChunk> {
     const {data, position, measureDistance} = args;
 
     const barXGroups = groupBy(data, (d) => String(d.data.x));
@@ -28,7 +30,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
         }),
     );
     const hasOverlays = data.some((d) => d.series.grouping === false);
-    const xLookupPoints: ShapePoint[] = data.map((d, priority) => {
+    const xLookupPoints: PluginShapePoint[] = data.map((d, priority) => {
         const distance =
             hasOverlays || measureDistance
                 ? getRectDistance(getBarXRect(d), ...position)
@@ -47,5 +49,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarXData>): GetT
         };
     });
 
-    return {chunks: [], xLookupPoints};
+    return {xLookupPoints};
 }
+
+type PluginShapePoint = ShapePoint<BarXTooltipChunk['data'], BarXTooltipChunk['series']>;

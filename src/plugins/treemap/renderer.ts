@@ -1,8 +1,8 @@
 import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
 import type {HierarchyRectangularNode} from 'd3-hierarchy';
-import {select} from 'd3-selection';
 import type {BaseType} from 'd3-selection';
+import {select} from 'd3-selection';
 import get from 'es-toolkit/compat/get';
 
 import type {PreparedSeriesOptions} from '~core/series/types';
@@ -19,7 +19,7 @@ export function renderTreemap(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedTreemapData,
+    renderData: PreparedTreemapData,
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -27,7 +27,7 @@ export function renderTreemap(
     svgElement.selectAll('*').remove();
     const labelsSvgElement = select(elements.labelsPlot);
     labelsSvgElement.selectAll('*').remove();
-    const {labelData, leaves, colors, series} = preparedData;
+    const {labelData, leaves, colors, series} = renderData;
     const leaf = svgElement
         .selectAll('g')
         .data(leaves)

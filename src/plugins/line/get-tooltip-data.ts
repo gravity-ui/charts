@@ -1,6 +1,6 @@
 import {getDistanceToMarkers, getMarkerFill} from '~core/shapes/marker';
-import {getDistanceToStrokedSegment} from '~core/utils/geometry';
 import type {Point} from '~core/utils/geometry';
+import {getDistanceToStrokedSegment} from '~core/utils/geometry';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
@@ -9,7 +9,7 @@ import type {
 
 import type {PlacementSegment} from './auto-placement';
 import {getLinePathPointFilter} from './path';
-import type {PreparedLineData} from './types';
+import type {LineTooltipChunk, PreparedLineData} from './types';
 
 function isContinuation(segment: PlacementSegment, prev: PlacementSegment | undefined) {
     return Boolean(prev && prev.x2 === segment.x1 && prev.y2 === segment.y1);
@@ -69,10 +69,12 @@ function getDistanceToLine(item: PreparedLineData, point: Point) {
     return Math.min(distance, getDistanceToMarkers(item.markers, point));
 }
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedLineData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedLineData>,
+): GetTooltipDataResult<LineTooltipChunk> {
     const {data, position, measureDistance} = args;
 
-    const xLookupPoints = data.reduce<ShapePoint[]>((acc, d) => {
+    const xLookupPoints = data.reduce<PluginShapePoint[]>((acc, d) => {
         const distance = measureDistance ? getDistanceToLine(d, position) : undefined;
         for (const p of d.points) {
             if (p.y !== null && p.x !== null && !p.hiddenInLine) {
@@ -90,5 +92,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedLineData>): GetT
         return acc;
     }, []);
 
-    return {chunks: [], xLookupPoints};
+    return {xLookupPoints};
 }
+
+type PluginShapePoint = ShapePoint<LineTooltipChunk['data'], LineTooltipChunk['series']>;

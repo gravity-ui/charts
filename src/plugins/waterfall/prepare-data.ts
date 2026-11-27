@@ -169,10 +169,6 @@ export const prepareWaterfallData = async (args: {
             data: item.data,
             series: item.series,
             subTotal: end,
-            htmlLabels: [],
-            markers: [],
-            getHoverMarkers: () => [],
-            annotations: [],
         };
 
         if (canPlaceLabels && (preparedData.height > 0 || zeroHeight)) {

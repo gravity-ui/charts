@@ -394,8 +394,6 @@ export const prepareBarXData = async (args: {
                         svgLabels: [],
                         isStackEnd: independent,
                         extendsUp,
-                        markers: [],
-                        getHoverMarkers: () => [],
                     };
 
                     stackItems.push(barData);

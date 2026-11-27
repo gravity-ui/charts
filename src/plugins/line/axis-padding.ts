@@ -10,10 +10,12 @@ import {hasSmoothInterpolation} from './path';
 import {projectLineData} from './prepare-data';
 import type {PreparedLineSeries} from './prepared-series';
 
-export function getLineAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+export function getLineAxisPadding(
+    args: PrepareAxisPaddingArgs<PreparedLineSeries>,
+): AxisPaddingPoint[] {
     const projected = projectLineData({
         ...args,
-        series: args.series as PreparedLineSeries[],
+        series: args.series,
         isOutsideBounds: () => false,
     });
     const padding = collectMarkerPadding(args, projected);

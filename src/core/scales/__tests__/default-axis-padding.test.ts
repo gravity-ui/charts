@@ -54,7 +54,7 @@ test.each(scenarios)('preserves $name after removing maxPadding', async (scenari
     const series: PreparedSeries[] = [];
     for (const type of new Set(scenario.raw.map((item) => item.type))) {
         series.push(
-            ...(await getSeriesPlugin(type).prepareSeries({
+            ...(await getSeriesPlugin(type).series.prepare({
                 series: scenario.raw.filter((item) => item.type === type),
                 colors: [],
                 colorScale: scaleOrdinal<string, string>().range(['black']),

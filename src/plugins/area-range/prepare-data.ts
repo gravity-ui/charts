@@ -104,7 +104,6 @@ export function projectAreaRangeData(args: {
         const bbox = item.gradient || item.fillGradient ? getRangeBBox(points) : null;
         result.push({
             active: true,
-            annotations: [],
             color: item.color,
             gradientBBox: item.gradient ? bbox : null,
             fillGradientBBox: item.fillGradient ? bbox : null,

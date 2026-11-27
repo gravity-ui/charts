@@ -17,7 +17,7 @@ export function renderHeatmap(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedHeatmapData,
+    renderData: PreparedHeatmapData,
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -28,7 +28,7 @@ export function renderHeatmap(
     // heatmap cells
     const cellsSelection = svgElement
         .selectAll('rect')
-        .data(preparedData.items)
+        .data(renderData.items)
         .join('rect')
         .attr('x', (d) => d.x)
         .attr('y', (d) => d.y)
@@ -41,7 +41,7 @@ export function renderHeatmap(
     // dataLabels
     renderDataLabels({
         container: select(elements.labelsPlot),
-        data: preparedData.labels,
+        data: renderData.labels,
         className: b('label'),
     });
 

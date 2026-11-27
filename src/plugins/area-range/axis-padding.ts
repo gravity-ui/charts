@@ -5,10 +5,12 @@ import {collectMarkerPadding} from '../marker-axis-padding';
 import {projectAreaRangeData} from './prepare-data';
 import type {PreparedAreaRangeSeries} from './prepared-series';
 
-export function getAreaRangeAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+export function getAreaRangeAxisPadding(
+    args: PrepareAxisPaddingArgs<PreparedAreaRangeSeries>,
+): AxisPaddingPoint[] {
     const projected = projectAreaRangeData({
         ...args,
-        series: args.series as PreparedAreaRangeSeries[],
+        series: args.series,
         isOutsideBounds: () => false,
     });
     return collectMarkerPadding(

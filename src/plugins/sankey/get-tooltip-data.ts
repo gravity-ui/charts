@@ -1,11 +1,11 @@
-import {isInsidePath} from '~core/utils/tooltip-helpers';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
+import {isInsidePath} from '~core/utils/tooltip-helpers';
 
-import type {SankeySeries, SankeySeriesData} from '../../types';
+import type {PreparedSankeyData, SankeyTooltipChunk} from './types';
 
-import type {PreparedSankeyData} from './types';
-
-export function getTooltipData(args: GetTooltipDataArgs<PreparedSankeyData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedSankeyData>,
+): GetTooltipDataResult<SankeyTooltipChunk> {
     const {data, position, boundsWidth, boundsHeight} = args;
     const [pointerX, pointerY] = position;
 
@@ -31,10 +31,10 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedSankeyData>): Ge
     return {
         chunks: [
             {
-                data: closestLink.source as SankeySeriesData,
+                data: closestLink.source,
                 target: closestLink.target,
                 value: closestLink.value,
-                series: sankeyData.series as SankeySeries,
+                series: sankeyData.series,
                 closest: true,
                 // The chunk is found only when the pointer is inside the shape.
                 distance: 0,

@@ -1,4 +1,5 @@
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
+import type {TooltipDataChunkHeatmap} from '~core/types';
 
 import type {BaseTextStyle, HeatmapSeriesData} from '../../types';
 
@@ -27,4 +28,8 @@ export type PreparedHeatmapData = {
     series: PreparedHeatmapSeries;
     items: HeatmapItem[];
     labels: HeatmapLabel[];
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
+
+export interface HeatmapTooltipChunk extends Omit<TooltipDataChunkHeatmap, 'series'> {
+    series: PreparedHeatmapSeries;
+}

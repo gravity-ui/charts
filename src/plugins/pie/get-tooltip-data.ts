@@ -1,10 +1,12 @@
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 import {getRadius, isPointInFill} from '~core/utils/tooltip-helpers';
 
-import type {PreparedPieData} from './types';
+import type {PieTooltipChunk, PreparedPieData} from './types';
 import {getPieArcPath} from './utils';
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedPieData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedPieData>,
+): GetTooltipDataResult<PieTooltipChunk> {
     const {data, position} = args;
     const [pointerX, pointerY] = position;
 

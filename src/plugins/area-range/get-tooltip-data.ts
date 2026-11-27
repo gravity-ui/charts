@@ -1,14 +1,14 @@
-import {getBandBoundaries, getDistanceToBand} from '~core/shapes/band';
 import type {BandColumn} from '~core/shapes/band';
-import {getDistanceToStrokedPolyline} from '~core/utils/geometry';
+import {getBandBoundaries, getDistanceToBand} from '~core/shapes/band';
 import type {Point} from '~core/utils/geometry';
+import {getDistanceToStrokedPolyline} from '~core/utils/geometry';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
     ShapePoint,
 } from '~core/utils/tooltip-helpers';
 
-import type {PreparedAreaRangeData} from './types';
+import type {AreaRangeTooltipChunk, PreparedAreaRangeData} from './types';
 
 interface AreaRangeGeometry {
     columns: BandColumn[];
@@ -51,8 +51,8 @@ function getDistanceToAreaRange(item: PreparedAreaRangeData, point: Point) {
 
 export function getTooltipData(
     args: GetTooltipDataArgs<PreparedAreaRangeData>,
-): GetTooltipDataResult {
-    const xLookupPoints = args.data.reduce<ShapePoint[]>((acc, item) => {
+): GetTooltipDataResult<AreaRangeTooltipChunk> {
+    const xLookupPoints = args.data.reduce<PluginShapePoint[]>((acc, item) => {
         const distance = args.measureDistance
             ? getDistanceToAreaRange(item, args.position)
             : undefined;
@@ -74,5 +74,7 @@ export function getTooltipData(
         return acc;
     }, []);
 
-    return {chunks: [], xLookupPoints};
+    return {xLookupPoints};
 }
+
+type PluginShapePoint = ShapePoint<AreaRangeTooltipChunk['data'], AreaRangeTooltipChunk['series']>;

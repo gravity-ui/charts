@@ -3,9 +3,9 @@
 import {scaleBand, scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
-import {seriesOptionsDefaults} from '~core/constants';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
+import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
 import {getVisibleSeries} from '~core/series/utils';
 import * as textUtils from '~core/utils/text';
@@ -47,7 +47,7 @@ async function prepareUnzoomedWaterfall(
     const shapes = await prepareWaterfallData({
         series,
         intervals: getWaterfallIntervals(series),
-        seriesOptions: seriesOptionsDefaults,
+        seriesOptions: getPreparedOptions(),
         boundsWidth: 300,
         xAxis,
         xScale,
@@ -148,7 +148,7 @@ test('resolves totals without overwriting point values', async () => {
     const result = await prepareWaterfallData({
         series,
         intervals: getWaterfallIntervals(series),
-        seriesOptions: seriesOptionsDefaults,
+        seriesOptions: getPreparedOptions(),
         boundsWidth: 600,
         xAxis: {type: 'category', categories: data.map((d) => String(d.x))} as PreparedXAxis,
         xScale: scaleBand()
@@ -214,7 +214,7 @@ test('keeps a zero-height label at the plot edge despite accumulated rounding', 
     const result = await prepareWaterfallData({
         series,
         intervals: getWaterfallIntervals(series),
-        seriesOptions: seriesOptionsDefaults,
+        seriesOptions: getPreparedOptions(),
         boundsWidth,
         xAxis: {type: 'category', categories} as PreparedXAxis,
         xScale: scaleBand().domain(categories).range([0, boundsWidth]),
@@ -268,7 +268,7 @@ test('a single column in a continuous X zoom uses its original Y interval for au
     const shapes = await prepareWaterfallData({
         series: waterfallSeries,
         intervals: getWaterfallIntervals(waterfallSeries),
-        seriesOptions: seriesOptionsDefaults,
+        seriesOptions: getPreparedOptions(),
         boundsWidth: 100,
         xAxis,
         xScale,

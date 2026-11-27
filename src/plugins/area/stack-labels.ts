@@ -1,12 +1,13 @@
 import {group} from 'd3-array';
 
-import type {PrepareShapeDataArgs} from '~core/series/plugin';
+import type {PrepareLayerArgs} from '~core/series/plugin';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {sumDecimals} from '~core/utils/math';
 import {getSymbolBounds} from '~core/utils/symbol';
 
 import type {AreaSeriesData} from '../../types';
-import {getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
+import {getStackLabelValue} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
 import type {PreparedAreaData} from './types';
@@ -83,7 +84,10 @@ function getAllSignsAnchor(
     );
 }
 
-export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: PrepareShapeDataArgs) {
+export function getAreaStackLabelAnchors(
+    data: PreparedAreaData[],
+    args: PrepareLayerArgs<unknown, PreparedSeriesOptions>,
+) {
     const stacks = new Map<string, StackAtX>();
     for (const item of data) {
         if (!item.series.stacking) continue;

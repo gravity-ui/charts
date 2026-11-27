@@ -18,7 +18,7 @@ export function renderFunnel(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedFunnelData,
+    renderData: PreparedFunnelData,
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -28,8 +28,8 @@ export function renderFunnel(
 
     // funnel levels
     const cellsSelection = svgElement
-        .selectAll<SVGPolygonElement, (typeof preparedData.items)[number]>('polygon')
-        .data(preparedData.items)
+        .selectAll<SVGPolygonElement, (typeof renderData.items)[number]>('polygon')
+        .data(renderData.items)
         .join('polygon')
         .attr('points', (d) => d.points.map((p) => p.join(',')).join(' '))
         .attr('fill', (d) => d.color)
@@ -41,7 +41,7 @@ export function renderFunnel(
     const connectorAreaClassName = b('connector-area');
     svgElement
         .selectAll(`.${connectorAreaClassName}`)
-        .data(preparedData.connectors)
+        .data(renderData.connectors)
         .join('path')
         .attr('d', (d) => d.areaPath.toString())
         .attr('class', connectorAreaClassName)
@@ -51,7 +51,7 @@ export function renderFunnel(
     const connectorLineClassName = b('connector-line');
     const connectorLines = svgElement
         .selectAll(`.${connectorLineClassName}`)
-        .data(preparedData.connectors)
+        .data(renderData.connectors)
         .join('g')
         .attr('class', connectorLineClassName)
         .attr('stroke', (d) => d.lineColor)
@@ -65,7 +65,7 @@ export function renderFunnel(
     // dataLabels
     renderDataLabels({
         container: select(elements.labelsPlot),
-        data: preparedData.svgLabels,
+        data: renderData.svgLabels,
         className: b('label'),
     });
 

@@ -1,6 +1,6 @@
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
 
-import type {BaseTextStyle, SankeySeriesData} from '../../types';
+import type {BaseTextStyle, SankeySeriesData, TooltipDataChunkSankey} from '../../types';
 
 import type {PreparedSankeySeries} from './prepared-series';
 
@@ -36,4 +36,8 @@ export type PreparedSankeyData = {
     nodes: SankeyNode[];
     links: SankeyLink[];
     labels: SankeyDataLabel[];
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
+
+export interface SankeyTooltipChunk extends Omit<TooltipDataChunkSankey, 'series'> {
+    series: PreparedSankeySeries;
+}

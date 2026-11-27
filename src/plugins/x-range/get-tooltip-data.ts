@@ -3,12 +3,12 @@ import {sort} from 'd3-array';
 import {getDistanceToRoundedRect} from '~core/utils/geometry';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 
-import type {XRangeSeries} from '../../types';
-
-import type {PreparedXRangeData} from './types';
+import type {PreparedXRangeData, XRangeTooltipChunk} from './types';
 import {getXRangeContour} from './utils';
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedXRangeData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedXRangeData>,
+): GetTooltipDataResult<XRangeTooltipChunk> {
     const {data, position} = args;
     const [pointerX] = position;
 
@@ -29,7 +29,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedXRangeData>): Ge
     return {
         chunks: pointsInRange.map((d) => ({
             data: d.data,
-            series: d.series as unknown as XRangeSeries,
+            series: d.series,
             closest: d === closestByX,
             // All chunks contain the pointer.
             distance: 0,

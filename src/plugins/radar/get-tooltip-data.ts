@@ -1,13 +1,13 @@
 import {Delaunay} from 'd3-delaunay';
 
-import {getRadius, isInsidePath} from '~core/utils/tooltip-helpers';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
+import {getRadius, isInsidePath} from '~core/utils/tooltip-helpers';
 
-import type {RadarSeries} from '../../types';
+import type {PreparedRadarData, RadarTooltipChunk} from './types';
 
-import type {PreparedRadarData} from './types';
-
-export function getTooltipData(args: GetTooltipDataArgs<PreparedRadarData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedRadarData>,
+): GetTooltipDataResult<RadarTooltipChunk> {
     const {data, position, boundsWidth, boundsHeight} = args;
     const [pointerX, pointerY] = position;
 
@@ -46,7 +46,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedRadarData>): Get
     return {
         chunks: radarData.shapes.map((shape) => ({
             data: shape.points[closestPoint.index].data,
-            series: shape.series as RadarSeries,
+            series: shape.series,
             category: shape.series.categories[closestPoint.index],
             closest: shape.series === closestPoint.series,
             // The closest shape is one of those containing the pointer.

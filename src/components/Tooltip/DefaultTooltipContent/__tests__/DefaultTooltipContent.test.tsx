@@ -252,7 +252,7 @@ describe('DefaultTooltipContent — plugin aggregate values', () => {
 
     test('keeps raw row formatter and renderer values independent of plugin totals', () => {
         const hovered = [makeLineChunk('First', 10), makeLineChunk('Second', 20)];
-        jest.spyOn(getSeriesPlugin('line').tooltip, 'getValue').mockReturnValue(100);
+        jest.spyOn(linePlugin.tooltip, 'getValue').mockReturnValue(100);
         const formatter = jest.fn(({value}) => `raw:${value}`);
         const rowRenderer = jest.fn(({id}: ChartTooltipRowRendererArgs) => <tr key={id} />);
         const totalFormatter = jest.fn(({value}) => `total:${value}`);
@@ -281,7 +281,7 @@ describe('DefaultTooltipContent — plugin aggregate values', () => {
         const hovered = [makeLineChunk('First', 10), makeLineChunk('Second', 20)];
         const xAxis: ChartXAxis = {type: 'linear'};
         const yAxis: ChartYAxis = {type: 'linear'};
-        jest.spyOn(getSeriesPlugin('line').tooltip, 'getValue').mockReturnValue(100);
+        jest.spyOn(linePlugin.tooltip, 'getValue').mockReturnValue(100);
         const aggregation = jest.fn((_args: ChartTooltipTotalsAggregationArgs) => 30);
 
         renderTooltip(
@@ -317,7 +317,7 @@ describe('DefaultTooltipContent — plugin aggregate values', () => {
         renderTooltip(<DefaultTooltipContent hovered={[chunk]} rowRenderer={rowRenderer} />);
 
         expect(rowRenderer).toHaveBeenCalledWith(expect.objectContaining({value}));
-        expect(getSeriesPlugin('sankey').tooltip.getValue?.({item: chunk})).toBe(value);
+        expect(getSeriesPlugin('sankey').tooltip?.getValue?.({item: chunk})).toBe(value);
     });
 });
 

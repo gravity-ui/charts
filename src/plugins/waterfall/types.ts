@@ -1,4 +1,4 @@
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {TooltipDataChunkWaterfall} from '~core/types';
 
 import type {LabelData} from '../../types';
 
@@ -10,7 +10,7 @@ export interface WaterfallInterval {
     previousIndex: number | undefined;
 }
 
-export type PreparedWaterfallData = {
+export interface PreparedWaterfallData {
     x: number;
     y: number;
     width: number;
@@ -23,4 +23,8 @@ export type PreparedWaterfallData = {
     data: PreparedWaterfallSeriesData;
     label?: LabelData;
     subTotal: number;
-} & SeriesShapeData;
+}
+
+export interface WaterfallTooltipChunk extends Omit<TooltipDataChunkWaterfall, 'series'> {
+    series: PreparedWaterfallSeries;
+}

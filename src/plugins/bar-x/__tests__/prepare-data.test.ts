@@ -3,8 +3,8 @@
 import {scaleLinear, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
-import {seriesOptionsDefaults} from '~core/constants';
 import type {PreparedSplit} from '~core/layout/split-types';
+import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
 import * as textUtils from '~core/utils/text';
 
@@ -46,8 +46,8 @@ async function prepare(
     return prepareBarXData({
         series,
         seriesOptions: {
-            ...seriesOptionsDefaults,
-            'bar-x': {...seriesOptionsDefaults['bar-x'], stackGap: options.stackGap ?? 1},
+            ...getPreparedOptions(),
+            'bar-x': {...getPreparedOptions()['bar-x'], stackGap: options.stackGap ?? 1},
         },
         xAxis: {type: 'linear'} as PreparedXAxis,
         xScale: scaleLinear()

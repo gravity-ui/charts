@@ -1,4 +1,5 @@
 import {ascending, descending, sort} from 'd3-array';
+import type {HierarchyRectangularNode} from 'd3-hierarchy';
 import {
     stratify,
     treemap,
@@ -8,7 +9,6 @@ import {
     treemapSliceDice,
     treemapSquarify,
 } from 'd3-hierarchy';
-import type {HierarchyRectangularNode} from 'd3-hierarchy';
 
 import {LayoutAlgorithm} from '~core/constants';
 import {getLabelsSize, getTextSizeFn, getTextWithElipsis} from '~core/utils';
@@ -243,8 +243,5 @@ export async function prepareTreemapData(args: {
         colors,
         series,
         htmlLabels,
-        markers: [],
-        getHoverMarkers: () => [],
-        annotations: [],
     };
 }

@@ -1,12 +1,10 @@
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 
-import type {TreemapSeries} from '../../types';
-
-import type {PreparedTreemapData} from './types';
+import type {PreparedTreemapData, TreemapTooltipChunk} from './types';
 
 export function getTooltipData(
     args: GetTooltipDataArgs<PreparedTreemapData>,
-): GetTooltipDataResult {
+): GetTooltipDataResult<TreemapTooltipChunk> {
     const {data, position} = args;
     const [pointerX, pointerY] = position;
 
@@ -23,7 +21,7 @@ export function getTooltipData(
             {
                 data: closestPoint.data,
                 color: data[0].colors.get(closestPoint),
-                series: data[0].series as unknown as TreemapSeries,
+                series: data[0].series,
                 closest: true,
                 // The chunk is found only when the pointer is inside the shape.
                 distance: 0,

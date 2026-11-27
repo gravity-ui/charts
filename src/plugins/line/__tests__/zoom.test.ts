@@ -145,8 +145,6 @@ test.each([undefined, 'before', 'middle', 'after'] as const)(
         for (const {range, expected} of cases) {
             const selection = filterLineData({
                 series: {
-                    type: 'line',
-                    name: 'Steps',
                     data,
                     interpolation: {type: 'step', position},
                 },
@@ -188,7 +186,7 @@ test.each(['cardinal', 'monotone'] as const)(
             {x: 10, y: 10},
         ];
         const selection = filterLineData({
-            series: {type: 'line', name: 'Curve', data, interpolation: {type}},
+            series: {data, interpolation: {type}},
             viewport: {
                 x: {type: 'linear', range: [4, 6]},
                 y: {type: 'linear', range: [4, 6]},
@@ -236,7 +234,7 @@ test('keeps original gaps between retained paths and discards unrelated tails', 
         {x: 110, y: 110},
     ];
     const selection = filterLineData({
-        series: {type: 'line', name: 'Paths', data},
+        series: {data},
         viewport: {
             x: {type: 'linear', range: [20, 80]},
             y: {type: 'linear', range: [20, 80]},
@@ -256,7 +254,7 @@ test('an X-only selection preserves gaps between multiple crossing paths', () =>
         {x: 100, y: 0},
     ];
     const selection = filterLineData({
-        series: {type: 'line', name: 'Paths', data},
+        series: {data},
         viewport: {x: {type: 'linear', range: [40, 60]}, y: {type: 'linear'}},
     });
     expect(selection.data).toEqual([]);
@@ -276,7 +274,7 @@ test('preserves offscreen detours between crossings without introducing a shortc
         {x: 200, y: 55},
     ];
     const selection = filterLineData({
-        series: {type: 'line', name: 'Detour', data},
+        series: {data},
         viewport: {
             x: {type: 'linear', range: [40, 60]},
             y: {type: 'linear', range: [40, 60]},

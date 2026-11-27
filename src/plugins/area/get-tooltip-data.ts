@@ -1,15 +1,15 @@
-import {getBandBoundaries, getDistanceToBand} from '~core/shapes/band';
 import type {BandColumn} from '~core/shapes/band';
+import {getBandBoundaries, getDistanceToBand} from '~core/shapes/band';
 import {getDistanceToMarkers, getMarkerFill} from '~core/shapes/marker';
-import {getDistanceToStrokedPolyline} from '~core/utils/geometry';
 import type {Point} from '~core/utils/geometry';
+import {getDistanceToStrokedPolyline} from '~core/utils/geometry';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
     ShapePoint,
 } from '~core/utils/tooltip-helpers';
 
-import type {PreparedAreaData} from './types';
+import type {AreaTooltipChunk, PreparedAreaData} from './types';
 
 interface AreaHitGeometry {
     columns: BandColumn[];
@@ -51,10 +51,12 @@ function getDistanceToArea(item: PreparedAreaData, point: Point) {
     return Math.min(distance, getDistanceToMarkers(item.markers, point));
 }
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedAreaData>,
+): GetTooltipDataResult<AreaTooltipChunk> {
     const {data, position, measureDistance} = args;
 
-    const xLookupPoints = data.reduce<ShapePoint[]>((acc, d) => {
+    const xLookupPoints = data.reduce<PluginShapePoint[]>((acc, d) => {
         const distance = measureDistance ? getDistanceToArea(d, position) : undefined;
         for (const p of d.points) {
             if (p.y === null || p.hiddenInLine) {
@@ -75,5 +77,7 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedAreaData>): GetT
         return acc;
     }, []);
 
-    return {chunks: [], xLookupPoints};
+    return {xLookupPoints};
 }
+
+type PluginShapePoint = ShapePoint<AreaTooltipChunk['data'], AreaTooltipChunk['series']>;

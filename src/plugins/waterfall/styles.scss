@@ -1,0 +1,11 @@
+.gcharts-waterfall {
+    &__label {
+        user-select: none;
+        pointer-events: none;
+        dominant-baseline: hanging;
+    }
+
+    &__connector {
+        stroke: var(--g-color-line-generic-active);
+    }
+}

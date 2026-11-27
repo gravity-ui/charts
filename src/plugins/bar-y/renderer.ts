@@ -19,11 +19,11 @@ export function renderBarY(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: BarYShapesArgs,
+    renderData: BarYShapesArgs,
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
-    const {shapes, svgLabels: dataLabels} = preparedData;
+    const {shapes, svgLabels: dataLabels} = renderData;
     const svgElement = select(elements.plot);
     svgElement.selectAll('*').remove();
     const segmentSelection = svgElement

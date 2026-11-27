@@ -1,13 +1,15 @@
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {getSourcePoint} from '~core/utils/source-point';
 
-import type {SankeySeries, TooltipDataChunkSankey} from '../../types';
+import type {SankeySeries} from '../../types';
 
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -16,47 +18,60 @@ import {prepareSankeyData} from './prepare-data';
 import {prepareSankeySeries} from './prepare-sankey-series';
 import type {PreparedSankeySeries} from './prepared-series';
 import {renderSankey} from './renderer';
-import type {PreparedSankeyData} from './types';
+import type {PreparedSankeyData, SankeyTooltipChunk} from './types';
 
-function getLinkValue({target, data: source, value}: TooltipDataChunkSankey) {
+function getLinkValue({target, data: source, value}: SankeyTooltipChunk) {
     return value ?? source.links.find((link) => link.name === target?.name)?.value;
 }
 
-function prepareShapeData({
+function prepareLayer({
     series,
     boundsWidth,
     boundsHeight,
-}: PrepareShapeDataArgs): PrepareShapeDataResult {
+}: PrepareLayerArgs<
+    PreparedSankeySeries,
+    PreparedSeriesOptions,
+    PreparedSeries
+>): PrepareLayerResult<PreparedSankeyData, PreparedSankeyData> {
     const data = prepareSankeyData({
-        series: series[0] as PreparedSankeySeries,
+        series: series[0],
         width: boundsWidth,
         height: boundsHeight,
     });
-    return {renderData: [data], tooltipItems: [data]};
+    return {
+        renderData: [data],
+        htmlLabels: data.htmlLabels,
+        labelLayout: [data],
+        lookupItems: [data],
+    };
 }
 
-function renderShapes({
+function renderLayer({
     plot,
     labelsPlot,
-    preparedData,
+    renderData,
     seriesOptions,
     dispatcher,
-}: RenderShapesArgs) {
-    return renderSankey(
-        {plot, labelsPlot},
-        preparedData[0] as PreparedSankeyData,
-        seriesOptions,
-        dispatcher,
-    );
+}: RenderLayerArgs<PreparedSankeyData, PreparedSeriesOptions>) {
+    return renderSankey({plot, labelsPlot}, renderData[0], seriesOptions, dispatcher);
 }
 
-export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = {
+export const sankeyPlugin = {
     type: 'sankey',
-    getClipPath: () => false,
-    prepareSeries: ({series, seriesOptions, legend, colorScale}) =>
-        prepareSankeySeries({series: series as SankeySeries[], seriesOptions, legend, colorScale}),
-    prepareShapeData,
-    renderShapes,
+    series: {
+        prepare: ({series, seriesOptions, legend, colorScale}) =>
+            prepareSankeySeries({
+                series: series as SankeySeries[],
+                seriesOptions,
+                legend,
+                colorScale,
+            }),
+    },
+    layers: {
+        getClipMode: () => false,
+        prepareData: prepareLayer,
+        render: renderLayer,
+    },
     interaction: {
         prepareNearestData,
         getTargetElements,
@@ -97,18 +112,27 @@ export const sankeyPlugin: SeriesPlugin<SankeySeries, TooltipDataChunkSankey> = 
                     {
                         id: 'name',
                         source: ({item}) => {
-                            const {target, data: source} = item as TooltipDataChunkSankey;
+                            const {target, data: source} = item;
                             return `${source.name} → ${target?.name}`;
                         },
                         align: 'start',
                     },
                     {
                         id: 'value',
-                        source: ({item}) => getLinkValue(item as TooltipDataChunkSankey),
+                        source: ({item}) => getLinkValue(item),
                         align: 'end',
                     },
                 ],
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: SankeySeries;
+    prepared: PreparedSankeySeries;
+    shape: PreparedSankeyData;
+    options: ChartSeriesOptions;
+    tooltipChunk: SankeyTooltipChunk;
+    interaction: SankeyInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

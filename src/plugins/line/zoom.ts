@@ -3,8 +3,8 @@ import isNil from 'es-toolkit/compat/isNil';
 
 import type {AxisDomainValue, DomainAxis, GetAxisDataArgs} from '~core/series/axis-contract';
 import {getDomainPoints} from '~core/series/domain-points';
-import {filterPoints} from '~core/zoom/filter-data';
 import type {FilterSeriesDataArgs} from '~core/zoom/filter-data';
+import {filterPoints} from '~core/zoom/filter-data';
 
 import type {LineSeries} from '../../types';
 import {getCurveFactory} from '../interpolation';
@@ -90,7 +90,10 @@ function createCoordinateProjector(axis: DomainAxis) {
     };
 }
 
-export function filterLineData({series, viewport}: FilterSeriesDataArgs<LineSeries>) {
+export function filterLineData({
+    series,
+    viewport,
+}: FilterSeriesDataArgs<Pick<LineSeries, 'data' | 'interpolation'>>) {
     const {interpolation} = series;
     const projectX = createCoordinateProjector(viewport.x);
     const projectY = createCoordinateProjector(viewport.y);

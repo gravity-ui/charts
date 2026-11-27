@@ -1,9 +1,11 @@
 import {getDistanceToPolygon} from '~core/utils/geometry';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 
-import type {PreparedFunnelData} from './types';
+import type {FunnelTooltipChunk, PreparedFunnelData} from './types';
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedFunnelData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedFunnelData>,
+): GetTooltipDataResult<FunnelTooltipChunk> {
     const {data, position, measureDistance} = args;
     const [, pointerY] = position;
     const items = data[0]?.items;

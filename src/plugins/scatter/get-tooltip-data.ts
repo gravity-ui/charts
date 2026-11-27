@@ -1,7 +1,7 @@
 import {getDistanceToSymbol} from '~core/utils/symbol';
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 
-import type {PreparedScatterData} from './types';
+import type {PreparedScatterData, ScatterTooltipChunk} from './types';
 
 /** Distance to the painted marker, drawn by `setMarker` with `radius + borderWidth` and stroked. */
 function getDistanceToMarker(marker: PreparedScatterData, point: [number, number]) {
@@ -18,7 +18,7 @@ function getDistanceToMarker(marker: PreparedScatterData, point: [number, number
 
 export function getTooltipData(
     args: GetTooltipDataArgs<PreparedScatterData>,
-): GetTooltipDataResult {
+): GetTooltipDataResult<ScatterTooltipChunk> {
     const {data, position} = args;
     const [pointerX, pointerY] = position;
 

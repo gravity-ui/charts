@@ -237,9 +237,9 @@ describe('getHoveredValues', () => {
         (item) => {
             const xAxis: ChartXAxis = {type: 'linear'};
             const yAxis: ChartYAxis = {type: 'linear'};
-            const getValue = jest
-                .spyOn(getSeriesPlugin(item.series.type).tooltip, 'getValue')
-                .mockReturnValue(42);
+            const tooltip = getSeriesPlugin(item.series.type).tooltip;
+            if (!tooltip) throw new Error('Expected a tooltip adapter');
+            const getValue = jest.spyOn(tooltip, 'getValue').mockReturnValue(42);
             try {
                 expect(getHoveredValues({hovered: [item], xAxis, yAxes: [yAxis]})).toEqual([42]);
                 expect(getValue).toHaveBeenCalledTimes(1);
@@ -473,7 +473,7 @@ describe('plugin tooltip headers', () => {
 
     it('resolves the header once and formats it once', () => {
         const item = createLineChunk('Line', 10);
-        const header = getSeriesPlugin('line').tooltip.header;
+        const header = getSeriesPlugin('line').tooltip?.header;
         if (!header) {
             throw new Error('Line plugin must declare a tooltip header');
         }
@@ -527,7 +527,9 @@ describe('prepared tooltip values', () => {
             (a.series.name ?? '').localeCompare(b.series.name ?? ''),
     ])('keeps cached values aligned with chunks for sorting %s', (sorting) => {
         const hovered = [createLineChunk('B', 20), createLineChunk('A', 10)];
-        const getValue = jest.spyOn(getSeriesPlugin('line').tooltip, 'getValue');
+        const tooltip = getSeriesPlugin('line').tooltip;
+        if (!tooltip) throw new Error('Expected a tooltip adapter');
+        const getValue = jest.spyOn(tooltip, 'getValue');
         const result = getPreparedHovered({hovered, sorting});
         expect(result.values).toEqual(
             result.hovered.map((item) => ('y' in item.data ? item.data.y : undefined)),
@@ -538,6 +540,7 @@ describe('prepared tooltip values', () => {
 
     it('supports plugins that omit the optional getValue hook', () => {
         const tooltip = getSeriesPlugin('line').tooltip;
+        if (!tooltip) throw new Error('Expected a tooltip adapter');
         const original = tooltip.getValue;
         delete tooltip.getValue;
         try {

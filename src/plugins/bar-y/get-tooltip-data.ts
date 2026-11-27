@@ -1,19 +1,19 @@
 import {bisector, sort} from 'd3-array';
 
 import {getRectDistance} from '~core/utils/geometry';
-import {isPointTooltipEnabled} from '~core/utils/tooltip-helpers';
 import type {
     GetTooltipDataArgs,
     GetTooltipDataResult,
     TooltipCandidate,
 } from '~core/utils/tooltip-helpers';
+import {isPointTooltipEnabled} from '~core/utils/tooltip-helpers';
 
-import type {BarYSeries} from '../../types';
-
-import type {PreparedBarYData} from './types';
+import type {BarYTooltipChunk, PreparedBarYData} from './types';
 import {getBarYRect} from './utils';
 
-export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetTooltipDataResult {
+export function getTooltipData(
+    args: GetTooltipDataArgs<PreparedBarYData>,
+): GetTooltipDataResult<BarYTooltipChunk> {
     const {data, position, measureDistance} = args;
     const [pointerX, pointerY] = position;
 
@@ -64,14 +64,14 @@ export function getTooltipData(args: GetTooltipDataArgs<PreparedBarYData>): GetT
     }
 
     return {
-        chunks: selectedPoints.map<TooltipCandidate>((p) => {
+        chunks: selectedPoints.map<TooltipCandidate<BarYTooltipChunk>>((p) => {
             const closest = hasOverlays
                 ? p === closestPoint
                 : p.x === closestPointXValue && p.y === closestYPoint.y;
             return {
                 data: p.data,
                 percentage: p.percentage,
-                series: p.series as BarYSeries,
+                series: p.series,
                 closest,
                 distance:
                     closest && measureDistance

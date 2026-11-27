@@ -20,7 +20,7 @@ export function renderXRange(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedXRangeData[],
+    renderData: PreparedXRangeData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -29,7 +29,7 @@ export function renderXRange(
 
     const segmentSelection = svgElement
         .selectAll(`path.${b('segment')}`)
-        .data(preparedData)
+        .data(renderData)
         .join('path')
         .attr('d', (d) => {
             return getRectPath({
@@ -47,7 +47,7 @@ export function renderXRange(
 
     svgElement
         .selectAll(`path.${b('segment-border')}`)
-        .data(preparedData.filter((d) => d.series.borderWidth > 0))
+        .data(renderData.filter((d) => d.series.borderWidth > 0))
         .join('path')
         .attr('d', (d) => {
             return getRectPath({
@@ -68,7 +68,7 @@ export function renderXRange(
         .attr('opacity', (d) => d.data.opacity ?? d.series.opacity)
         .attr('pointer-events', 'none');
 
-    const svgLabels = preparedData.flatMap((d) => d.svgLabels);
+    const svgLabels = renderData.flatMap((d) => d.svgLabels);
     renderDataLabels({
         container: select(elements.labelsPlot),
         data: svgLabels,

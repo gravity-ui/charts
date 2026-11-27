@@ -8,10 +8,12 @@ import {prepareClusterMarkerSeries} from './cluster';
 import {getScatterMarkerBounds} from './marker-bounds';
 import type {PreparedScatterSeries} from './prepared-series';
 
-export function getScatterAxisPadding(args: PrepareAxisPaddingArgs): AxisPaddingPoint[] {
+export function getScatterAxisPadding(
+    args: PrepareAxisPaddingArgs<PreparedScatterSeries>,
+): AxisPaddingPoint[] {
     const points: AxisPaddingPoint[] = [];
     const hoverEnabled = args.seriesOptions?.scatter?.states?.hover?.enabled !== false;
-    for (const s of args.series as PreparedScatterSeries[]) {
+    for (const s of args.series) {
         const yScale = args.yScale[s.yAxis];
         if (!yScale) continue;
         const inRange = createPaddingPointFilter(args.xScale, yScale);

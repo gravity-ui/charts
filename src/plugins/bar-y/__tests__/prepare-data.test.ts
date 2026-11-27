@@ -3,7 +3,7 @@
 import {scaleBand, scaleLinear, scaleLog, scaleOrdinal} from 'd3-scale';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
-import {seriesOptionsDefaults} from '~core/constants';
+import {getPreparedOptions} from '~core/series/prepare-options';
 import type {PreparedLegend} from '~core/series/types';
 import type {ShapeLabels} from '~core/shapes/types';
 import * as textUtils from '~core/utils/text';
@@ -21,7 +21,7 @@ interface PrepareOptions {
     height?: number;
     reversed?: boolean;
     logarithmic?: boolean;
-    otherLayers?: ShapeLabels[];
+    otherLabelLayouts?: ShapeLabels[];
     series?: Pick<BarYSeries, 'barPadding' | 'borderWidth' | 'borderRadius' | 'dataLabels'>;
     seriesOptions?: ChartSeriesOptions['bar-y'];
 }
@@ -53,8 +53,8 @@ async function prepare(
         boundsWidth: width,
         boundsHeight: height,
         seriesOptions: {
-            ...seriesOptionsDefaults,
-            'bar-y': {...seriesOptionsDefaults['bar-y'], ...options.seriesOptions},
+            ...getPreparedOptions(),
+            'bar-y': {...getPreparedOptions()['bar-y'], ...options.seriesOptions},
         },
         xAxis: {type: options.logarithmic ? 'logarithmic' : 'linear'} as PreparedXAxis,
         xScale: (options.logarithmic ? scaleLog() : scaleLinear())
@@ -64,7 +64,7 @@ async function prepare(
         yScale: [scaleBand().domain(['A']).range([0, height])],
     });
 
-    return filterBarYDataLabels(data, options.otherLayers ?? []);
+    return filterBarYDataLabels(data, options.otherLabelLayouts ?? []);
 }
 
 describe('bar-y label placement', () => {
@@ -80,12 +80,12 @@ describe('bar-y label placement', () => {
     test.each(defaultSvgLabelObstacleCases)(
         'checks a default SVG label against an obstacle $name',
         async ({y, expectedCount}) => {
-            const otherLayers: ShapeLabels[] = [
+            const otherLabelLayouts: ShapeLabels[] = [
                 {htmlLabels: [{x: 85, y, size: {width: 40, height: 1}, content: 'Other label'}]},
             ];
             const {svgLabels} = await prepare([20], undefined, 400, {
                 series: {dataLabels: {enabled: true, padding: 5}},
-                otherLayers,
+                otherLabelLayouts,
             });
 
             expect(svgLabels).toHaveLength(expectedCount);

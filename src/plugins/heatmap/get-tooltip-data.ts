@@ -1,12 +1,10 @@
 import type {GetTooltipDataArgs, GetTooltipDataResult} from '~core/utils/tooltip-helpers';
 
-import type {HeatmapSeries} from '../../types';
-
-import type {PreparedHeatmapData} from './types';
+import type {HeatmapTooltipChunk, PreparedHeatmapData} from './types';
 
 export function getTooltipData(
     args: GetTooltipDataArgs<PreparedHeatmapData>,
-): GetTooltipDataResult {
+): GetTooltipDataResult<HeatmapTooltipChunk> {
     const {data, position} = args;
     const [pointerX, pointerY] = position;
 
@@ -26,7 +24,7 @@ export function getTooltipData(
         chunks: [
             {
                 data: closestPoint.data,
-                series: data[0].series as unknown as HeatmapSeries,
+                series: data[0].series,
                 closest: true,
                 // The chunk is found only when the pointer is inside the shape.
                 distance: 0,

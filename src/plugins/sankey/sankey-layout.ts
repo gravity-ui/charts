@@ -1,3 +1,6 @@
+import {max, min, sum} from 'd3-array';
+import {linkHorizontal} from 'd3-shape';
+
 // Derived from d3-sankey v0.12.3 (https://github.com/d3/d3-sankey)
 // Copyright 2015-2021 Mike Bostock — ISC License
 //
@@ -6,9 +9,6 @@
 // - sankeyLinkHorizontal() implemented via linkHorizontal() from d3-shape
 // - Removed unused alignment helpers (left, right, center); only justify is kept
 // - No d3-sankey dependency; uses d3-array and d3-shape (already project dependencies)
-
-import {max, min, sum} from 'd3-array';
-import {linkHorizontal} from 'd3-shape';
 
 type SankeyLayoutNodeProps = {
     index: number;

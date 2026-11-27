@@ -107,7 +107,7 @@ test.each([
     const lower = area([low, high], {name: 'Lower', stacking, interpolation});
 
     const hovered = getClosestPoints({
-        shapesData: project([upper, lower]),
+        shapesData: project([upper, lower]).map((data) => ({type: data.series.type, data})),
         // The nearest observation is on the right, while the step still holds the left values.
         position: [160, 200],
         boundsWidth: 400,

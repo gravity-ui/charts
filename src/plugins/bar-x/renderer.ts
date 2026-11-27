@@ -21,7 +21,7 @@ export function renderBarX(
         boundsWidth: number;
         boundsHeight: number;
     },
-    preparedData: PreparedBarXData[],
+    renderData: PreparedBarXData[],
     seriesOptions: PreparedSeriesOptions,
     allowOverlapDataLabels: boolean,
     dispatcher?: Dispatch<object>,
@@ -30,7 +30,7 @@ export function renderBarX(
     const hoverOptions = get(seriesOptions, 'bar-x.states.hover');
     const inactiveOptions = get(seriesOptions, 'bar-x.states.inactive');
     svgElement.selectAll('*').remove();
-    const shapes = preparedData.map((datum) => ({datum, paths: getBarXPaths(datum)}));
+    const shapes = renderData.map((datum) => ({datum, paths: getBarXPaths(datum)}));
     const rectSelection = svgElement
         .selectAll<SVGPathElement, PreparedBarXData>(`path.${b('segment')}`)
         .data(shapes)
@@ -54,7 +54,7 @@ export function renderBarX(
         .attr('opacity', (d) => d.opacity)
         .attr('cursor', (d) => d.series.cursor);
 
-    if (preparedData.some((d) => d.series.grouping === false)) {
+    if (renderData.some((d) => d.series.grouping === false)) {
         // Keep each border next to its fill so later series cover both together.
         const borders = new Map<PreparedBarXData, SVGPathElement>();
         borderSelection.each(function (d) {
@@ -66,7 +66,7 @@ export function renderBarX(
         });
     }
 
-    let dataLabels = preparedData.map((d) => d.svgLabels).flat();
+    let dataLabels = renderData.map((d) => d.svgLabels).flat();
     if (!allowOverlapDataLabels) {
         dataLabels = filterOverlappingLabels(dataLabels);
     }

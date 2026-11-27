@@ -8,8 +8,10 @@ import {
     DEFAULT_POINT_MARKER_OPTIONS,
 } from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
+import {prepareSeriesMetadata} from '~core/series/prepare-series-metadata';
 import {prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
+import type {ChartSeriesOptions} from '~core/types';
 import type {PointMarkerOptions} from '~core/types/chart/marker';
 import {getGradientMidColor, getUniqId, isLinearGradient} from '~core/utils';
 import {merge} from '~core/utils/merge';
@@ -32,7 +34,7 @@ function prepareSeriesData(
 }
 
 export function prepareAreaRangeSeries(
-    args: PrepareSeriesArgs<AreaRangeSeries>,
+    args: PrepareSeriesArgs<AreaRangeSeries, ChartSeriesOptions>,
 ): PreparedAreaRangeSeries[] {
     const {colorScale, series: seriesList, seriesOptions, legend, xAxis, yAxis} = args;
     const defaultLineWidth = get(seriesOptions, 'area-range.lineWidth', DEFAULT_LINE_WIDTH);
@@ -65,25 +67,19 @@ export function prepareAreaRangeSeries(
             seriesOptions?.['area-range']?.states?.hover?.marker,
         );
 
-        return {
-            type: series.type,
+        const metadata = prepareSeriesMetadata({
+            series: {...series, id: getUniqId(), name},
             color,
-            name,
-            id: getUniqId(),
-            visible: get(series, 'visible', true),
-            legend: {
-                color: fillColor,
-                enabled: get(series, 'legend.enabled', legend.enabled),
-                symbol: prepareLegendSymbol(series),
-                groupId: series.legend?.groupId ?? getUniqId(),
-                source: series.legend,
-                itemText: series.legend?.itemText ?? name,
-            },
+            legend,
+            symbol: prepareLegendSymbol(series),
+        });
+        return {
+            ...metadata,
+            type: series.type,
             data: prepareSeriesData(series, xAxis),
             opacity: get(series, 'opacity', 0.75),
             lineWidth: get(series, 'lineWidth', defaultLineWidth),
             marker: {states: {normal: marker, hover: hoverMarker}},
-            cursor: get(series, 'cursor', null),
             tooltip: {
                 ...series.tooltip,
                 valueFormat:
@@ -104,7 +100,7 @@ export function prepareAreaRangeSeries(
             fillColor,
             fillGradient,
             yAxis: yAxisIndex,
-            custom: series.custom,
+            legend: {...metadata.legend, color: fillColor},
         };
     });
 }

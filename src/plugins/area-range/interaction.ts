@@ -1,9 +1,9 @@
+import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import {
     getInteractionElements,
     getMarkerInteractionElements,
     getShapePoint,
 } from '~core/utils/chart-interaction';
-import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getPointCandidates} from '~core/utils/nearest-point';
 
@@ -14,9 +14,8 @@ import type {PreparedAreaRangeData} from './types';
 export function getTargetElements({
     plot,
     markers,
-    preparedData,
-}: InteractionElementsArgs): InteractionElement<AreaRangeInteractionItem>[] {
-    const shapes = preparedData as PreparedAreaRangeData[];
+    renderData,
+}: InteractionElementsArgs<PreparedAreaRangeData>): InteractionElement<AreaRangeInteractionItem>[] {
     return [
         ...getInteractionElements<PreparedAreaRangeData, AreaRangeInteractionItem>(
             plot,
@@ -26,7 +25,7 @@ export function getTargetElements({
                 series: shape.series,
             }),
         ),
-        ...getMarkerInteractionElements<AreaRangeInteractionItem>(markers, shapes),
+        ...getMarkerInteractionElements<AreaRangeInteractionItem>(markers, renderData),
     ];
 }
 
@@ -35,5 +34,5 @@ export function prepareNearestData(
 ): NearestCandidate<AreaRangeInteractionItem>[] {
     return getPointCandidates(
         getTooltipData({...args, measureDistance: false}).xLookupPoints ?? [],
-    ) as NearestCandidate<AreaRangeInteractionItem>[];
+    );
 }

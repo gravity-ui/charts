@@ -1,6 +1,7 @@
 import type {PieArcDatum} from 'd3-shape';
 
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
+import type {TooltipDataChunkPie} from '~core/types';
 
 import type {ConnectorCurve, HtmlItem, LabelData} from '../../types';
 
@@ -77,4 +78,8 @@ export type PreparedPieData = {
         opacity: number;
         size: number;
     };
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
+
+export interface PieTooltipChunk extends Omit<TooltipDataChunkPie, 'series'> {
+    series: PreparedPieSeries;
+}

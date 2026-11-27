@@ -10,8 +10,8 @@ import {
     isPointDataLabelEnabled,
 } from '~core/utils';
 import {evaluateCubicBezier} from '~core/utils/bezier';
-import {getSymbolBounds} from '~core/utils/symbol';
 import type {SymbolBounds} from '~core/utils/symbol';
+import {getSymbolBounds} from '~core/utils/symbol';
 
 import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '../../types';
 

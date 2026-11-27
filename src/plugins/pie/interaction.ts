@@ -1,7 +1,7 @@
 import type {PieArcDatum} from 'd3-shape';
 
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {PieInteractionItem} from './interaction-types';
@@ -9,7 +9,7 @@ import type {PreparedPieData, SegmentData} from './types';
 
 export function getTargetElements({
     plot,
-}: InteractionElementsArgs): InteractionElement<PieInteractionItem>[] {
+}: InteractionElementsArgs<PreparedPieData>): InteractionElement<PieInteractionItem>[] {
     return getInteractionElements<PieArcDatum<SegmentData>, PieInteractionItem>(
         plot,
         '.gcharts-pie__segment',

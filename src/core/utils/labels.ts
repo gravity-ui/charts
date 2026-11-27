@@ -96,9 +96,9 @@ export function filterOverlappingLabels<T extends LabelRect>(labels: T[], obstac
 
 export function filterLayerLabels<T extends SeriesDataWithLabels>(
     data: T[],
-    otherLayers: ShapeLabels[],
+    otherLabelLayouts: ShapeLabels[],
 ): T[] {
-    const otherLabels = getLayerLabelRects(otherLayers);
+    const otherLabels = getLayerLabelRects(otherLabelLayouts);
     const keptLabels: LabelRect[] = [];
 
     return data.map((d) => {

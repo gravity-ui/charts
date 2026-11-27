@@ -1,7 +1,8 @@
 import type {Path} from 'd3-path';
 
 import type {DashStyle} from '~core/constants';
-import type {SeriesShapeData} from '~core/shapes/types';
+import type {ShapeLabels} from '~core/shapes/types';
+import type {TooltipDataChunkFunnel} from '~core/types';
 
 import type {FunnelSeriesData, LabelData} from '../../types';
 
@@ -38,4 +39,8 @@ export type PreparedFunnelData = {
     items: FunnelItemData[];
     connectors: FunnelConnectorData[];
     svgLabels: LabelData[];
-} & SeriesShapeData;
+} & Pick<ShapeLabels, 'htmlLabels'>;
+
+export interface FunnelTooltipChunk extends Omit<TooltipDataChunkFunnel, 'series'> {
+    series: PreparedFunnelSeries;
+}

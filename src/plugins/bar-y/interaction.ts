@@ -1,13 +1,13 @@
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {BarYInteractionItem} from './interaction-types';
-import type {PreparedBarYData} from './types';
+import type {BarYShapesArgs, PreparedBarYData} from './types';
 
 export function getTargetElements({
     plot,
-}: InteractionElementsArgs): InteractionElement<BarYInteractionItem>[] {
+}: InteractionElementsArgs<BarYShapesArgs>): InteractionElement<BarYInteractionItem>[] {
     return getInteractionElements<PreparedBarYData, BarYInteractionItem>(
         plot,
         '.gcharts-bar-y__segment, .gcharts-bar-y__segment-border',

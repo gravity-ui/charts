@@ -1,5 +1,4 @@
 import {scaleOrdinal} from 'd3-scale';
-import get from 'es-toolkit/compat/get';
 
 import type {PreparedLegendOptions} from '~core/series/types';
 
@@ -42,7 +41,7 @@ describe('treemap getTooltipData', () => {
                     boundsHeight: 100,
                     measureDistance: false,
                 });
-                return [leaf.data.id, get(chunks[0], 'color')];
+                return [leaf.data.id, chunks?.[0]?.color];
             }),
         );
 

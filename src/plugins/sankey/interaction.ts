@@ -1,5 +1,5 @@
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 import {getSourcePoint} from '~core/utils/source-point';
 
@@ -12,9 +12,9 @@ const linkPoints = new WeakMap<SankeyLink, SankeyLinkPoint>();
 
 export function getTargetElements({
     plot,
-    preparedData,
-}: InteractionElementsArgs): InteractionElement<SankeyInteractionItem>[] {
-    const shape = preparedData[0] as PreparedSankeyData | undefined;
+    renderData,
+}: InteractionElementsArgs<PreparedSankeyData>): InteractionElement<SankeyInteractionItem>[] {
+    const shape = renderData[0];
     if (!shape) return [];
     const {series} = shape;
     return [

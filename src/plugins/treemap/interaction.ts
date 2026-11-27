@@ -1,5 +1,5 @@
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {TreemapInteractionItem} from './interaction-types';
@@ -7,9 +7,9 @@ import type {PreparedTreemapData} from './types';
 
 export function getTargetElements({
     plot,
-    preparedData,
-}: InteractionElementsArgs): InteractionElement<TreemapInteractionItem>[] {
-    const shape = preparedData[0] as PreparedTreemapData | undefined;
+    renderData,
+}: InteractionElementsArgs<PreparedTreemapData>): InteractionElement<TreemapInteractionItem>[] {
+    const shape = renderData[0];
     if (!shape) return [];
     const {series} = shape;
     return getInteractionElements<PreparedTreemapData['leaves'][number], TreemapInteractionItem>(

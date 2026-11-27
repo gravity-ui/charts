@@ -1,5 +1,5 @@
-import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {InteractionElement, InteractionElementsArgs} from '~core/utils/chart-interaction';
+import {getInteractionElements} from '~core/utils/chart-interaction';
 import type {NearestCandidate, PrepareNearestDataArgs} from '~core/utils/nearest-point';
 
 import type {BarXInteractionItem} from './interaction-types';
@@ -7,7 +7,7 @@ import type {PreparedBarXData} from './types';
 
 export function getTargetElements({
     plot,
-}: InteractionElementsArgs): InteractionElement<BarXInteractionItem>[] {
+}: InteractionElementsArgs<PreparedBarXData>): InteractionElement<BarXInteractionItem>[] {
     return getInteractionElements<PreparedBarXData, BarXInteractionItem>(
         plot,
         '.gcharts-bar-x__segment, .gcharts-bar-x__segment-border',

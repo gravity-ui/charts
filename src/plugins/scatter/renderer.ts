@@ -26,7 +26,7 @@ export function renderScatter(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedScatterShapeData,
+    renderData: PreparedScatterShapeData,
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -38,7 +38,7 @@ export function renderScatter(
 
     const selection = svgElement
         .selectAll('path')
-        .data(preparedData.scatterData, shapeKey)
+        .data(renderData.scatterData, shapeKey)
         .join('g')
         .call(renderMarker)
         .attr('opacity', (d) => d.point.opacity)
@@ -46,7 +46,7 @@ export function renderScatter(
 
     renderDataLabels({
         container: select(elements.labelsPlot),
-        data: preparedData.svgLabels,
+        data: renderData.svgLabels,
         className: b('label'),
     })
         .attr('class', (data) => (data.cluster ? b('cluster-label') : b('label')))

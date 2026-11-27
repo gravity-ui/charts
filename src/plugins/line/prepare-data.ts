@@ -4,10 +4,11 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeries} from '~core/series/types';
 import {buildHoverMarkerGetter, getMarkerFill} from '~core/shapes/marker';
 import type {ShapeLabels} from '~core/shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '~core/shapes/utils';
+import type {ChartSeriesOptions} from '~core/types';
 import {getGradientBBox, setGradientPointFills} from '~core/utils/gradient';
 import {applyCapturedPointColors, prepareGradientCoords} from '~core/utils/gradient-reference';
 
@@ -56,7 +57,7 @@ function buildSegmentGetter(
 
 interface Args {
     series: PreparedLineSeries[];
-    seriesOptions?: PreparedSeriesOptions;
+    seriesOptions?: ChartSeriesOptions;
     xAxis: PreparedXAxis;
     xScale: ChartScale;
     yAxis: PreparedYAxis[];
@@ -64,7 +65,7 @@ interface Args {
     split: PreparedSplit;
     isOutsideBounds: (x: number, y: number) => boolean;
     isRangeSlider?: boolean;
-    otherLayers?: ShapeLabels[];
+    otherLabelLayouts?: ShapeLabels[];
     allSeries?: PreparedSeries[];
     getCurveFactory?: (interpolation?: PreparedLineSeries['interpolation']) => CurveFactory;
 }
@@ -174,7 +175,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
         split,
         isOutsideBounds,
         isRangeSlider,
-        otherLayers,
+        otherLabelLayouts,
         allSeries,
         getCurveFactory,
     } = args;
@@ -294,7 +295,7 @@ export const prepareLineData = async (args: Args): Promise<PreparedLineData[]> =
 
             if (needSimulation) {
                 obstacles = getObstacleRectsFromLayers(
-                    (otherLayers ?? []).filter((l) => !isLabeledLineLayer(l)),
+                    (otherLabelLayouts ?? []).filter((l) => !isLabeledLineLayer(l)),
                 );
                 toPlace = seriesWithPoints.filter((d) => d.series.dataLabels.enabled);
             }

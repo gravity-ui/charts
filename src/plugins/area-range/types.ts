@@ -1,4 +1,5 @@
 import type {GradientShapeData, SeriesShapeData} from '~core/shapes/types';
+import type {TooltipDataChunkAreaRange} from '~core/types';
 
 import type {AreaRangeSeriesData, LabelData} from '../../types';
 
@@ -17,7 +18,8 @@ export interface AreaRangePointData {
     y: number | null;
 }
 
-export interface PreparedAreaRangeData extends SeriesShapeData, GradientShapeData {
+export interface PreparedAreaRangeData
+    extends Omit<SeriesShapeData, 'annotations'>, GradientShapeData {
     active: boolean;
     color: string;
     hovered: boolean;
@@ -27,4 +29,8 @@ export interface PreparedAreaRangeData extends SeriesShapeData, GradientShapeDat
     series: PreparedAreaRangeSeries;
     svgLabels: LabelData[];
     width: number;
+}
+
+export interface AreaRangeTooltipChunk extends Omit<TooltipDataChunkAreaRange, 'series'> {
+    series: PreparedAreaRangeSeries;
 }

@@ -5,8 +5,8 @@ import type {ChartScale} from '~core/scales/types';
 import type {PreparedSeriesOptions} from '~core/series/types';
 import {getDataCategoryValue} from '~core/utils';
 
-import {getStackLabelGroups, getStackLabelValue} from '../stack-labels';
 import type {StackLabelAnchor} from '../stack-labels';
+import {getStackLabelGroups, getStackLabelValue} from '../stack-labels';
 import {resolveStackLabelsOptions} from '../stack-labels-options';
 
 import type {PreparedBarYData} from './types';

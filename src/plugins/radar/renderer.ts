@@ -1,7 +1,7 @@
 import {color} from 'd3-color';
 import type {Dispatch} from 'd3-dispatch';
-import {select} from 'd3-selection';
 import type {BaseType} from 'd3-selection';
+import {select} from 'd3-selection';
 import {line} from 'd3-shape';
 import get from 'es-toolkit/compat/get';
 
@@ -30,7 +30,7 @@ export function renderRadar(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedRadarData[],
+    renderData: PreparedRadarData[],
     seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -42,7 +42,7 @@ export function renderRadar(
 
     const radarSelection = svgElement
         .selectAll('radar')
-        .data(preparedData)
+        .data(renderData)
         .join('g')
         .attr('id', (radarData) => radarData.id)
         .attr('class', b('item'))
@@ -97,7 +97,7 @@ export function renderRadar(
     // Render labels
     const labelGroups = labelsSvgElement
         .selectAll<SVGGElement, PreparedRadarData>('g')
-        .data(preparedData)
+        .data(renderData)
         .join('g')
         .attr('cursor', (radarData) => radarData.cursor);
     renderDataLabels({

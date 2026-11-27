@@ -28,7 +28,7 @@ export function renderArea(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedAreaData[],
+    renderData: PreparedAreaData[],
     seriesOptions: PreparedSeriesOptions,
     allowOverlapDataLabels: boolean,
     dispatcher?: Dispatch<object>,
@@ -45,13 +45,13 @@ export function renderArea(
     plotSvgElement.selectAll('*').remove();
     const resolveGradientPaint = createGradientPaintResolver(elements.plot);
     const lineBounds = new Map(
-        preparedData.map((data) => [
+        renderData.map((data) => [
             data,
             data.gradientBBox === undefined ? getGradientBBox(data.points) : data.gradientBBox,
         ]),
     );
     const fillBounds = new Map(
-        preparedData.map((data) => [
+        renderData.map((data) => [
             data,
             data.fillGradientBBox === undefined ? getAreaBBox(data.points) : data.fillGradientBBox,
         ]),
@@ -87,7 +87,7 @@ export function renderArea(
 
     const shapeSelection = plotSvgElement
         .selectAll('shape')
-        .data(preparedData)
+        .data(renderData)
         .join('g')
         .attr('class', b('series'))
         .attr('cursor', (d) => d.series.cursor);
@@ -114,7 +114,7 @@ export function renderArea(
         .attr('fill', (d) => getAreaFill(d))
         .attr('opacity', (d) => d.opacity);
 
-    let dataLabels = preparedData.reduce((acc, d) => {
+    let dataLabels = renderData.reduce((acc, d) => {
         return acc.concat(d.svgLabels);
     }, [] as LabelData[]);
 

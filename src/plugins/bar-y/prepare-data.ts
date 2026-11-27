@@ -367,15 +367,12 @@ export async function prepareBarYData(
         shapes: result.map((item) => item.shape),
         svgLabels,
         htmlLabels,
-        markers: [],
-        getHoverMarkers: () => [],
-        annotations: [],
     };
 }
 
 export function filterBarYDataLabels(
     data: BarYShapesArgs,
-    otherLayers: ShapeLabels[],
+    otherLabelLayouts: ShapeLabels[],
 ): BarYShapesArgs {
     if (!data.svgLabels.length && !data.htmlLabels.length) {
         return data;
@@ -391,7 +388,7 @@ export function filterBarYDataLabels(
             svgLabels: svgLabelsBySeries.get(item) ?? [],
             htmlLabels: htmlLabelsBySeries.get(item) ?? [],
         })),
-        otherLayers,
+        otherLabelLayouts,
     );
 
     return {

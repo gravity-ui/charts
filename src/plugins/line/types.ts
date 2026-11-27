@@ -1,6 +1,7 @@
 import type {DashStyle, LineCap, LineJoin} from '~core/constants';
 import type {AnnotationAnchor, PreparedAnnotation} from '~core/series/types';
 import type {GradientShapeData, MarkerItem, SeriesShapeData} from '~core/shapes/types';
+import type {TooltipDataChunkLine} from '~core/types';
 
 import type {
     LabelData,
@@ -49,4 +50,8 @@ export interface PreparedLineData
     linecap: LineCap;
     linejoin: LineJoin;
     interpolation?: SeriesInterpolation;
+}
+
+export interface LineTooltipChunk extends Omit<TooltipDataChunkLine, 'series'> {
+    series: PreparedLineSeries;
 }

@@ -116,7 +116,7 @@ export function validateData<TItem extends ChartInteractionItem>(
             });
         }
 
-        getSeriesPlugin(series.type).validate?.({
+        getSeriesPlugin(series.type).series.validate?.({
             series,
             allSeries: data.series.data,
             seriesOptions: data.series.options,

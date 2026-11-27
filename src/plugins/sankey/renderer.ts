@@ -16,7 +16,7 @@ export function renderSankey(
         plot: SVGGElement;
         labelsPlot: SVGGElement;
     },
-    preparedData: PreparedSankeyData,
+    renderData: PreparedSankeyData,
     _seriesOptions: PreparedSeriesOptions,
     dispatcher?: Dispatch<object>,
 ): () => void {
@@ -27,7 +27,7 @@ export function renderSankey(
     svgElement
         .append('g')
         .selectAll()
-        .data(preparedData.nodes)
+        .data(renderData.nodes)
         .join('rect')
         .attr('x', (d) => d.x0)
         .attr('y', (d) => d.y0)
@@ -40,7 +40,7 @@ export function renderSankey(
         .append('g')
         .attr('fill', 'none')
         .selectAll()
-        .data(preparedData.links)
+        .data(renderData.links)
         .join('g')
         .append('path')
         .attr('stroke-opacity', (d) => d.opacity)
@@ -51,7 +51,7 @@ export function renderSankey(
     // dataLabels
     renderDataLabels({
         container: select(elements.labelsPlot),
-        data: preparedData.labels,
+        data: renderData.labels,
         className: b('label'),
     }).attr('dy', '0.35em');
 

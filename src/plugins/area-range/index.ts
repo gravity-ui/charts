@@ -2,12 +2,14 @@ import {i18n} from '~core/i18n';
 import type {DomainAxis} from '~core/series/axis-contract';
 import {getDomainPoints} from '~core/series/domain-points';
 import type {
-    PrepareShapeDataArgs,
-    PrepareShapeDataResult,
-    RenderShapesArgs,
+    PrepareLayerArgs,
+    PrepareLayerResult,
+    RenderLayerArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipXValue} from '~core/tooltip/utils';
+import type {ChartSeries, ChartSeriesOptions} from '~core/types';
 import {filterLayerLabels} from '~core/utils';
 import {createGradientGeometryPreparer, getGradientGeometry} from '~core/utils/gradient-geometry';
 import {
@@ -18,17 +20,19 @@ import {
 import {filterPoints} from '~core/zoom/filter-data';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
-import type {AreaRangeSeries, AreaRangeSeriesData, TooltipDataChunkAreaRange} from '../../types';
+import type {AreaRangeSeries, AreaRangeSeriesData} from '../../types';
 
 import {getAreaRangeAxisPadding} from './axis-padding';
+import {areaRangeDefaults} from './defaults';
 import {formatAreaRange, getAreaRangeWidth} from './format';
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
+import type {AreaRangeInteractionItem} from './interaction-types';
 import {prepareAreaRangeSeries} from './prepare-area-range-series';
 import {prepareAreaRangeData, projectAreaRangeData} from './prepare-data';
 import type {PreparedAreaRangeSeries} from './prepared-series';
 import {renderAreaRange} from './renderer';
-import type {PreparedAreaRangeData} from './types';
+import type {AreaRangeTooltipChunk, PreparedAreaRangeData} from './types';
 
 function isAreaRangePointDefined(point: AreaRangeSeriesData) {
     return point.y0 !== null && point.y1 !== null;
@@ -39,8 +43,45 @@ function isAreaRangePointInYRange({y0, y1}: AreaRangeSeriesData, {range}: Domain
     return y0 !== null && y1 !== null && y0 <= max && y1 >= min;
 }
 
-export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkAreaRange> = {
+export const areaRangePlugin = {
     type: 'area-range',
+    series: {
+        optionsDefaults: areaRangeDefaults,
+        validate: ({series, xAxis, yAxis}) => {
+            validateAxisPlotValues({
+                series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y0}))},
+                xAxis,
+                yAxis,
+            });
+            validateXYSeries({
+                series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y0}))},
+                xAxis,
+                yAxis,
+            });
+            validateXYSeries({
+                series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y1}))},
+                xAxis,
+                yAxis,
+            });
+            validateSeriesColor({color: series.color, seriesName: series.name});
+            validateSeriesColor({color: series.fillColor, seriesName: series.name});
+
+            if (
+                series.data.some(
+                    (data) =>
+                        data.y0 !== null && data.y1 !== null && Number(data.y0) > Number(data.y1),
+                )
+            ) {
+                throw new ChartError({
+                    code: CHART_ERROR_CODE.INVALID_DATA,
+                    message: i18n('error', 'label_invalid-area-range-bounds', {
+                        seriesName: series.name,
+                    }),
+                });
+            }
+        },
+        prepare: prepareAreaRangeSeries,
+    },
     axes: {
         y: {
             getData: ({series, viewport}) => ({
@@ -53,8 +94,71 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
                 ),
             }),
         },
+        padding: {getPaintExtents: getAreaRangeAxisPadding},
     },
-    getAxisPadding: getAreaRangeAxisPadding,
+    colorScale: {
+        getValue: getAreaRangeWidth,
+    },
+    layers: {
+        prepareData: async (
+            args: PrepareLayerArgs<PreparedAreaRangeSeries, PreparedSeriesOptions, PreparedSeries>,
+        ): Promise<PrepareLayerResult<PreparedAreaRangeData, PreparedAreaRangeData>> => {
+            const {
+                series,
+                xAxis,
+                xScale,
+                yAxis,
+                yScale,
+                split,
+                isOutsideBounds,
+                isRangeSlider,
+                otherLabelLayouts = [],
+            } = args;
+
+            if (!xAxis || !xScale || !yScale?.length || !split) {
+                return {renderData: [], lookupItems: []};
+            }
+
+            const data = await prepareAreaRangeData({
+                series: series,
+                xAxis,
+                xScale,
+                yAxis: yAxis ?? [],
+                yScale,
+                split,
+                isOutsideBounds: isOutsideBounds ?? (() => false),
+                isRangeSlider,
+            });
+            const filteredData = filterLayerLabels(data, otherLabelLayouts);
+            return {
+                renderData: filteredData,
+                markers: filteredData.flatMap((item) => item.markers),
+                htmlLabels: filteredData.flatMap((item) => item.htmlLabels),
+                getHoverMarkers: (hovered) =>
+                    filteredData.flatMap((item) => item.getHoverMarkers(hovered)),
+                labelLayout: filteredData,
+                lookupItems: filteredData,
+                gradientGeometry: getGradientGeometry(filteredData),
+            };
+        },
+        prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
+        render: ({
+            plot,
+            labelsPlot,
+            renderData,
+            seriesOptions,
+            dispatcher,
+        }: RenderLayerArgs<PreparedAreaRangeData, PreparedSeriesOptions>) => {
+            const allowOverlap = renderData.some((item) => item.series.dataLabels.allowOverlap);
+            return renderAreaRange(
+                {plot, labelsPlot},
+                renderData,
+                seriesOptions,
+                allowOverlap,
+                dispatcher,
+            );
+        },
+    },
     zoom: {
         types: ['x', 'xy', 'y'],
         defaultType: 'x',
@@ -77,86 +181,6 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
                     },
                 },
             ),
-    },
-    prepareGradientGeometry: createGradientGeometryPreparer(projectAreaRangeData),
-    prepareSeries: prepareAreaRangeSeries,
-    getColorValue: getAreaRangeWidth,
-    validate: ({series, xAxis, yAxis}) => {
-        validateAxisPlotValues({
-            series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y0}))},
-            xAxis,
-            yAxis,
-        });
-        validateXYSeries({
-            series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y0}))},
-            xAxis,
-            yAxis,
-        });
-        validateXYSeries({
-            series: {...series, data: series.data.map((data) => ({x: data.x, y: data.y1}))},
-            xAxis,
-            yAxis,
-        });
-        validateSeriesColor({color: series.color, seriesName: series.name});
-        validateSeriesColor({color: series.fillColor, seriesName: series.name});
-
-        if (
-            series.data.some(
-                (data) => data.y0 !== null && data.y1 !== null && Number(data.y0) > Number(data.y1),
-            )
-        ) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: i18n('error', 'label_invalid-area-range-bounds', {
-                    seriesName: series.name,
-                }),
-            });
-        }
-    },
-    prepareShapeData: async (args: PrepareShapeDataArgs): Promise<PrepareShapeDataResult> => {
-        const {
-            series,
-            xAxis,
-            xScale,
-            yAxis,
-            yScale,
-            split,
-            isOutsideBounds,
-            isRangeSlider,
-            otherLayers = [],
-        } = args;
-
-        if (!xAxis || !xScale || !yScale?.length || !split) {
-            return {renderData: [], tooltipItems: []};
-        }
-
-        const data = await prepareAreaRangeData({
-            series: series as PreparedAreaRangeSeries[],
-            xAxis,
-            xScale,
-            yAxis: yAxis ?? [],
-            yScale,
-            split,
-            isOutsideBounds: isOutsideBounds ?? (() => false),
-            isRangeSlider,
-        });
-        const filteredData = filterLayerLabels(data, otherLayers);
-        return {
-            renderData: filteredData,
-            tooltipItems: filteredData,
-            gradientGeometry: getGradientGeometry(filteredData),
-        };
-    },
-    renderShapes: ({
-        plot,
-        labelsPlot,
-        preparedData,
-        seriesOptions,
-        dispatcher,
-    }: RenderShapesArgs) => {
-        const data = preparedData as PreparedAreaRangeData[];
-        const allowOverlap = data.some((item) => item.series.dataLabels.allowOverlap);
-        return renderAreaRange({plot, labelsPlot}, data, seriesOptions, allowOverlap, dispatcher);
     },
     interaction: {
         prepareNearestData,
@@ -182,10 +206,9 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
                     {id: 'name', source: 'series.name', align: 'start'},
                     {
                         id: 'value',
-                        source: ({item}) =>
-                            getAreaRangeWidth((item as TooltipDataChunkAreaRange).data),
+                        source: ({item}) => getAreaRangeWidth(item.data),
                         formatValue: ({item, format}) => {
-                            const {y0, y1} = (item as TooltipDataChunkAreaRange).data;
+                            const {y0, y1} = item.data;
 
                             return y0 === null || y1 === null
                                 ? ''
@@ -197,4 +220,13 @@ export const areaRangePlugin: SeriesPlugin<AreaRangeSeries, TooltipDataChunkArea
             },
         ],
     },
-};
+} satisfies SeriesPlugin<{
+    raw: AreaRangeSeries;
+    prepared: PreparedAreaRangeSeries;
+    shape: PreparedAreaRangeData;
+    options: ChartSeriesOptions;
+    tooltipChunk: AreaRangeTooltipChunk;
+    interaction: AreaRangeInteractionItem;
+    allRaw: ChartSeries;
+    allPrepared: PreparedSeries;
+}>;

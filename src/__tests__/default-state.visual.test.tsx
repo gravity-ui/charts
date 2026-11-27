@@ -7,6 +7,35 @@ import type {ChartData} from '../types';
 
 test.describe('Default state', () => {
     test.describe('hoveredPosition', () => {
+        test('honors a point tooltip override on a disabled series', async ({mount, page}) => {
+            await mount(
+                <ChartTestStory
+                    data={{
+                        legend: {enabled: false},
+                        xAxis: {min: 0, max: 2},
+                        series: {
+                            data: [
+                                {
+                                    type: 'line',
+                                    name: 'Orders',
+                                    tooltip: {enabled: false},
+                                    data: [
+                                        {x: 0, y: 10},
+                                        {x: 1, y: 20, tooltip: {enabled: true}},
+                                        {x: 2, y: 15},
+                                    ],
+                                },
+                            ],
+                        },
+                        defaultState: {hoveredPosition: {x: '50%', y: '50%'}},
+                    }}
+                />,
+            );
+            const tooltip = page.locator('.gcharts-tooltip');
+            await expect(tooltip.getByText('Orders', {exact: true})).toBeVisible();
+            await expect(tooltip.getByText('20', {exact: true})).toBeVisible();
+        });
+
         test('keeps category B and its anchor under a CSS transform', async ({mount, page}) => {
             await page.setViewportSize({width: 1000, height: 600});
             const component = await mount(
