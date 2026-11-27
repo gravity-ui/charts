@@ -59,3 +59,17 @@ export default function App() {
 ```
 
 `Chart` adapts to its parent's size — make sure the container has an explicit height.
+
+## Localize chart text
+
+Register translations before rendering the chart, then pass the locale as its `lang` prop. You can provide just the labels your application needs.
+
+```tsx
+import {Chart, registerTranslations} from '@gravity-ui/charts';
+
+registerTranslations('es', {legend: {label_legend: 'Leyenda'}}, {fallbackLocale: 'en'});
+
+<Chart data={data} lang="es" />;
+```
+
+The legend uses `Leyenda` as its accessible name. Missing translations use the fallback locale, which defaults to English. Registering additional keys for the same locale preserves the translations already registered for it.
