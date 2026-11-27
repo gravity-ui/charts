@@ -1,4 +1,3 @@
-import type {PreparedAreaSeries} from '~core/series/types';
 import {
     getInteractionElements,
     getMarkerInteractionElements,
@@ -12,6 +11,7 @@ import type {AreaSeriesData} from '../../types';
 
 import {getTooltipData} from './get-tooltip-data';
 import type {AreaInteractionItem} from './interaction-types';
+import type {PreparedAreaSeries} from './prepared-series';
 import type {PointData, PreparedAreaData} from './types';
 
 const sourcePoints = new WeakMap<AreaSeriesData[], Set<AreaSeriesData>>();

@@ -5,7 +5,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedPieSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import {CHART_ERROR_CODE, ChartError} from '../../libs';
@@ -15,6 +14,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {preparePieData} from './prepare-data';
 import {preparePieSeries} from './prepare-pie-series';
+import type {PreparedPieSeries} from './prepared-series';
 import {renderPie} from './renderer';
 import type {PreparedPieData} from './types';
 

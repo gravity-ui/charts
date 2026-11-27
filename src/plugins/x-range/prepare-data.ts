@@ -4,7 +4,7 @@ import get from 'es-toolkit/compat/get';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedSeriesOptions, PreparedXRangeSeries} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {getBarBandContentSize, getBarWidth} from '~core/shapes/bar-width';
 import {
     getDataCategoryValue,
@@ -18,6 +18,7 @@ import {getFormattedValue} from '~core/utils/format';
 
 import type {HtmlItem, LabelData} from '../../types';
 
+import type {PreparedXRangeSeries} from './prepared-series';
 import type {PreparedXRangeData} from './types';
 
 interface PrepareXRangeDataArgs {

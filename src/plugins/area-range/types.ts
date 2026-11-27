@@ -1,7 +1,8 @@
-import type {PreparedAreaRangeSeries} from '~core/series/types';
 import type {GradientShapeData, SeriesShapeData} from '~core/shapes/types';
 
 import type {AreaRangeSeriesData, LabelData} from '../../types';
+
+import type {PreparedAreaRangeSeries} from './prepared-series';
 
 export interface AreaRangePointData {
     color?: string;

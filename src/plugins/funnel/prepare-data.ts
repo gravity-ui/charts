@@ -1,6 +1,5 @@
 import {path} from 'd3-path';
 
-import type {PreparedFunnelSeries} from '~core/series/types';
 import {
     calculateNumericProperty,
     getFormattedValue,
@@ -10,6 +9,7 @@ import {
     isPointDataLabelEnabled,
 } from '~core/utils';
 
+import type {PreparedFunnelSeries} from './prepared-series';
 import type {PreparedFunnelData} from './types';
 
 type Args = {

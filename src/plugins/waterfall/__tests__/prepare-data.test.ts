@@ -7,7 +7,7 @@ import {seriesOptionsDefaults} from '~core/constants';
 import {createXScale} from '~core/scales/x-scale';
 import {createYScale} from '~core/scales/y-scale';
 import {getPreparedOptions} from '~core/series/prepare-options';
-import type {PreparedLegend, PreparedWaterfallSeries} from '~core/series/types';
+import type {PreparedLegend} from '~core/series/types';
 import {getVisibleSeries} from '~core/series/utils';
 import * as textUtils from '~core/utils/text';
 import {getZoomedSeriesData} from '~core/zoom';
@@ -16,6 +16,7 @@ import type {ChartSeriesOptions, WaterfallSeriesData} from '../../../types';
 import {getWaterfallIntervals} from '../intervals';
 import {prepareWaterfallData} from '../prepare-data';
 import {prepareWaterfallSeries} from '../prepare-waterfall-series';
+import type {PreparedWaterfallSeries} from '../prepared-series';
 
 beforeEach(() => {
     jest.spyOn(textUtils, 'createLabelMeasurer').mockReturnValue(async () => ({

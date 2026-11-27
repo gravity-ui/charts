@@ -2,7 +2,6 @@ import get from 'es-toolkit/compat/get';
 
 import {DEFAULT_DATALABELS_STYLE, seriesOptionsDefaults} from '~core/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedBarYSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getLabelsSize, getUniqId} from '~core/utils';
@@ -13,6 +12,8 @@ import {withSourcePoint} from '~core/utils/source-point';
 import type {BarYSeries, BarYSeriesData} from '../../types';
 import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
+
+import type {PreparedBarYSeries} from './prepared-series';
 
 const DEFAULT_LABEL_PADDING = 7;
 

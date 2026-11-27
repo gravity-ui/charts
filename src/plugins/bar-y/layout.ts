@@ -3,13 +3,15 @@ import get from 'es-toolkit/compat/get';
 
 import type {PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedBarYSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {getSeriesStackId} from '~core/series/utils';
 import {getBarBandContentSize, getBarLayout} from '~core/shapes/bar-width';
 import {getDataCategoryValue, isBandScale} from '~core/utils';
 import {getBarBandSize} from '~core/utils/band-size';
 
 import type {BarYSeriesData} from '../../types';
+
+import type {PreparedBarYSeries} from './prepared-series';
 
 /**
  * BarY always filters out data with null or replace null by zero.

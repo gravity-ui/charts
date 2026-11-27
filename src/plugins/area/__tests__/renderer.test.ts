@@ -1,8 +1,9 @@
 /** @jest-environment jsdom */
 
-import type {PreparedAreaSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import type {LinearGradient} from '~core/types';
 
+import type {PreparedAreaSeries} from '../prepared-series';
 import {renderArea} from '../renderer';
 import type {PointData, PreparedAreaData} from '../types';
 

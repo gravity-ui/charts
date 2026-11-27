@@ -7,7 +7,7 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedBarXSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {getBarBandContentSize, getBarLayout, getBarWidthBySeries} from '~core/shapes/bar-width';
 import {getDataCategoryValue, isPointDataLabelEnabled} from '~core/utils';
 import {getBarBandSize} from '~core/utils/band-size';
@@ -18,6 +18,7 @@ import {createLabelMeasurer} from '~core/utils/text';
 
 import type {BarXSeriesData, HtmlItem, LabelData} from '../../types';
 
+import type {PreparedBarXSeries} from './prepared-series';
 import type {PreparedBarXData} from './types';
 import {getBarXRect, getBarXStackKey} from './utils';
 

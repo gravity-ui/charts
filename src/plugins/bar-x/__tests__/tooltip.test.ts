@@ -1,7 +1,8 @@
-import type {PreparedBarXSeries, PreparedLineSeries} from '~core/series/types';
 import {getClosestPoints} from '~core/utils/get-closest-data';
 
+import type {PreparedLineSeries} from '../../line/prepared-series';
 import type {PreparedLineData} from '../../line/types';
+import type {PreparedBarXSeries} from '../prepared-series';
 import type {PreparedBarXData} from '../types';
 
 test('unequal grouped stacks keep bar and line rows in the same tooltip category', () => {

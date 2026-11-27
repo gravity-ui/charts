@@ -4,7 +4,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedFunnelSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipScalarValue} from '~core/tooltip/utils';
 
 import type {FunnelSeries, TooltipDataChunkFunnel} from '../../types';
@@ -13,6 +12,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareFunnelData} from './prepare-data';
 import {prepareFunnelSeries} from './prepare-funnel-series';
+import type {PreparedFunnelSeries} from './prepared-series';
 import {renderFunnel} from './renderer';
 import type {PreparedFunnelData} from './types';
 

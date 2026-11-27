@@ -4,7 +4,7 @@ import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
 import {prepareAnnotation} from '~core/series/prepare-annotation';
-import type {PreparedLineSeries, PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeries, PreparedSeriesOptions} from '~core/series/types';
 import {buildHoverMarkerGetter, getMarkerFill} from '~core/shapes/marker';
 import type {ShapeLabels} from '~core/shapes/types';
 import {getXValue, getYValue, markHiddenPointsOutOfYRange} from '~core/shapes/utils';
@@ -20,6 +20,7 @@ import {
 } from './auto-placement';
 import {hasNormalMarker} from './normal-marker';
 import {hasSmoothInterpolation} from './path';
+import type {PreparedLineSeries} from './prepared-series';
 import type {PointData, PreparedLineData} from './types';
 
 function isLabeledLineLayer(layer: ShapeLabels): boolean {

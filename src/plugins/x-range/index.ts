@@ -5,7 +5,6 @@ import type {
     RenderShapesArgs,
     SeriesPlugin,
 } from '~core/series/plugin';
-import type {PreparedXRangeSeries} from '~core/series/types';
 import {getTooltipColorSymbol, getTooltipYValue} from '~core/tooltip/utils';
 import {getFormattedValue} from '~core/utils/format';
 import {filterPoints} from '~core/zoom/filter-data';
@@ -17,6 +16,7 @@ import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
 import {prepareXRangeData} from './prepare-data';
 import {prepareXRangeSeries} from './prepare-x-range-series';
+import type {PreparedXRangeSeries} from './prepared-series';
 import {renderXRange} from './renderer';
 import type {PreparedXRangeData} from './types';
 

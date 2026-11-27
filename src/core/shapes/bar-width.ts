@@ -1,11 +1,15 @@
-import type {PreparedBarXSeries, PreparedBarYSeries} from '../series/types';
-
 import {
     DEFAULT_BAR_BAND_PADDING,
     MIN_BAR_GAP,
     MIN_BAR_GROUP_GAP,
     MIN_BAR_WIDTH,
 } from './bar-constants';
+
+interface BarWidthSeries {
+    grouping: boolean;
+    stackBarPadding: number;
+    stackBarMaxWidth: number;
+}
 
 export function getBarBandContentSize(bandSize: number, padding = DEFAULT_BAR_BAND_PADDING) {
     return Math.max(0, bandSize - Math.max(bandSize * padding, MIN_BAR_GROUP_GAP));
@@ -16,7 +20,7 @@ export function getBarWidth(slotSize: number, padding: number, maxWidth: number)
     return Math.max(MIN_BAR_WIDTH, Math.min(slotSize - gap, maxWidth));
 }
 
-export function getBarWidthBySeries<T extends PreparedBarXSeries | PreparedBarYSeries>(
+export function getBarWidthBySeries<T extends BarWidthSeries>(
     series: T[],
     barSlotSize: number,
     groupSize: number,
@@ -34,8 +38,8 @@ export function getBarWidthBySeries<T extends PreparedBarXSeries | PreparedBarYS
 }
 
 /** Expand grouped slots only for drawn series with wider individual limits. */
-export function getBarLayout<T extends PreparedBarXSeries | PreparedBarYSeries>(
-    series: Iterable<T>,
+export function getBarLayout(
+    series: Iterable<BarWidthSeries>,
     slotSize: number,
     padding: number,
     maxWidth: number,

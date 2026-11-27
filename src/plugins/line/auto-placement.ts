@@ -1,7 +1,6 @@
 import type {CurveFactory} from 'd3-shape';
 import {curveLinear, line as lineGenerator} from 'd3-shape';
 
-import type {PreparedLineSeries} from '~core/series/types';
 import type {ShapeLabels} from '~core/shapes/types';
 import {
     getFormattedValue,
@@ -19,6 +18,7 @@ import type {HtmlItem, LabelData, LineSeriesDataLabelPlacementPosition} from '..
 import {hasNormalMarker} from './normal-marker';
 import {getLinePathPointFilter} from './path';
 import type {LinePathPoint} from './path';
+import type {PreparedLineSeries} from './prepared-series';
 import type {PointData} from './types';
 
 export const DEFAULT_PLACEMENT_ORDER: readonly LineSeriesDataLabelPlacementPosition[] = [

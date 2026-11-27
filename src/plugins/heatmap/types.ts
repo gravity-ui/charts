@@ -1,7 +1,8 @@
-import type {PreparedHeatmapSeries} from '~core/series/types';
 import type {SeriesShapeData} from '~core/shapes/types';
 
 import type {BaseTextStyle, HeatmapSeriesData} from '../../types';
+
+import type {PreparedHeatmapSeries} from './prepared-series';
 
 export type HeatmapItem = {
     x: number;

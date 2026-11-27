@@ -700,6 +700,7 @@
       "allowOverlap",
       "enabled",
       "format",
+      "mode",
       "padding",
       "style"
     ],
