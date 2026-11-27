@@ -1,7 +1,7 @@
 import {group} from 'd3-array';
 
 import type {PrepareShapeDataArgs} from '~core/series/plugin';
-import {getDataCategoryValue} from '~core/utils';
+import {getDataCategoryValue, isBandScale} from '~core/utils';
 import {sumDecimals} from '~core/utils/math';
 
 import {getStackLabelValue} from '../stack-labels';
@@ -36,7 +36,9 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
     for (const items of stacks.values()) {
         const options = optionsBySeries.get(items[0].series);
         if (!options?.enabled) continue;
-        const plotIndex = args.yAxis?.[items[0].series.yAxis]?.plotIndex ?? 0;
+        const yAxisIndex = items[0].series.yAxis;
+        const plotIndex = args.yAxis?.[yAxisIndex]?.plotIndex ?? 0;
+        const yScale = args.yScale?.[yAxisIndex];
         const pointsBySign = group(
             items.filter((item) => typeof item.data.y === 'number' && Number.isFinite(item.data.y)),
             (item) => Number(item.data.y) < 0,
@@ -44,28 +46,39 @@ export function getBarXStackLabelAnchors(data: PreparedBarXData[], args: Prepare
         for (const negative of [false, true]) {
             const points = pointsBySign.get(negative);
             if (!points?.length) continue;
-            const total = sumDecimals(points.map((item) => Number(item.data.y)));
-            // Zero segments do not add a separate total beside a negative stack.
-            if (total === 0 && pointsBySign.has(true)) continue;
+            const axisTotal = sumDecimals(points.map((item) => Number(item.data.y)));
+            const total =
+                typeof options.aggregation === 'function'
+                    ? getStackLabelValue(
+                          options,
+                          points.map((item) => item.data),
+                          axisTotal,
+                      )
+                    : axisTotal;
+            const isZeroGroup = axisTotal === 0;
+            if (isZeroGroup && total === 0 && pointsBySign.has(true)) continue;
+
             const extendsUp = points[0].extendsUp;
             const outer = points.reduce((end, item) =>
                 (extendsUp ? item.y < end.y : item.y + item.height > end.y + end.height)
                     ? item
                     : end,
             );
-            const y = extendsUp ? outer.y : outer.y + outer.height;
+            let y = extendsUp ? outer.y : outer.y + outer.height;
+            if (
+                isZeroGroup &&
+                outer.series.stacking === 'normal' &&
+                yScale &&
+                !isBandScale(yScale)
+            ) {
+                y = (args.split?.plots[plotIndex]?.top ?? 0) + yScale(0);
+            }
+
             anchors.push({
                 options,
                 x: outer.x + outer.width / 2,
                 y,
-                total:
-                    typeof options.aggregation === 'function'
-                        ? getStackLabelValue(
-                              options,
-                              points.map((item) => item.data),
-                              total,
-                          )
-                        : total,
+                total,
                 direction: extendsUp ? 'top' : 'bottom',
                 plotIndex,
             });

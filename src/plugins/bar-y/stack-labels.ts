@@ -3,7 +3,7 @@ import {group} from 'd3-array';
 import type {PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
 import type {PreparedSeriesOptions} from '~core/series/types';
-import {getDataCategoryValue} from '~core/utils';
+import {getDataCategoryValue, isBandScale} from '~core/utils';
 import {sumDecimals} from '~core/utils/math';
 
 import {getStackLabelValue} from '../stack-labels';
@@ -35,6 +35,7 @@ export function getBarYStackLabelAnchors(
     );
     const [rangeStart, rangeEnd] = xScale.range();
     const reversed = rangeStart > rangeEnd;
+    const valueScale = isBandScale(xScale) ? undefined : xScale;
     const stacks = group(
         data.filter((item) => item.series.stacking && optionsBySeries.get(item.series)?.enabled),
         (item) =>
@@ -59,16 +60,33 @@ export function getBarYStackLabelAnchors(
         for (const negative of [false, true]) {
             const points = pointsBySign.get(negative);
             if (!points?.length) continue;
-            const total = sumDecimals(points.map((item) => Number(item.data.x)));
-            // Zero segments do not add a separate total beside a negative stack.
-            if (total === 0 && pointsBySign.has(true)) continue;
+            const axisTotal = sumDecimals(points.map((item) => Number(item.data.x)));
+            const total =
+                typeof options.aggregation === 'function'
+                    ? getStackLabelValue(
+                          options,
+                          points.map((item) => item.data),
+                          axisTotal,
+                      )
+                    : axisTotal;
+            const isZeroGroup = axisTotal === 0;
+            if (isZeroGroup && total === 0 && pointsBySign.has(true)) continue;
+
             const extendsRight = negative === reversed;
-            const outer = points.reduce((end, item) =>
+            const anchorPoints =
+                items[0].series.stacking === 'normal' && !isZeroGroup
+                    ? points.filter((item) => item.data.x !== 0)
+                    : points;
+            const outer = anchorPoints.reduce((end, item) =>
                 (extendsRight ? item.x + item.width > end.x + end.width : item.x < end.x)
                     ? item
                     : end,
             );
             let x = extendsRight ? outer.x + outer.width : outer.x;
+            if (isZeroGroup && outer.series.stacking === 'normal' && valueScale) {
+                x = valueScale(0);
+            }
+
             // Percent bars may extend beyond the plot due to border compensation.
             if (items[0].series.stacking === 'percent') {
                 x = Math.max(0, Math.min(boundsWidth, x));
@@ -77,14 +95,7 @@ export function getBarYStackLabelAnchors(
                 options,
                 x,
                 y: outer.y + outer.height / 2,
-                total:
-                    typeof options.aggregation === 'function'
-                        ? getStackLabelValue(
-                              options,
-                              points.map((item) => item.data),
-                              total,
-                          )
-                        : total,
+                total,
                 direction: extendsRight ? 'right' : 'left',
                 plotIndex: 0,
             });

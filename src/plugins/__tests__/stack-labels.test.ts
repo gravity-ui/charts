@@ -187,7 +187,7 @@ describe.each(plugins)('$type stack labels', (plugin) => {
         },
     );
 
-    test('uses geometry signs and zero suppression independently of callback results', async () => {
+    test('groups custom totals by axis sign and suppresses a zero total beside a negative stack', async () => {
         const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) =>
             points.some((point) => Number(plugin.type === 'bar-y' ? point.x : point.y) < 0) ? 7 : 0,
         );
@@ -208,13 +208,40 @@ describe.each(plugins)('$type stack labels', (plugin) => {
         );
 
         expect(texts(result.labels)).toEqual(['0', '7', '7']);
-        expect(aggregation).toHaveBeenCalledTimes(3);
         for (const [{points}] of aggregation.mock.calls) {
             const signs = new Set(
                 points.map((point) => Number(plugin.type === 'bar-y' ? point.x : point.y) < 0),
             );
             expect(signs.size).toBe(1);
         }
+    });
+
+    test('keeps both custom totals when the negative series comes first and reaches the plot edge', async () => {
+        const aggregation = ({points}: StackLabelsAggregationArgs) =>
+            points.reduce((sum, point) => sum + point.custom.orders, 0);
+        const orders = [7, 5];
+
+        const {args} = await prepare(
+            plugin,
+            [[-10], [0]],
+            'normal',
+            {enabled: true, aggregation},
+            [],
+            (series) =>
+                series.forEach((item, index) => {
+                    item.data[0].custom = {orders: orders[index]};
+                }),
+        );
+        const valueScale = scaleLinear().domain([-10, 0]);
+        if (plugin.type === 'bar-y') {
+            args.xScale = valueScale.range([0, args.boundsWidth]);
+        } else {
+            args.yScale = [valueScale.range([args.boundsHeight, 0])];
+        }
+
+        const result = await plugin.prepareShapeData(args);
+
+        expect(texts(result.labels)).toEqual(['5', '7']);
     });
 
     test('recalculates participating points when visibility changes and excludes disabled series', async () => {
@@ -701,6 +728,53 @@ describe('area stack labels', () => {
             expected.forEach((point) => expect(points).toContain(point));
         }
     });
+});
+
+test('bar-y keeps the zero series total when stack labels are disabled for a clipped negative series', async () => {
+    const aggregation = ({points}: StackLabelsAggregationArgs) =>
+        points.reduce((sum, point) => sum + point.custom.orders, 0);
+    const orders = [7, 5];
+    const {args} = await prepare(
+        barYPlugin,
+        [[-10], [0]],
+        'normal',
+        {enabled: true, aggregation},
+        [{enabled: false}],
+        (series) =>
+            series.forEach((item, index) => {
+                item.data[0].custom = {orders: orders[index]};
+            }),
+    );
+    args.xScale = scaleLinear().domain([-5, 5]).range([0, args.boundsWidth]);
+
+    const result = await barYPlugin.prepareShapeData(args);
+
+    expect(texts(result.labels)).toEqual(['5']);
+});
+
+test('bar-y includes a trailing zero in the subtotal anchored to a visible nonzero segment', async () => {
+    const aggregation = ({points}: StackLabelsAggregationArgs) =>
+        points.reduce((sum, point) => sum + point.custom.orders, 0);
+    const orders = [2, 10, 5];
+    const {args} = await prepare(
+        barYPlugin,
+        [[2], [10], [0]],
+        'normal',
+        {enabled: true, aggregation},
+        [undefined, {enabled: false}],
+        (series) =>
+            series.forEach((item, index) => {
+                if (item.type === 'bar-y') {
+                    item.borderWidth = 2;
+                    item.data[0].custom = {orders: orders[index]};
+                }
+            }),
+    );
+    args.xScale = scaleLinear().domain([-1, 5]).range([args.boundsWidth, 0]);
+
+    const result = await barYPlugin.prepareShapeData(args);
+
+    expect(texts(result.labels)).toEqual(['7']);
 });
 
 describe.each([barXPlugin, barYPlugin])('$type stack overlays', (plugin) => {
