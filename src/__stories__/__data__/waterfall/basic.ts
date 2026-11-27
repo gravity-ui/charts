@@ -1,4 +1,4 @@
-import type {ChartData} from '../../../types';
+import type {ChartData, WaterfallSeriesData} from '../../../types';
 
 function prepareData(): ChartData {
     const data = [
@@ -6,8 +6,8 @@ function prepareData(): ChartData {
         {y: 10, x: 'revenue'},
         {y: -20, x: 'fixed costs'},
         {y: -15, x: 'cost price'},
-        {total: true, x: '2025'},
-    ];
+        {role: 'total', x: '2025'},
+    ] satisfies WaterfallSeriesData[];
 
     return {
         series: {

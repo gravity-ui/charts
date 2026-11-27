@@ -14,7 +14,7 @@ const data: ChartData = {
                 data: [
                     {x: 0, y: 80},
                     {x: 1, y: -110},
-                    {x: 2, total: true},
+                    {x: 2, role: 'total'},
                 ],
                 dataLabels: {placement: 'auto', placementFallback: 'hide'},
             },

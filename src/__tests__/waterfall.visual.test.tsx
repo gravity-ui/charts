@@ -2,6 +2,7 @@ import React from 'react';
 
 import {expect, test} from '@playwright/experimental-ct-react';
 
+import WaterfallExample from '../../docs/examples/src/charts/series-types/waterfall';
 import WaterfallHeaderTooltipExample from '../../docs/examples/src/charts/tooltip/waterfall-header';
 import {ChartTestStory} from '../../playwright/components/ChartTestStory';
 import {
@@ -17,6 +18,90 @@ test.describe('Waterfall series', () => {
     test('Basic', async ({mount}) => {
         const component = await mount(<ChartTestStory data={waterfallBasicData} />);
         await expect(component.locator('svg')).toHaveScreenshot();
+    });
+
+    test('Cumulative subtotals on both sides of zero', async ({mount}) => {
+        const component = await mount(
+            <div style={{width: 640, height: 320}}>
+                <WaterfallExample />
+            </div>,
+        );
+        const labels = component.locator('.gcharts-waterfall__label');
+        await expect(labels).toHaveCount(6);
+        await expect(component).toHaveScreenshot();
+
+        const legend = component.locator('.gcharts-legend');
+        const checkpoints = legend.getByRole('button', {name: 'Quarter end', exact: true});
+        await checkpoints.click({modifiers: ['ControlOrMeta']});
+        await expect(labels).toHaveCount(4);
+        await expect(labels.filter({hasText: /^-20$/})).toBeVisible();
+        await checkpoints.click({modifiers: ['ControlOrMeta']});
+        await legend
+            .getByRole('button', {name: 'Outflow', exact: true})
+            .click({modifiers: ['ControlOrMeta']});
+        await expect(labels.filter({hasText: /^100$/})).toHaveCount(3);
+        await expect(labels.filter({hasText: /^110$/})).toBeVisible();
+    });
+
+    test('Subtotal tooltip and label overrides apply only to checkpoints', async ({
+        mount,
+        page,
+    }) => {
+        const points: WaterfallSeriesData[] = [
+            {x: 'Sales', y: 100},
+            {x: 'March', role: 'subtotal', y: 999, tooltip: {enabled: true}},
+            {x: 'Refund', y: 10},
+            {x: 'June', role: 'subtotal', color: '#365891', dataLabels: {enabled: false}},
+        ];
+        const component = await mount(
+            <ChartTestStory
+                data={{
+                    xAxis: {type: 'category', categories: points.map((point) => String(point.x))},
+                    legend: {enabled: true},
+                    series: {
+                        data: [
+                            {
+                                type: 'waterfall',
+                                name: 'Cash',
+                                data: points,
+                                dataLabels: {enabled: false},
+                                tooltip: {valueFormat: {type: 'number', prefix: '$'}},
+                                subtotal: {
+                                    name: 'Balance',
+                                    legend: {enabled: false},
+                                    color: '#6086c7',
+                                    tooltip: {
+                                        enabled: false,
+                                        valueFormat: {type: 'number', precision: 2, lang: 'en'},
+                                    },
+                                    dataLabels: {
+                                        enabled: true,
+                                        format: {type: 'number', postfix: ' USD'},
+                                    },
+                                },
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+        const columns = component.locator('.gcharts-waterfall__segment');
+        await expect(columns).toHaveCount(4);
+        await expect(columns.nth(1)).toHaveAttribute('fill', '#6086c7');
+        await expect(columns.last()).toHaveAttribute('fill', '#365891');
+        await expect(component.locator('.gcharts-legend').getByText('Balance')).toHaveCount(0);
+        await expect(component.locator('.gcharts-waterfall__label')).toHaveText(['100 USD']);
+
+        const tooltip = page.locator('.gcharts-tooltip');
+        await columns.nth(1).hover();
+        await expect(tooltip.getByText('March', {exact: true})).toBeVisible();
+        await expect(tooltip.getByRole('row')).toHaveCount(1);
+        await expect(tooltip.getByRole('row', {name: 'Balance 100.00', exact: true})).toBeVisible();
+        await columns.last().hover();
+        await expect(tooltip).toBeHidden();
+        await columns.nth(2).hover();
+        await expect(tooltip.getByRole('row', {name: 'Subtotal $110', exact: true})).toBeVisible();
+        await expect(tooltip.getByRole('row')).toHaveCount(2);
     });
 
     test('Labels stay on visible columns and shift at the edge by default', async ({mount}) => {

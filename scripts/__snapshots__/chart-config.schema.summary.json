@@ -743,6 +743,7 @@
       "negativeColor",
       "nullMode",
       "positiveColor",
+      "subtotal",
       "tooltip",
       "type",
       "visible"
@@ -753,6 +754,7 @@
       "dataLabels",
       "label",
       "opacity",
+      "role",
       "tooltip",
       "total",
       "x",

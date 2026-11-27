@@ -196,6 +196,18 @@ describe('chart config artifacts', () => {
         );
     });
 
+    test('waterfall total flag remains available with a migration hint in both artifacts', () => {
+        const point = schema.definitions['WaterfallSeriesData<JsonValue>'].properties;
+        expect(point.total).toMatchObject({
+            type: 'boolean',
+            deprecated: expect.stringContaining("role: 'total'"),
+        });
+        expect(point.role.enum).toEqual(['change', 'subtotal', 'total']);
+        expect(declaration).toMatch(
+            /@deprecated [^\n]*role: 'total'[^\n]*\n\s*\*\/\s*total\?: boolean;/,
+        );
+    });
+
     test('waterfall connectors are available in declarations and schema', () => {
         expect(() =>
             validateDeclaration(

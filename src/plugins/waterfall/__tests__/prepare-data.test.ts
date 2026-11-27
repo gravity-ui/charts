@@ -11,10 +11,10 @@ import {getVisibleSeries} from '~core/series/utils';
 import * as textUtils from '~core/utils/text';
 import {getZoomedSeriesData} from '~core/zoom';
 
-import type {WaterfallSeriesData} from '../../../types';
-import {getWaterfallIntervals} from '../intervals';
+import type {WaterfallSeries, WaterfallSeriesData} from '../../../types';
+import {getWaterfallIntervals, resolveWaterfallIntervals} from '../intervals';
 import {prepareWaterfallData} from '../prepare-data';
-import {prepareWaterfallSeries} from '../prepare-waterfall-series';
+import {prepareWaterfallPoints, prepareWaterfallSeries} from '../prepare-waterfall-series';
 import type {PreparedWaterfallSeries} from '../prepared-series';
 
 beforeEach(() => {
@@ -314,4 +314,68 @@ test('Y zoom tests column intervals for the current legend selection', () => {
     const withoutExpenses = [positive.legend.groupId, totals.legend.groupId];
     expect(getZoomedXValues(withoutExpenses)).toEqual([2, 3]);
     expect(getZoomedXValues([...withoutExpenses, negative.legend.groupId])).toEqual([]);
+});
+
+test.each(['skip', 'zero'] as const)(
+    'checkpoint intervals and raw values with nullMode %s',
+    (nullMode) => {
+        const data: WaterfallSeriesData[] = [
+            {role: 'subtotal'},
+            {role: 'change', y: 100},
+            {role: 'subtotal', y: null},
+            {y: -130},
+            {role: 'subtotal', y: 999},
+            {role: 'subtotal'},
+            {y: 10},
+            {role: 'total'},
+            {role: 'total', y: null},
+            {total: true, y: null},
+        ];
+        const series: WaterfallSeries = {type: 'waterfall', name: 'Cash', data, nullMode};
+        const points = prepareWaterfallPoints(series);
+        const intervals = resolveWaterfallIntervals(points);
+        const expected = [
+            [0, 0],
+            [0, 100],
+            [0, 100],
+            [100, -30],
+            [0, -30],
+            [0, -30],
+            [-30, -20],
+            [0, -20],
+        ];
+        if (nullMode === 'zero') expected.push([0, -20], [0, -20]);
+        expect([...intervals.values()].map(({start, end}) => [start, end])).toEqual(expected);
+        expect(points.filter(({role}) => role === 'subtotal').map(({y}) => y)).toEqual([
+            undefined,
+            null,
+            999,
+            undefined,
+        ]);
+    },
+);
+
+test('subtotal presentation inherits series settings and the resolved total color', () => {
+    const [, , total, subtotal] = prepareWaterfallSeries({
+        series: [
+            {
+                type: 'waterfall',
+                name: 'Cash',
+                data: [{role: 'subtotal'}],
+                dataLabels: {enabled: false, format: {type: 'number', precision: 1}},
+                tooltip: {enabled: false, valueFormat: {type: 'number', prefix: '$'}},
+            },
+        ],
+        colorScale: scaleOrdinal<string, string>().range(['#135790']),
+        colors: [],
+        legend: {enabled: true} as PreparedLegend,
+    });
+    expect(subtotal).toMatchObject({
+        name: 'Subtotal',
+        color: '#135790',
+        legend: {enabled: true, itemText: 'Subtotal'},
+        dataLabels: {enabled: false, format: {type: 'number', precision: 1}},
+        tooltip: {enabled: false, valueFormat: {type: 'number', prefix: '$'}},
+    });
+    expect(subtotal.color).toBe(total.color);
 });

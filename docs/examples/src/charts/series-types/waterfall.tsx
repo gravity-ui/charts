@@ -1,35 +1,36 @@
 import React from 'react';
 
 import {Chart} from '@gravity-ui/charts';
-import type {ChartData} from '@gravity-ui/charts';
+import type {ChartData, WaterfallSeriesData} from '@gravity-ui/charts';
 
 import type {ExampleMeta} from '../gallery';
 
+const points: WaterfallSeriesData[] = [
+    {x: 'Sales', y: 100},
+    {x: 'March', role: 'subtotal'},
+    {x: 'Purchases', y: -130},
+    {x: 'June', role: 'subtotal'},
+    {x: 'Refund', y: 10},
+    {x: 'Closing', role: 'total'},
+];
+
 const data: ChartData = {
+    xAxis: {type: 'category', categories: points.map((point) => String(point.x))},
+    yAxis: [{padding: {min: '18px', max: '18px'}}],
+    legend: {enabled: true},
     series: {
         data: [
             {
                 type: 'waterfall',
-                name: 'Customers',
-                dataLabels: {enabled: true},
-                data: [
-                    {x: 0, y: 120},
-                    {x: 1, y: 45},
-                    {x: 2, y: -20},
-                    {x: 3, total: true},
-                ],
+                name: 'Cash balance',
+                data: points,
+                subtotal: {name: 'Quarter end', color: '#6086c7'},
+                legend: {
+                    itemText: {positive: 'Inflow', negative: 'Outflow', totals: 'Closing balance'},
+                },
             },
         ],
     },
-    xAxis: {
-        type: 'category',
-        categories: ['Opening', 'New', 'Churned', 'Closing'],
-    },
-    yAxis: [
-        {
-            title: {text: 'Customers'},
-        },
-    ],
 };
 
 export default function WaterfallExample() {
@@ -42,10 +43,8 @@ export default function WaterfallExample() {
 
 export const meta = {
     seriesType: 'Waterfall',
-    title: 'Basic waterfall chart',
-    description: 'Positive and negative increments, a total column, and data labels.',
+    title: 'Cash flow with quarter-end balances',
+    description: 'Track changes in cash and read the balance at each quarter end.',
     docsUrl: 'pages/guides/series-types/waterfall.html#example',
-    gallery: {
-        order: 0,
-    },
+    gallery: {order: 0},
 } satisfies ExampleMeta;

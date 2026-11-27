@@ -43,3 +43,25 @@ describe('waterfall connector validation', () => {
         );
     });
 });
+
+describe('waterfall subtotals', () => {
+    test.each([
+        {data: [{role: 'subtotal', total: true}]},
+        {data: [{role: 'total', total: false}]},
+        {data: [{role: 'change', total: true}]},
+        {data: [{role: 'quarter'}]},
+        {subtotal: null},
+        {subtotal: {color: 1}},
+        {subtotal: {legend: {itemText: false}}},
+        {subtotal: {legend: {enabled: 'false'}}},
+        {subtotal: {tooltip: []}},
+        {subtotal: {tooltip: {valueFormat: {type: 'custom'}}}},
+        {subtotal: {dataLabels: {enabled: 0}}},
+        {subtotal: {dataLabels: {format: 'number'}}},
+    ])('rejects invalid declarations: %j', (options) => {
+        const series = {type: 'waterfall', name: 'Balance', data: [{y: 1}], ...options};
+        expect(() => validateData({series: {data: [series as WaterfallSeries]}})).toThrow(
+            expect.objectContaining({code: CHART_ERROR_CODE.INVALID_DATA}),
+        );
+    });
+});

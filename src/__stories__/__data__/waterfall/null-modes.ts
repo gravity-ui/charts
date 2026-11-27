@@ -5,7 +5,7 @@ const dataWithNulls: WaterfallSeriesData[] = [
     {x: 'B', y: 15},
     {x: 'C', y: null},
     {x: 'D', y: 25},
-    {x: 'Total', total: true},
+    {x: 'Total', role: 'total'},
 ];
 
 export const waterfallNullModeSkipData: ChartData = {

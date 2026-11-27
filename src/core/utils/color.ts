@@ -8,7 +8,9 @@ export function getDomainForContinuousColorScale(args: {
     series: ChartData['series']['data'];
 }): number[] {
     const {series} = args;
-    const values = series.flatMap((s) => {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const s of series) {
         const {getColorValue} = getSeriesPlugin(s.type);
 
         if (!getColorValue) {
@@ -17,10 +19,16 @@ export function getDomainForContinuousColorScale(args: {
             );
         }
 
-        return s.data.map((d) => Number(getColorValue(d)));
-    });
+        for (const point of s.data) {
+            const value = Number(getColorValue(point));
+            if (Number.isFinite(value)) {
+                min = Math.min(min, value);
+                max = Math.max(max, value);
+            }
+        }
+    }
 
-    return [Math.min(...values), Math.max(...values)];
+    return min <= max ? [min, max] : [0, 0];
 }
 
 export function getDefaultColorStops(size: number) {

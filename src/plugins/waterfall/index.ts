@@ -8,9 +8,7 @@ import {getTooltipXValue, getTooltipYValue} from '~core/tooltip/utils';
 import {filterOverlappingLabels} from '~core/utils';
 import {filterPoints} from '~core/zoom/filter-data';
 
-import {CHART_ERROR_CODE, ChartError} from '../../libs';
 import type {TooltipDataChunkWaterfall, WaterfallSeries} from '../../types';
-import {validateBarLabelPlacement} from '../bar-label-placement';
 
 import {getTooltipData} from './get-tooltip-data';
 import {getTargetElements, prepareNearestData} from './interaction';
@@ -20,6 +18,8 @@ import {prepareWaterfallPoints, prepareWaterfallSeries} from './prepare-waterfal
 import type {PreparedWaterfallSeries} from './prepared-series';
 import {renderWaterfall} from './renderer';
 import type {PreparedWaterfallData} from './types';
+import {getWaterfallPointRole} from './utils';
+import {validateWaterfallSeries} from './validation';
 
 function isPreparedWaterfallSeries(
     series: WaterfallSeries | PreparedWaterfallSeries,
@@ -110,28 +110,8 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
         },
     },
     prepareSeries: prepareWaterfallSeries,
-    validate: ({series}) => {
-        validateBarLabelPlacement(series.dataLabels);
-        const {connectors} = series;
-        if (connectors === undefined) {
-            return;
-        }
-
-        if (typeof connectors !== 'object' || connectors === null || Array.isArray(connectors)) {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'waterfall.connectors must be an object',
-            });
-        }
-
-        if (connectors.enabled !== undefined && typeof connectors.enabled !== 'boolean') {
-            throw new ChartError({
-                code: CHART_ERROR_CODE.INVALID_DATA,
-                message: 'waterfall.connectors.enabled must be a boolean',
-            });
-        }
-    },
-    getColorValue: (d) => d.y,
+    validate: ({series}) => validateWaterfallSeries(series),
+    getColorValue: (point) => (point.role === 'subtotal' ? undefined : point.y),
     prepareShapeData,
     renderShapes: function ({
         plot,
@@ -150,18 +130,22 @@ export const waterfallPlugin: SeriesPlugin<WaterfallSeries> = {
     },
     tooltip: {
         prepareData: getTooltipData,
-        getValue: getTooltipYValue,
+        getValue: (args) => {
+            const {data, subTotal} = args.item as TooltipDataChunkWaterfall;
+            return data.role === 'subtotal' ? subTotal : getTooltipYValue(args);
+        },
         header: {getValue: getTooltipXValue, axis: 'x'},
         rows: (chunk) => {
             const c = chunk as TooltipDataChunkWaterfall;
-            if (c.data.total) {
+            const role = getWaterfallPointRole(c.data);
+            if (role !== 'change') {
                 return [
                     {
-                        id: 'totals',
+                        id: role === 'total' ? 'totals' : 'subtotal',
                         cells: [
                             {
                                 id: 'name',
-                                source: () => 'Total',
+                                source: role === 'total' ? () => 'Total' : 'series.name',
                                 align: 'start',
                             },
                             {

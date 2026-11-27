@@ -12,17 +12,19 @@ import type {WaterfallSeries} from '../../types';
 import {resolveBarLabelPlacement} from '../bar-label-placement';
 
 import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from './prepared-series';
+import {getWaterfallPointRole} from './utils';
 
 export function prepareWaterfallPoints(series: WaterfallSeries): PreparedWaterfallSeriesData[] {
     const nullAsZero = series.nullMode === 'zero';
     const points: PreparedWaterfallSeriesData[] = [];
 
     series.data.forEach((point) => {
-        if (point.y === null && !nullAsZero) return;
+        const role = getWaterfallPointRole(point);
+        if (point.y === null && !nullAsZero && role !== 'subtotal') return;
 
-        const y = !point.total && nullAsZero ? (point.y ?? 0) : point.y;
+        const y = role === 'change' && nullAsZero ? (point.y ?? 0) : point.y;
         // A point without y can still reserve a position on the X axis.
-        if (!point.total && y !== undefined && !Number.isFinite(y)) return;
+        if (role === 'change' && y !== undefined && !Number.isFinite(y)) return;
 
         points.push(
             withSourcePoint(point, {
@@ -43,11 +45,9 @@ export function prepareWaterfallSeries(
     const [, negativeColor, positiveColor] = colors;
     const series = seriesList[0];
 
-    const common: Omit<PreparedWaterfallSeries, 'fullData'> = {
-        id: '',
-        color: seriesList[0].color || colorScale(seriesList[0].name),
+    const totalColor = series.color || colorScale(series.name);
+    const common = {
         type: series.type,
-        name: series.name,
         visible: get(series, 'visible', true),
         connectors: {
             enabled: series.connectors?.enabled ?? true,
@@ -61,15 +61,12 @@ export function prepareWaterfallSeries(
             padding: get(series, 'dataLabels.padding', DEFAULT_DATALABELS_PADDING),
             html: get(series, 'dataLabels.html', false),
             format: series.dataLabels?.format,
-        },
+        } satisfies PreparedWaterfallSeries['dataLabels'],
         legend: {
             enabled: get(series, 'legend.enabled', legend.enabled),
             symbol: prepareLegendSymbol(series),
-            groupId: '',
-            itemText: '',
         },
         cursor: get(series, 'cursor', null),
-        data: [],
         tooltip: {
             ...series.tooltip,
             valueFormat: series.tooltip?.valueFormat ?? getDefaultValueFormat({axis: yAxis?.[0]}),
@@ -77,55 +74,72 @@ export function prepareWaterfallSeries(
         custom: series.custom,
     };
 
-    const positiveName = series.legend?.itemText?.positive ?? `${series.name} ↑`;
-    const positive = {
-        ...common,
-        name: positiveName,
-        legend: {
-            ...common.legend,
-            groupId: getUniqId(),
-            itemText: series.legend?.itemText?.positive ?? positiveName,
-        },
-        id: getUniqId(),
-        color: series.positiveColor || positiveColor,
-        data: [] as PreparedWaterfallSeriesData[],
-    };
-    const negativeName = series.legend?.itemText?.negative ?? `${series.name} ↓`;
-    const negative = {
-        ...common,
-        name: negativeName,
-        legend: {
-            ...common.legend,
-            groupId: getUniqId(),
-            itemText: series.legend?.itemText?.negative ?? negativeName,
-        },
-        id: getUniqId(),
-        color: series.negativeColor || negativeColor,
-        data: [] as PreparedWaterfallSeriesData[],
-    };
+    function createGroup(
+        name: string,
+        color: string,
+        data: PreparedWaterfallSeriesData[],
+    ): PreparedWaterfallSeries {
+        return {
+            ...common,
+            id: getUniqId(),
+            name,
+            color,
+            legend: {...common.legend, groupId: getUniqId(), itemText: name},
+            data,
+            fullData: data,
+        };
+    }
 
-    const totalsName = series.legend?.itemText?.totals ?? series.name;
-    const totals = {
-        ...common,
-        name: totalsName,
-        legend: {
-            ...common.legend,
-            groupId: getUniqId(),
-            itemText: series.legend?.itemText?.totals ?? totalsName,
-        },
-        id: getUniqId(),
-        data: [] as PreparedWaterfallSeriesData[],
-    };
-
+    const changesUp: PreparedWaterfallSeriesData[] = [];
+    const changesDown: PreparedWaterfallSeriesData[] = [];
+    const totals: PreparedWaterfallSeriesData[] = [];
+    const subtotals: PreparedWaterfallSeriesData[] = [];
     for (const point of prepareWaterfallPoints(series)) {
-        if (point.total) {
-            totals.data.push(point);
+        const role = getWaterfallPointRole(point);
+        if (role === 'subtotal') {
+            subtotals.push(point);
+        } else if (role === 'total') {
+            totals.push(point);
         } else if ((point.y ?? 0) < 0) {
-            negative.data.push(point);
+            changesDown.push(point);
         } else {
-            positive.data.push(point);
+            changesUp.push(point);
         }
     }
 
-    return [positive, negative, totals].map((item) => ({...item, fullData: item.data}));
+    const names = series.legend?.itemText;
+    const groups = [
+        createGroup(
+            names?.positive ?? `${series.name} ↑`,
+            series.positiveColor || positiveColor,
+            changesUp,
+        ),
+        createGroup(
+            names?.negative ?? `${series.name} ↓`,
+            series.negativeColor || negativeColor,
+            changesDown,
+        ),
+        createGroup(names?.totals ?? series.name, totalColor, totals),
+    ];
+    if (subtotals.length) {
+        const options = series.subtotal;
+        const group = createGroup(
+            options?.name ?? 'Subtotal',
+            options?.color ?? totalColor,
+            subtotals,
+        );
+        group.legend.itemText = options?.legend?.itemText ?? group.name;
+        group.legend.enabled = common.legend.enabled && (options?.legend?.enabled ?? true);
+        group.tooltip = {
+            enabled: options?.tooltip?.enabled ?? common.tooltip.enabled,
+            valueFormat: options?.tooltip?.valueFormat ?? common.tooltip.valueFormat,
+        };
+        group.dataLabels = {
+            ...common.dataLabels,
+            enabled: options?.dataLabels?.enabled ?? common.dataLabels.enabled,
+            format: options?.dataLabels?.format ?? common.dataLabels.format,
+        };
+        groups.push(group);
+    }
+    return groups;
 }
