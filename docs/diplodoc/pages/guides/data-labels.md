@@ -111,4 +111,4 @@ Returning `0` from the callback does not by itself hide the label. For example, 
 
 Both the default sum and custom aggregation include real points on both sides of an area gap, including points isolated between two nulls. Synthetic points added during layout are excluded.
 
-In `'allSigns'` mode, the label uses the positive area boundary or a visible positive marker. If both are absent, it uses the negative area boundary or a visible negative marker. Isolated points without a visible marker can contribute to the total even when they cannot anchor its label.
+In `'allSigns'` mode, the label uses the positive area boundary or a visible positive marker. At a gap, it can fall back to the negative area boundary or a visible negative marker, then to a visible zero marker. A boundary outside the plot hides its label. Isolated points without a visible marker can still contribute to the total.

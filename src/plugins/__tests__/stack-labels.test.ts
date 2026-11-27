@@ -498,6 +498,37 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 });
 
 describe('area stack labels', () => {
+    test('hides combined totals when the positive boundary is clipped', async () => {
+        const values = [
+            [130, 130, 130, 50],
+            [-60, -60, -60, -60],
+        ];
+        const {result} = await prepare(areaPlugin, values, 'normal', {
+            enabled: true,
+            mode: 'allSigns',
+        });
+
+        expect(texts(result.labels)).toEqual(['-10']);
+    });
+
+    test('shows a combined total for an isolated zero marker', async () => {
+        const values = [[null, 0, null]];
+        const {result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([series]) => {
+                if (series.type === 'area') {
+                    series.data[1].marker = {states: {normal: {enabled: true}}};
+                }
+            },
+        );
+
+        expect(texts(result.labels)).toEqual(['0']);
+    });
+
     test('shows a zero combined total at the only visible negative marker', async () => {
         const values = [
             [null, 30, null],

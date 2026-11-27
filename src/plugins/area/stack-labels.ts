@@ -25,6 +25,7 @@ interface StackBoundary {
     prev?: Boundary;
     next?: Boundary;
     marker?: Boundary;
+    zeroMarker?: Boundary;
     hasPositiveBoundary?: boolean;
 }
 
@@ -70,7 +71,7 @@ function getAllSignsAnchor(
     const stack = useNegative ? negative : positive;
     const boundary = useNegative
         ? negativeBoundary
-        : (positiveBoundary ?? getOuterBoundary(positive));
+        : (positiveBoundary ?? getOuterBoundary(positive) ?? positive?.zeroMarker);
     if (!stack || !boundary) return undefined;
 
     return createAnchor(
@@ -154,28 +155,26 @@ export function getAreaStackLabelAnchors(data: PreparedAreaData[], args: Prepare
             contributingPoints.push(point.data);
 
             const pickOuterY = stack.extendsUp ? Math.min : Math.max;
-            const markers = value === 0 ? undefined : markersByPoint?.get(point.data);
+            const markers = markersByPoint?.get(point.data);
             if (markers && markerBounds) {
+                const markerKey = value === 0 ? 'zeroMarker' : 'marker';
                 for (const marker of markers) {
                     const edgeY = stack.extendsUp
                         ? Math.max(top, marker.cy - markerBounds.top)
                         : Math.min(bottom, marker.cy + markerBounds.bottom);
-                    stack.marker = {y: pickOuterY(stack.marker?.y ?? edgeY, edgeY)};
+                    stack[markerKey] = {y: pickOuterY(stack[markerKey]?.y ?? edgeY, edgeY)};
                 }
             }
 
             for (const side of ['prev', 'next'] as const) {
                 const neighborPoints = pointsByX[index + (side === 'prev' ? -1 : 1)];
                 const neighbor = neighborPoints?.[side === 'prev' ? neighborPoints.length - 1 : 0];
-                if (allSignsPoints && (!neighbor || neighbor.y === null || neighbor.hiddenInLine)) {
-                    continue;
-                }
+                // Keep clipped boundaries so label layout can hide their totals.
+                if (allSignsPoints && (!neighbor || neighbor.y === null)) continue;
                 // Explicit nulls open a gap; synthetic missing points are zero-height sections.
                 if (neighbor?.data.y === null && item.series.nullMode !== 'zero') continue;
                 const boundaryPoint = side === 'prev' ? point : points[points.length - 1];
-                if (boundaryPoint.y === null || (allSignsPoints && boundaryPoint.hiddenInLine)) {
-                    continue;
-                }
+                if (boundaryPoint.y === null) continue;
                 if (allSignsPoints && value > 0) stack.hasPositiveBoundary = true;
                 const boundary = stack[side];
                 if (boundary) {

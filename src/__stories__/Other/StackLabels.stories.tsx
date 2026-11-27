@@ -52,6 +52,31 @@ export const AreaAllSigns: Story = {
     },
 };
 
+export const AreaAllSignsClippedEdge: Story = {
+    args: {
+        data: getAllSignsStackLabelsData({
+            type: 'area',
+            categories: ['A', 'B', 'C', 'D'],
+            valueAxis: {min: -100, max: 100},
+            entries: [
+                {name: 'Sales', values: [130, 130, 130, 50]},
+                {name: 'Refunds', values: [-60, -60, -60, -60]},
+            ],
+        }),
+    },
+};
+
+export const AreaAllSignsZeroMarker: Story = {
+    args: {
+        data: getAllSignsStackLabelsData({
+            type: 'area',
+            categories: ['A', 'B', 'C'],
+            valueAxis: {min: -1, max: 1},
+            entries: [{name: 'Sales', values: [null, 0, null], markerIndex: 1}],
+        }),
+    },
+};
+
 function createCustomAggregationStory(type: 'bar-x' | 'bar-y' | 'area'): Story {
     return {
         args: {data: getStackLabelsAggregationData(type)},
