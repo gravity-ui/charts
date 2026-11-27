@@ -1,3 +1,4 @@
+import {group} from 'd3-array';
 import {select} from 'd3-selection';
 
 import {DEFAULT_DATALABELS_STYLE} from '~core/constants';
@@ -11,6 +12,7 @@ import {
     getLayerLabelRects,
 } from '~core/utils';
 import {getFormattedValue} from '~core/utils/format';
+import {sumDecimals} from '~core/utils/math';
 import {getSourcePoint} from '~core/utils/source-point';
 import {getMultilineTextInfo, getTextSizeFn} from '~core/utils/text';
 
@@ -26,6 +28,48 @@ export interface StackLabelAnchor {
     total: number;
     direction: 'top' | 'bottom' | 'left' | 'right';
     plotIndex: number;
+}
+
+export function getStackLabelGroups<T>(
+    items: T[],
+    getValue: (item: T) => string | number | null | undefined,
+    mode: StackLabelsOptions['mode'],
+) {
+    const points = items.filter((item) => Number.isFinite(getValue(item)));
+    if (!points.length) return [];
+
+    const getNumericValue = (item: T) => Number(getValue(item));
+    if (mode === 'allSigns') {
+        return [getAllSignsStackLabelGroup(points, getNumericValue)];
+    }
+
+    return getPerSignStackLabelGroups(points, getNumericValue);
+}
+
+function getAllSignsStackLabelGroup<T>(points: T[], getValue: (item: T) => number) {
+    const negative =
+        !points.some((item) => getValue(item) > 0) && points.some((item) => getValue(item) < 0);
+    const edgePoints = points.filter((item) => {
+        const value = getValue(item);
+        return negative ? value < 0 : value >= 0;
+    });
+    const total = sumDecimals(points.map(getValue));
+
+    return {points, edgePoints, negative, total};
+}
+
+function getPerSignStackLabelGroups<T>(points: T[], getValue: (item: T) => number) {
+    const pointsBySign = group(points, (item) => getValue(item) < 0);
+
+    return [false, true].flatMap((negative) => {
+        const signPoints = pointsBySign.get(negative);
+        if (!signPoints) return [];
+
+        const total = sumDecimals(signPoints.map(getValue));
+        if (total === 0 && pointsBySign.has(true)) return [];
+
+        return [{points: signPoints, edgePoints: signPoints, negative, total}];
+    });
 }
 
 export function getStackLabelValue(

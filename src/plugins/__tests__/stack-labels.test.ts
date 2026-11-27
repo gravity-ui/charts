@@ -126,6 +126,44 @@ describe('bar-x stack label anchors', () => {
     );
 });
 
+describe.each([barXPlugin, barYPlugin])('$type combined stack labels', (plugin) => {
+    test('sums both signs and shows zero when fractions cancel in either order', async () => {
+        const values = [
+            [100, 1, 1],
+            [-30, 1 / 3, -1],
+            [null, -1, 1 / 3],
+            [null, -1 / 3, -1 / 3],
+        ];
+        const {result} = await prepare(plugin, values, 'normal', {
+            enabled: true,
+            mode: 'allSigns',
+        });
+
+        expect(texts(result.labels)).toEqual(['0', '0', '70']);
+    });
+
+    test('passes original points of both signs to the callback once per category', async () => {
+        const mixedValues = [
+            [100, 30],
+            [-30, -30],
+        ];
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+        const {raw} = await prepare(plugin, mixedValues, 'normal', {
+            enabled: true,
+            mode: 'allSigns',
+            aggregation,
+        });
+
+        expect(aggregation).toHaveBeenCalledTimes(2);
+        const pointSets = aggregation.mock.calls.map(([{points}]) => points);
+        for (const [index, point] of raw[0].data.entries()) {
+            const points = pointSets.find((set) => set.some((entry) => entry === point));
+            expect(points).toHaveLength(2);
+            expect(points).toContain(raw[1].data[index]);
+        }
+    });
+});
+
 describe.each(plugins)('$type stack labels', (plugin) => {
     test.each(['normal', 'percent'] as const)(
         'aggregates original custom data independently of geometry in %s stacks',
@@ -465,6 +503,139 @@ describe.each(plugins)('$type stack labels', (plugin) => {
 });
 
 describe('area stack labels', () => {
+    test('hides combined totals when the positive boundary is clipped', async () => {
+        const values = [
+            [130, 130, 130, 50],
+            [-60, -60, -60, -60],
+        ];
+        const {result} = await prepare(areaPlugin, values, 'normal', {
+            enabled: true,
+            mode: 'allSigns',
+        });
+
+        expect(texts(result.labels)).toEqual(['-10']);
+    });
+
+    test('shows a combined total for an isolated zero marker', async () => {
+        const values = [[null, 0, null]];
+        const {result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([series]) => {
+                if (series.type === 'area') {
+                    series.data[1].marker = {states: {normal: {enabled: true}}};
+                }
+            },
+        );
+
+        expect(texts(result.labels)).toEqual(['0']);
+    });
+
+    test('shows a zero combined total at the only visible negative marker', async () => {
+        const values = [
+            [null, 30, null],
+            [null, -30, null],
+        ];
+        const {args, result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([, negative]) => {
+                if (negative.type === 'area') {
+                    negative.marker = {radius: 4};
+                    negative.data[1].marker = {states: {normal: {enabled: true}}};
+                }
+            },
+        );
+
+        expect(
+            getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args),
+        ).toMatchObject([{x: 200, y: 134, total: 0, direction: 'bottom'}]);
+    });
+
+    test('uses the visible negative edge for isolated positive points at the ends of a series', async () => {
+        const values = [
+            [30, null, null, 30],
+            [-10, -10, -10, -10],
+        ];
+        const {args, result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([positive]) => {
+                if (positive.type === 'area') positive.lineWidth = 0;
+            },
+        );
+        const anchors = getAreaStackLabelAnchors(result.renderData as PreparedAreaData[], args);
+
+        expect(anchors.filter(({x}) => x === 100 || x === 400)).toMatchObject([
+            {x: 100, y: 110, total: 20, direction: 'bottom'},
+            {x: 400, y: 110, total: 20, direction: 'bottom'},
+        ]);
+    });
+
+    test('anchors a combined total outside a visible marker at an area gap', async () => {
+        const values = [
+            [null, 30, null],
+            [-10, -10, -10],
+        ];
+        const {args, result} = await prepare(
+            areaPlugin,
+            values,
+            'normal',
+            {enabled: true, mode: 'allSigns'},
+            [],
+            ([positive]) => {
+                if (positive.type === 'area') {
+                    positive.marker = {radius: 12};
+                    positive.data[1].marker = {states: {normal: {enabled: true}}};
+                }
+            },
+        );
+        const data = result.renderData as PreparedAreaData[];
+        expect(
+            getAreaStackLabelAnchors(data, args).filter((anchor) => anchor.x === 200),
+        ).toMatchObject([{y: 58, total: 20, direction: 'top'}]);
+    });
+
+    test('includes an isolated point in the combined total and uses the available boundary', async () => {
+        const values = [
+            [null, 30, null, 40, 20],
+            [-10, -10, -20, -40, -10],
+        ];
+        const options: StackLabelsOptions = {enabled: true, mode: 'allSigns'};
+        const {args, raw, result} = await prepare(areaPlugin, values, 'normal', options);
+        const data = result.renderData as PreparedAreaData[];
+        const anchors = getAreaStackLabelAnchors(data, args);
+
+        expect(anchors.filter((anchor) => anchor.x === 200)).toMatchObject([
+            {total: 20, y: 110, direction: 'bottom'},
+        ]);
+        expect(anchors.filter((anchor) => anchor.x === 400)).toMatchObject([
+            {total: 0, y: 60, direction: 'top'},
+        ]);
+
+        const aggregation = jest.fn(({points}: StackLabelsAggregationArgs) => points.length);
+        args.seriesOptions = getPreparedOptions({area: {stackLabels: {...options, aggregation}}});
+        getAreaStackLabelAnchors(data, args);
+
+        const isolated = raw[0].data[1];
+        const isolatedCalls = aggregation.mock.calls.filter(([{points}]) =>
+            points.some((point) => point === isolated),
+        );
+        expect(isolatedCalls).toHaveLength(1);
+        const points = isolatedCalls[0][0].points;
+        expect(points).toHaveLength(2);
+        expect(points).toContain(raw[1].data[1]);
+    });
+
     test.each([false, true])('follows both value ends, reversed=%s', async (reversed) => {
         const {args} = await prepare(areaPlugin, [[10], [20], [-10], [-20]]);
         const yScale = scaleLinear()
