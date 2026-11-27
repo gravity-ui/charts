@@ -1,6 +1,6 @@
 import type {AxisPaddingPoint, PrepareAxisPaddingArgs} from '~core/scales/axis-padding';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedLineSeries} from '~core/series/types';
+import type {PreparedSeriesMarker} from '~core/series/types';
 import {getSymbolBounds} from '~core/utils/symbol';
 
 interface MarkerPaddingPoint {
@@ -11,12 +11,12 @@ interface MarkerPaddingPoint {
 }
 
 interface ProjectedMarkerSeries {
-    series: Pick<PreparedLineSeries, 'marker' | 'yAxis'>;
+    series: {marker: PreparedSeriesMarker; yAxis: number};
     points: MarkerPaddingPoint[];
 }
 
 /** Cache normal/hover symbol geometry once per series, outside point projection. */
-function createMarkerPaddingGetter(marker: PreparedLineSeries['marker']) {
+function createMarkerPaddingGetter(marker: PreparedSeriesMarker) {
     const {normal, hover} = marker.states;
     const bounds = (state: typeof normal | typeof hover) =>
         getSymbolBounds({
@@ -71,7 +71,7 @@ export function createPaddingPointFilter(xScale: ChartScale, yScale: ChartScale)
 
 function appendMarkerPadding(args: {
     points: MarkerPaddingPoint[];
-    marker: PreparedLineSeries['marker'];
+    marker: PreparedSeriesMarker;
     xScale: ChartScale;
     yScale: ChartScale;
     top: number;

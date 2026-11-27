@@ -4,9 +4,10 @@ import {dispatch} from 'd3-dispatch';
 import {curveLinear} from 'd3-shape';
 
 import {getPreparedOptions} from '~core/series/prepare-options';
-import type {PreparedLineSeries, PreparedSeriesOptions} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import type {LinearGradient} from '~core/types';
 
+import type {PreparedLineSeries} from '../prepared-series';
 import {renderLine} from '../renderer';
 import type {PointData, PreparedLineData} from '../types';
 

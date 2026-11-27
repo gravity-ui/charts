@@ -3,10 +3,10 @@ import {scaleLinear} from 'd3-scale';
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {PreparedSplit} from '~core/layout/split-types';
 import type {ChartScale} from '~core/scales/types';
-import type {PreparedScatterSeries} from '~core/series/types';
 
 import {clusterSeriesData} from '../cluster';
 import {prepareScatterData} from '../prepare-data';
+import type {PreparedScatterSeries} from '../prepared-series';
 import type {PreparedScatterData} from '../types';
 
 function makeSeries(

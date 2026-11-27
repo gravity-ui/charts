@@ -1,10 +1,10 @@
 import type {SymbolType} from '~core/constants';
-import type {PreparedScatterSeries} from '~core/series/types';
 import type {ChartMargin} from '~core/types';
 import {calculateNumericProperty, getSymbolSize} from '~core/utils';
 
 import type {ScatterClusterData, ScatterSeriesData} from '../../types';
 
+import type {PreparedScatterSeries} from './prepared-series';
 import type {PreparedScatterData} from './types';
 
 // Subpixel clearance keeps candidate marker strokes from visually touching.

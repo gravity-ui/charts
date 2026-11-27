@@ -3,8 +3,9 @@ import {scaleOrdinal} from 'd3-scale';
 import {createScales} from '../../hooks/useAxisScales';
 import {prepareLineSeries} from '../../plugins/line/prepare-line-series';
 import {prepareWaterfallSeries} from '../../plugins/waterfall/prepare-waterfall-series';
+import type {PreparedWaterfallSeries} from '../../plugins/waterfall/prepared-series';
 import type {PreparedAxis, PreparedYAxis} from '../axes/types';
-import type {PreparedLegend, PreparedSeries, PreparedWaterfallSeries} from '../series/types';
+import type {PreparedLegend, PreparedSeries} from '../series/types';
 
 import {createYScale} from './y-scale';
 

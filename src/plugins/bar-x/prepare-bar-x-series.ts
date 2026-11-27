@@ -7,7 +7,7 @@ import {
 } from '~core/constants';
 import {DEFAULT_DATALABELS_PADDING} from '~core/series/constants';
 import type {PrepareSeriesArgs} from '~core/series/plugin';
-import type {PreparedBarXSeries, PreparedSeries} from '~core/series/types';
+import type {PreparedSeries} from '~core/series/types';
 import {getSeriesStackId, prepareLegendSymbol} from '~core/series/utils';
 import {getDefaultValueFormat} from '~core/tooltip/utils';
 import {getUniqId} from '~core/utils';
@@ -17,6 +17,7 @@ import type {BarXSeries, BarXSeriesData} from '../../types';
 import {resolveBarLabelPlacement} from '../bar-label-placement';
 import {resolveStackBarSizing} from '../bar-sizing';
 
+import type {PreparedBarXSeries} from './prepared-series';
 import {getBarXStackKey} from './utils';
 
 function prepareSeriesData(series: BarXSeries): BarXSeriesData[] {

@@ -4,11 +4,7 @@ import sortBy from 'es-toolkit/compat/sortBy';
 
 import type {PreparedXAxis, PreparedYAxis} from '~core/axes/types';
 import type {ChartScale} from '~core/scales/types';
-import type {
-    PreparedSeriesOptions,
-    PreparedWaterfallSeries,
-    PreparedWaterfallSeriesData,
-} from '~core/series/types';
+import type {PreparedSeriesOptions} from '~core/series/types';
 import {MIN_BAR_GAP, MIN_BAR_WIDTH} from '~core/shapes/bar-constants';
 import {PLOT_BOUNDS_PIXEL_TOLERANCE, getXValue, getYValue} from '~core/shapes/utils';
 import {isPointDataLabelEnabled} from '~core/utils';
@@ -19,6 +15,7 @@ import {createLabelMeasurer} from '~core/utils/text';
 
 import type {LabelData} from '../../types';
 
+import type {PreparedWaterfallSeries, PreparedWaterfallSeriesData} from './prepared-series';
 import type {PreparedWaterfallData, WaterfallInterval} from './types';
 
 interface PlotBounds {
